@@ -295,6 +295,7 @@ svg{stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-l
 .gbay{grid-area:c;min-height:0;display:flex;z-index:1;position:relative}
 #pvCv{display:block;width:100%;height:100%;min-height:200px;border-radius:50% / 46%;background:radial-gradient(ellipse at 50% 50%,rgba(var(--c),.12),rgba(0,0,0,.25) 60%,rgba(0,0,0,0) 72%);cursor:pointer}
 .gdet{grid-area:d;z-index:1;display:flex;align-items:center;gap:14px;padding:12px 14px;border-radius:14px;background:rgba(10,12,24,.75);border:1px solid rgba(var(--c),.4);height:104px;box-sizing:border-box;overflow:hidden;text-align:left;transition:border-color .25s}
+.gdet.idle{visibility:hidden}
 .gdet.flash{animation:fl .7s ease}
 .gdt{flex:1;min-width:0}.gda{flex:none;display:flex;flex-direction:column;gap:7px;width:220px}
 .gdet .pvn{font-size:17px}.gdet .pvd{font-size:12.5px;margin-top:3px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
@@ -490,7 +491,7 @@ body.paused .tbtn{display:none!important}
       <div class="opts" data-set="snd"><button data-v="on">On</button><button data-v="off">Off</button></div></div>
     <div class="card" style="--c:255,176,112"><div class="ct"><div class="ico"><i data-ic="shake"></i></div><div class="cn">Screen shake<div class="cd">Camera shake on explosions and hits.</div></div></div>
       <div class="opts" data-set="shake"><button data-v="on">On</button><button data-v="off">Off</button></div></div>
-    <div class="card" style="--c:200,150,255"><div class="ct"><div class="ico"><i data-ic="map"></i></div><div class="cn">HUD layout<div class="cd">Move and resize the minimap and upgrade panel used in Multiplayer.</div></div></div>
+    <div class="card" style="--c:200,150,255"><div class="ct"><div class="ico"><i data-ic="map"></i></div><div class="cn">HUD layout<div class="cd">Move and resize the minimap, upgrade panel and scoreboard used in Multiplayer.</div></div></div>
       <button class="buy ctr" id="sMM">Edit HUD layout</button></div>
     <div class="card" style="--c:200,150,255"><div class="ct"><div class="ico"><i data-ic="map"></i></div><div class="cn">Tutorial<div class="cd">Learn the controls step by step.</div></div></div>
       <button class="buy ctr" id="sTut">Play tutorial</button></div>
@@ -618,7 +619,7 @@ body.paused .tbtn{display:none!important}
 <script>
 'use strict';
 // Versioning: next version -> next whole number (4.00), sub version -> +0.01 (3.01)
-const VERSION = '4.14';
+const VERSION = '4.15';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -1917,6 +1918,7 @@ function selInfo() {
 }
 function renderPrevInfo() {
   const s = selInfo(), it = s.it; let h = '', col = '143,200,255';
+  $('pvI').classList.toggle('idle', s.type === 'idle');
   if (s.type === 'idle') {
     h = `<div class="gdt"><div class="pvh"><div class="pvn">${it.name}</div>${chipR(it.rar)}</div><div class="pvd">${hangarMode === 'world' ? 'Your ship for Multiplayer. Upgrades and abilities come from orbs you find in the galaxy, so only skins can be changed here.' : 'Your ship, ready for upgrades. Hover an upgrade to see it in action, click it to buy. On a phone, tap once to preview and again to buy.'}</div></div>`;
   } else if (s.type === 'upg') {
@@ -3627,49 +3629,69 @@ function drawUpPanel(W, H, touch, c = ctx, box = null, bs = ow ? ow.bs : {}, ab 
   c.restore();
 }
 // multiplayer scoreboard, top right under the stardust counter
-function drawScoreboard(W, H, touch) {
-  const rows = [{ n: cloudUser || 'You', k: score, col: '255,255,255', me: true }];
-  for (const id in mp.peers) { const P = mp.peers[id]; rows.push({ n: P.n, k: P.k || 0, col: P.col, dead: !P.alive }); }
-  rows.sort((a, b) => b.k - a.k);
-  const fs = touch ? 10.5 : 11.5, rh_ = touch ? 17 : 19, w = touch ? 150 : 184, x1 = W - 16, x0 = x1 - w, y0 = touch ? 80 : 86;
-  ctx.save();
-  rr(x0, y0, w, 22 + rows.length * rh_, 10); ctx.fillStyle = 'rgba(4,6,14,0.45)'; ctx.fill(); ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.lineWidth = 1; ctx.stroke();
-  ctx.font = `700 9px ${FONT}`; ctx.fillStyle = 'rgba(233,238,247,0.55)'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; spaced('SCOREBOARD', x0 + 10, y0 + 12, 1.6, 'left');
+const SB_MIN = 0.6, SB_MAX = 1.6;
+const sbDims = (sc, n) => [184 * sc, (22 + n * 19) * sc];
+// top-left anchored so it grows downward as pilots join
+function sbBox(W, H, touch, n) {
+  const L = touch ? save.sbT : save.sbD, sc = L && L.s ? clamp(L.s, SB_MIN, SB_MAX) : (touch ? 0.82 : 1), [w, h] = sbDims(sc, n);
+  let x0 = L ? L.x * W : W - 16 - w, y0 = L ? L.y * H : (touch ? 80 : 86);
+  x0 = clamp(x0, 6, W - w - 6); y0 = clamp(y0, 6, H - h - 6);
+  return [Math.round(x0), Math.round(y0), w, h, sc];
+}
+function drawScoreboard(W, H, touch, c = ctx, box = null, rows = null) {
+  if (!rows) {
+    rows = [{ n: cloudUser || 'You', k: score, col: '255,255,255', me: true }];
+    for (const id in mp.peers) { const P = mp.peers[id]; rows.push({ n: P.n, k: P.k || 0, col: P.col, dead: !P.alive }); }
+    rows.sort((a, b) => b.k - a.k);
+  }
+  const [x0, y0, w, h, sc] = box || sbBox(W, H, touch, rows.length), fs = 11.5 * sc, rh_ = 19 * sc, x1 = x0 + w;
+  c.save();
+  const R = 10 * sc; c.beginPath(); c.moveTo(x0 + R, y0); c.arcTo(x1, y0, x1, y0 + h, R); c.arcTo(x1, y0 + h, x0, y0 + h, R); c.arcTo(x0, y0 + h, x0, y0, R); c.arcTo(x0, y0, x1, y0, R); c.closePath();
+  c.fillStyle = 'rgba(4,6,14,0.45)'; c.fill(); c.strokeStyle = 'rgba(255,255,255,0.08)'; c.lineWidth = 1; c.stroke();
+  c.font = `700 ${9 * sc}px ${FONT}`; c.fillStyle = 'rgba(233,238,247,0.55)'; c.textAlign = 'left'; c.textBaseline = 'middle';
+  { let x = x0 + 10 * sc; for (const ch of 'SCOREBOARD') { c.fillText(ch, x, y0 + 12 * sc); x += c.measureText(ch).width + 1.6 * sc; } }
   rows.forEach((r, i) => {
-    const y = y0 + 22 + i * rh_ + rh_ / 2 - 2;
-    ctx.globalAlpha = r.dead ? 0.5 : 1;
-    ctx.font = `700 ${fs}px ${FONT}`; ctx.textAlign = 'left'; ctx.fillStyle = 'rgba(233,238,247,0.5)'; ctx.fillText(String(i + 1), x0 + 10, y);
-    ctx.fillStyle = `rgb(${r.col})`; ctx.font = `${r.me ? 700 : 600} ${fs}px ${FONT}`;
-    let nm = r.n; while (nm.length > 3 && ctx.measureText(nm).width > w - 90) nm = nm.slice(0, -2) + '…';
-    ctx.fillText(nm, x0 + 24, y);
-    ctx.textAlign = 'right'; ctx.fillStyle = r.me ? '#fff' : 'rgba(233,238,247,0.85)'; ctx.fillText(fmt(r.k), x1 - 10, y);
+    const y = y0 + 22 * sc + i * rh_ + rh_ / 2 - 2 * sc;
+    c.globalAlpha = r.dead ? 0.5 : 1;
+    c.font = `700 ${fs}px ${FONT}`; c.textAlign = 'left'; c.fillStyle = 'rgba(233,238,247,0.5)'; c.fillText(String(i + 1), x0 + 10 * sc, y);
+    c.fillStyle = `rgb(${r.col})`; c.font = `${r.me ? 700 : 600} ${fs}px ${FONT}`;
+    let nm = r.n; while (nm.length > 3 && c.measureText(nm).width > w - 90 * sc) nm = nm.slice(0, -2) + '…';
+    c.fillText(nm, x0 + 24 * sc, y);
+    c.textAlign = 'right'; c.fillStyle = r.me ? '#fff' : 'rgba(233,238,247,0.85)'; c.fillText(fmt(r.k), x1 - 10 * sc, y);
   });
-  ctx.restore();
+  c.restore();
 }
 // ---- HUD layout editor (Settings): move and resize the minimap and the upgrade panel ----
 let mmE = null;
+const ED_ROWS = [{ n: 'bob', k: 4200, col: '255,170,90' }, { n: 'You', k: 1800, col: '255,255,255', me: true }, { n: 'carol', k: 950, col: '143,255,214' }];
 const ED_DEMO_BS = { dmg: 3, rate: 5, bspeed: 1, speed: 2, pierce: 1, magnet: 0, dash: 2 }, ED_DEMO_AB = { multi: 2, seek: 1, nova: 1, shield: 2 };
 function openMMEd() {
   const touch = isTouch(), w = innerWidth, h = innerHeight, [x0, y0, sz] = mmLayout(touch, w, h), [px, py, pw_, ph, psc] = upBox(w, h, touch);
   const keep = ow; ow = { seed: 4242, CH: owCH(), taken: {}, drops: [] }; ow.R = OWM * ow.CH; owPre(); const demo = ow; ow = keep;
   const st = []; for (let i = 0; i < 160; i++) st.push([Math.random(), Math.random(), Math.random() * 1.4 + 0.3, Math.random()]);
-  mmE = { touch, x: x0 + sz / 2, y: y0 + sz / 2, s: sz, px: px + pw_ / 2, py: py + ph / 2, ps: psc, sel: 'mm', drag: null, demo, img: null, imgS: 0, st };
-  $('mmX').textContent = 'Drag the minimap or the upgrade panel to move it. Drag its round handle or use the slider to resize. Saved for ' + (touch ? 'touch screens' : 'mouse and keyboard') + '.';
+  const [sx0, sy0, , , ssc] = sbBox(w, h, touch, 3);
+  mmE = { touch, x: x0 + sz / 2, y: y0 + sz / 2, s: sz, px: px + pw_ / 2, py: py + ph / 2, ps: psc, sx: sx0, sy: sy0, ss: ssc, sel: 'mm', drag: null, demo, img: null, imgS: 0, st };
+  $('mmX').textContent = 'Drag the minimap, upgrade panel or scoreboard to move it. Drag its round handle or use the slider to resize. Saved for ' + (touch ? 'touch screens' : 'mouse and keyboard') + '.';
   mmSel('mm'); $('mmEd').classList.remove('hidden'); mmPanel(); requestAnimationFrame(mmLoop);
 }
 function mmSel(k) {
   mmE.sel = k; const sl = $('mmSz');
-  if (k === 'mm') { sl.min = MM_MIN; sl.max = MM_MAX; sl.step = 1; sl.value = mmE.s; } else { sl.min = UP_MIN * 100; sl.max = UP_MAX * 100; sl.step = 1; sl.value = Math.round(mmE.ps * 100); }
-  $('mmSl').textContent = k === 'mm' ? 'Minimap size' : 'Upgrade panel size';
+  if (k === 'mm') { sl.min = MM_MIN; sl.max = MM_MAX; sl.step = 1; sl.value = mmE.s; }
+  else if (k === 'up') { sl.min = UP_MIN * 100; sl.max = UP_MAX * 100; sl.step = 1; sl.value = Math.round(mmE.ps * 100); }
+  else { sl.min = SB_MIN * 100; sl.max = SB_MAX * 100; sl.step = 1; sl.value = Math.round(mmE.ss * 100); }
+  $('mmSl').textContent = k === 'mm' ? 'Minimap size' : k === 'up' ? 'Upgrade panel size' : 'Scoreboard size';
 }
+const edSBox = () => { const [w, h] = sbDims(mmE.ss, 3); return [mmE.sx, mmE.sy, w, h, mmE.ss]; };
 const edPBox = () => { const [w, h] = upDims(mmE.ps); return [mmE.px - w / 2, mmE.py - h / 2, w, h, mmE.ps]; };
 function mmClampE() {
   const w = innerWidth, h = innerHeight, r = mmE.s / 2; mmE.x = clamp(mmE.x, r + 6, w - r - 6); mmE.y = clamp(mmE.y, r + 16, h - r - 6);
   const [pw_, ph] = upDims(mmE.ps); mmE.px = clamp(mmE.px, pw_ / 2 + 6, w - pw_ / 2 - 6); mmE.py = clamp(mmE.py, ph / 2 + 6, h - ph / 2 - 6);
+  const [sw, sh] = sbDims(mmE.ss, 3); mmE.sx = clamp(mmE.sx, 6, w - sw - 6); mmE.sy = clamp(mmE.sy, 6, h - sh - 6);
 }
-function mmPanel() { const sy = mmE.sel === 'mm' ? mmE.y : mmE.py; $('mmP').classList.toggle('low', sy < innerHeight * 0.45); }
+function mmPanel() { const sy = mmE.sel === 'mm' ? mmE.y : mmE.sel === 'up' ? mmE.py : mmE.sy + 30; $('mmP').classList.toggle('low', sy < innerHeight * 0.45); }
 const mmHandle = () => { const r = mmE.s / 2; return [mmE.x + (r + 6) * Math.SQRT1_2, mmE.y + (r + 6) * Math.SQRT1_2]; };
 const upHandle = () => { const [x0, y0, w, h] = edPBox(); return [x0 + w + 2, y0 + h + 2]; };
+const sbHandle = () => { const [x0, y0, w, h] = edSBox(); return [x0 + w + 2, y0 + h + 2]; };
 function mmLoop() {
   if (!mmE) return;
   const c = $('mmCv'), w = innerWidth, h = innerHeight, d = DPR || 1;
@@ -3692,6 +3714,7 @@ function mmLoop() {
   // upgrade panel
   const pb = edPBox();
   drawUpPanel(w, h, t, g, pb, ED_DEMO_BS, ED_DEMO_AB);
+  const sb = edSBox(); drawScoreboard(w, h, t, g, sb, ED_ROWS);
   // minimap
   const s = Math.round(mmE.s), r = s / 2, x0 = mmE.x - r, y0 = mmE.y - r;
   if (!mmE.img || mmE.imgS !== s) { const keep = ow; ow = mmE.demo; mmE.img = owMiniBuild(s); ow = keep; mmE.imgS = s; }
@@ -3710,31 +3733,35 @@ function mmLoop() {
   g.setLineDash([5, 5]); g.lineDashOffset = -rtime * 20; g.lineWidth = 1.5;
   g.strokeStyle = mmE.sel === 'mm' ? 'rgba(200,150,255,0.95)' : 'rgba(200,150,255,0.35)'; g.beginPath(); g.arc(mmE.x, mmE.y, r + 6, 0, TAU); g.stroke();
   g.strokeStyle = mmE.sel === 'up' ? 'rgba(200,150,255,0.95)' : 'rgba(200,150,255,0.35)'; g.strokeRect(pb[0] - 4, pb[1] - 4, pb[2] + 8, pb[3] + 8);
+  g.strokeStyle = mmE.sel === 'sb' ? 'rgba(200,150,255,0.95)' : 'rgba(200,150,255,0.35)'; g.strokeRect(sb[0] - 4, sb[1] - 4, sb[2] + 8, sb[3] + 8);
   g.setLineDash([]);
-  handle(...mmHandle(), mmE.sel === 'mm'); handle(...upHandle(), mmE.sel === 'up');
+  handle(...mmHandle(), mmE.sel === 'mm'); handle(...upHandle(), mmE.sel === 'up'); handle(...sbHandle(), mmE.sel === 'sb');
   requestAnimationFrame(mmLoop);
 }
 function edHit(x, y) {
-  const grab = mmE.touch ? 26 : 16, [mhx, mhy] = mmHandle(), [uhx, uhy] = upHandle(), [px0, py0, pw_, ph] = edPBox();
+  const grab = mmE.touch ? 26 : 16, [mhx, mhy] = mmHandle(), [uhx, uhy] = upHandle(), [shx, shy] = sbHandle(), [px0, py0, pw_, ph] = edPBox(), [sx0, sy0, sw, sh] = edSBox();
+  if (Math.hypot(x - shx, y - shy) < grab) return ['sb', 'size'];
   if (Math.hypot(x - mhx, y - mhy) < grab) return ['mm', 'size'];
   if (Math.hypot(x - uhx, y - uhy) < grab) return ['up', 'size'];
   if (Math.hypot(x - mmE.x, y - mmE.y) < mmE.s / 2 + 14) return ['mm', 'move'];
   if (x > px0 - 8 && x < px0 + pw_ + 8 && y > py0 - 8 && y < py0 + ph + 8) return ['up', 'move'];
+  if (x > sx0 - 8 && x < sx0 + sw + 8 && y > sy0 - 8 && y < sy0 + sh + 8) return ['sb', 'move'];
   return null;
 }
 $('mmCv').addEventListener('pointerdown', e => {
   if (!mmE) return;
   const hit = edHit(e.clientX, e.clientY); if (!hit) return;
   const [k, mode] = hit; mmSel(k);
-  if (mode === 'move') mmE.drag = { k, m: 'move', ox: (k === 'mm' ? mmE.x : mmE.px) - e.clientX, oy: (k === 'mm' ? mmE.y : mmE.py) - e.clientY };
-  else { const [x0, y0] = edPBox(); mmE.drag = { k, m: 'size', ax: x0, ay: y0 }; }
+  if (mode === 'move') mmE.drag = { k, m: 'move', ox: (k === 'mm' ? mmE.x : k === 'up' ? mmE.px : mmE.sx) - e.clientX, oy: (k === 'mm' ? mmE.y : k === 'up' ? mmE.py : mmE.sy) - e.clientY };
+  else { const [x0, y0] = k === 'sb' ? edSBox() : edPBox(); mmE.drag = { k, m: 'size', ax: x0, ay: y0 }; }
   e.preventDefault(); try { $('mmCv').setPointerCapture(e.pointerId); } catch (x) {}
 });
 $('mmCv').addEventListener('pointermove', e => {
   if (!mmE) return;
   if (!mmE.drag) { const hit = edHit(e.clientX, e.clientY); $('mmCv').style.cursor = !hit ? 'default' : hit[1] === 'size' ? 'nwse-resize' : 'grab'; return; }
   const D = mmE.drag;
-  if (D.m === 'move') { if (D.k === 'mm') { mmE.x = e.clientX + D.ox; mmE.y = e.clientY + D.oy; } else { mmE.px = e.clientX + D.ox; mmE.py = e.clientY + D.oy; } }
+  if (D.m === 'move') { if (D.k === 'mm') { mmE.x = e.clientX + D.ox; mmE.y = e.clientY + D.oy; } else if (D.k === 'up') { mmE.px = e.clientX + D.ox; mmE.py = e.clientY + D.oy; } else { mmE.sx = e.clientX + D.ox; mmE.sy = e.clientY + D.oy; } }
+  else if (D.k === 'sb') { mmE.ss = clamp((e.clientX - D.ax) / 184, SB_MIN, SB_MAX); $('mmSz').value = Math.round(mmE.ss * 100); }
   else if (D.k === 'mm') { mmE.s = clamp(Math.round(Math.hypot(e.clientX - mmE.x, e.clientY - mmE.y) * 2 / 1.06), MM_MIN, MM_MAX); $('mmSz').value = mmE.s; }
   else { mmE.ps = clamp((e.clientX - D.ax) / 140, UP_MIN, UP_MAX); const [w, h] = upDims(mmE.ps); mmE.px = D.ax + w / 2; mmE.py = D.ay + h / 2; $('mmSz').value = Math.round(mmE.ps * 100); }
   mmClampE(); mmPanel();
@@ -3744,12 +3771,14 @@ $('mmCv').addEventListener('pointerup', mmUp); $('mmCv').addEventListener('point
 $('mmSz').addEventListener('input', e => {
   if (!mmE) return;
   if (mmE.sel === 'mm') mmE.s = clamp(+e.target.value, MM_MIN, MM_MAX);
+  else if (mmE.sel === 'sb') mmE.ss = clamp(+e.target.value / 100, SB_MIN, SB_MAX);
   else { const [x0, y0] = edPBox(); mmE.ps = clamp(+e.target.value / 100, UP_MIN, UP_MAX); const [w, h] = upDims(mmE.ps); mmE.px = x0 + w / 2; mmE.py = y0 + h / 2; }
   mmClampE(); mmPanel();
 });
 $('mmReset').onclick = () => {
   if (!mmE) return; const t = mmE.touch, w = innerWidth, h = innerHeight;
-  delete save[t ? 'mmT' : 'mmD']; delete save[t ? 'upT' : 'upD'];
+  delete save[t ? 'mmT' : 'mmD']; delete save[t ? 'upT' : 'upD']; delete save[t ? 'sbT' : 'sbD'];
+  { const [a, b_, , , c_] = sbBox(w, h, t, 3); mmE.sx = a; mmE.sy = b_; mmE.ss = c_; }
   const [x0, y0, sz] = mmLayout(t, w, h), [px, py, pw_, ph, psc] = upBox(w, h, t);
   Object.assign(mmE, { x: x0 + sz / 2, y: y0 + sz / 2, s: sz, px: px + pw_ / 2, py: py + ph / 2, ps: psc }); mmSel(mmE.sel); mmPanel(); sfx.ui();
 };
@@ -3757,6 +3786,7 @@ $('mmDone').onclick = () => {
   if (!mmE) return; const t = mmE.touch, w = innerWidth, h = innerHeight;
   save[t ? 'mmT' : 'mmD'] = { x: +(mmE.x / w).toFixed(4), y: +(mmE.y / h).toFixed(4), s: Math.round(mmE.s) };
   save[t ? 'upT' : 'upD'] = { x: +(mmE.px / w).toFixed(4), y: +(mmE.py / h).toFixed(4), s: +mmE.ps.toFixed(3) };
+  save[t ? 'sbT' : 'sbD'] = { x: +(mmE.sx / w).toFixed(4), y: +(mmE.sy / h).toFixed(4), s: +mmE.ss.toFixed(3) };
   persist(); mmE = null; $('mmEd').classList.add('hidden'); if (ow) ow.mm = null; sfx.buy();
 };
 $('sMM').onclick = () => { audio(); sfx.ui(); openMMEd(); };
