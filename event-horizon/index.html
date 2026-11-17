@@ -276,7 +276,7 @@ body.paused .tbtn{display:none!important}
 <script>
 'use strict';
 // Versioning (renumbered by request): next version -> next whole number (3.00), sub version -> +0.01 (2.01)
-const VERSION = '2.02';
+const VERSION = '2.03';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -951,18 +951,35 @@ function spawnOrbital(size) {
     return;
   }
 }
+const DK = {
+  drone: { c: '255,80,120', sc: 150, du: 3, pk: 0.32 },
+  seeker: { c: '255,170,60', sc: 100, du: 2, pk: 0.14 },
+  lancer: { c: '190,120,255', sc: 220, du: 4, pk: 0.36 },
+  charger: { c: '255,215,90', sc: 200, du: 4, pk: 0.34 },
+};
+const dCol = d => (DK[d.kind] || DK.drone).c;
+const astUnits = a => [0, 1, 3, 7][a.size] || 1;
+let waveTot = 0, reinT = 0;
+function waveLeft() { let n = 0; for (const a of asts) n += astUnits(a); for (const d of drones) if (!d.extra) n++; for (const q of queue) if (q.u) n += q.u; return n; }
+function spawnKind(kind, t, extra) {
+  queue.push({ t, u: extra ? 0 : 1, f: () => { const d = mkDrone(kind); d.extra = !!extra; drones.push(d); ring(clamp(d.x, 0, W), clamp(d.y, 0, H), 50, DK[kind].c, 0.6, 2); } });
+}
 function mkDrone(kind = 'drone') {
   let x, y;
   if (follow) {
     let a = rand(0, TAU);
     for (let t = 0; t < 10; t++) { a = rand(0, TAU); const px = CX + Math.cos(a) * WR * 0.96, py = CY + Math.sin(a) * WR * 0.96; if (!onScreen({ x: px, y: py }) && (!ship || Math.hypot(px - ship.x, py - ship.y) > 350 * U)) break; }
     x = CX + Math.cos(a) * WR * 0.96; y = CY + Math.sin(a) * WR * 0.96;
-    return { x, y, vx: 0, vy: 0, hp: kind === 'seeker' ? 1 + (sector - 1) * 0.1 : 3 * hpMul(), kind, cd: rand(1.5, 3), ang: 0, R: 13 * U, hit: 0, bw: -1, ph: rand(0, TAU), dead: false };
+    return droneObj(x, y, kind);
   }
   const side = Math.random() * 4 | 0;
   if (side === 0) { x = rand(0, W); y = -30; } else if (side === 1) { x = W + 30; y = rand(0, H); }
   else if (side === 2) { x = rand(0, W); y = H + 30; } else { x = -30; y = rand(0, H); }
-  return { x, y, vx: 0, vy: 0, hp: kind === 'seeker' ? 1 + (sector - 1) * 0.1 : 3 * hpMul(), kind, cd: rand(1.5, 3), ang: 0, R: 13 * U, hit: 0, bw: -1, ph: rand(0, TAU), dead: false };
+  return droneObj(x, y, kind);
+}
+function droneObj(x, y, kind) {
+  const hp = kind === 'seeker' ? 1 + (sector - 1) * 0.1 : (kind === 'lancer' ? 4 : kind === 'charger' ? 5 : 3) * hpMul();
+  return { x, y, vx: 0, vy: 0, hp, kind, cd: kind === 'lancer' ? rand(2.5, 3.5) : rand(1.5, 3), ang: 0, R: (kind === 'charger' ? 15 : kind === 'lancer' ? 14 : 13) * U, hit: 0, bw: -1, ph: rand(0, TAU), dead: false, st: 'move', stT: 0, la: 0 };
 }
 function mkBoss(sec) {
   const hp = 110 + (sec - 1) * 70;
@@ -1067,10 +1084,15 @@ function startWave() {
     for (let i = 0; i < big; i++) spawnOrbital(3);
     for (let i = 0; i < (follow ? 4 : 2); i++) spawnOrbital(2);
     const nd = ew >= 2 ? Math.min(10, Math.floor((ew - 1) * 0.9) + (M.drones || 0)) : 0;
-    for (let i = 0; i < nd; i++) queue.push({ t: 1.5 + i * 1.2, f: () => { const d = mkDrone(); drones.push(d); ring(clamp(d.x, 0, W), clamp(d.y, 0, H), 50, '255,70,110', 0.6, 2); } });
+    for (let i = 0; i < nd; i++) spawnKind('drone', 1.5 + i * 1.2);
     const ns = ew >= 3 ? Math.min(12, Math.round(Math.floor((ew - 1) / 2) * 2 * (M.seekers || 1))) : 0;
-    for (let i = 0; i < ns; i++) queue.push({ t: 4 + i * 0.5, f: () => { const d = mkDrone('seeker'); drones.push(d); ring(clamp(d.x, 0, W), clamp(d.y, 0, H), 50, '255,160,40', 0.6, 2); } });
+    for (let i = 0; i < ns; i++) spawnKind('seeker', 4 + i * 0.5);
+    const nl = ew >= 4 ? Math.min(4, Math.floor((ew - 1) / 3)) : 0;
+    for (let i = 0; i < nl; i++) spawnKind('lancer', 3 + i * 2.2);
+    const nc = ew >= 5 ? Math.min(4, Math.floor((ew - 2) / 3)) : 0;
+    for (let i = 0; i < nc; i++) spawnKind('charger', 5 + i * 1.8);
   }
+  waveTot = waveLeft(); reinT = rand(13, 19);
   if (wave > 1) bombs = Math.min(S.maxBombs, bombs + 1);
   if (sector === 1 && wave <= 3 && (save.tut || 0) < wave) { tip = { k: ['controls', 'ring', 'dust'][wave - 1], t: 8, dur: 8 }; save.tut = wave; persist(); }
   sfx.wave();
@@ -1171,13 +1193,13 @@ function breakAst(j, scored) {
 }
 function killDrone(i, scored) {
   const d = drones[i]; drones.splice(i, 1); d.dead = true;
-  const sk = d.kind === 'seeker';
-  if (scored) { addScore(sk ? 100 : 150, d.x, d.y); dropDust(d.x, d.y, sk ? 2 : 3); freeze = Math.max(freeze, 0.03); }
-  burst(d.x, d.y, 40, sk ? '255,170,60' : '255,80,120', 220, 1.0, 2.2);
+  const K = DK[d.kind] || DK.drone;
+  if (scored) { addScore(K.sc, d.x, d.y); dropDust(d.x, d.y, K.du); freeze = Math.max(freeze, 0.03); }
+  burst(d.x, d.y, 40, K.c, 220, 1.0, 2.2);
   burst(d.x, d.y, 20, '255,220,180', 120, 0.6, 2);
-  ring(d.x, d.y, 70, sk ? '255,170,60' : '255,90,130', 0.45, 3);
+  ring(d.x, d.y, 70, K.c, 0.45, 3);
   sfx.boom(0.8); shake = Math.min(25, shake + 6);
-  if (scored && Math.random() < (sk ? 0.14 : 0.32) * S.luck) dropPickup(d.x, d.y);
+  if (scored && Math.random() < K.pk * S.luck) dropPickup(d.x, d.y);
 }
 function killBoss() {
   const b = boss; boss = null; b.dead = true;
@@ -2037,8 +2059,18 @@ function update(dt, rdt) {
       const dx = ship.x - a.x, dy = ship.y - a.y, d = Math.hypot(dx, dy) || 1, vt = (a.vx * dx + a.vy * dy) / d;
       if (vt < 120 * U) { a.vx += dx / d * 75 * U * edt; a.vy += dy / d * 75 * U * edt; }
     }
+    if (follow) {
+      // near the arena wall: bleed off sliding speed and steer back in, so rocks never ride the border
+      const ex = a.x - CX, ey = a.y - CY, er = Math.hypot(ex, ey) || 1;
+      if (er > WR * 0.82) {
+        const nx = ex / er, ny = ey / er, vn = a.vx * nx + a.vy * ny, tvx = a.vx - vn * nx, tvy = a.vy - vn * ny, k = 1 - Math.pow(0.3, edt);
+        a.vx -= tvx * k; a.vy -= tvy * k;
+        const tx = ship ? ship.x : CX, ty = ship ? ship.y : CY, td = Math.hypot(tx - a.x, ty - a.y) || 1, push = (er > WR * 0.93 ? 260 : 130) * U;
+        a.vx += (tx - a.x) / td * push * edt; a.vy += (ty - a.y) / td * push * edt;
+      }
+    }
     a.x += a.vx * edt; a.y += a.vy * edt; a.rot += a.vr * edt; if (a.hit > 0) a.hit -= dt;
-    bound(a, a.R, 0.8);
+    if (bound(a, a.R, 0.8)) { const ex = a.x - CX, ey = a.y - CY, er = Math.hypot(ex, ey) || 1; a.vx -= ex / er * 60 * U; a.vy -= ey / er * 60 * U; }
     if (r < rh + a.R * 0.3) { swallow(a, 0.014 * a.size); asts.splice(i, 1); continue; }
     if (ship && ship.inv <= 0 && dist2(a, ship) < (a.R + 8 * U) ** 2) {
       hurt();
@@ -2054,20 +2086,50 @@ function update(dt, rdt) {
     const tx = ship ? ship.x : CX + Math.cos(time * 0.5 + d.ph) * MIN * 0.4;
     const ty = ship ? ship.y : CY + Math.sin(time * 0.5 + d.ph) * MIN * 0.4;
     const dx = tx - d.x, dy = ty - d.y, dl = Math.hypot(dx, dy) || 1;
-    const sk = d.kind === 'seeker';
-    const want = sk ? 1 : dl > 170 * U ? 1 : -0.6, th = (sk ? 600 : 330) * U;
+    const kd = d.kind, sk = kd === 'seeker', ln = kd === 'lancer', chg = kd === 'charger';
+    const want = sk ? 1 : ln ? (dl > 440 * U ? 1 : dl < 320 * U ? -1 : 0) : chg ? (dl > 270 * U ? 1 : -0.5) : dl > 170 * U ? 1 : -0.6;
+    const th = (sk ? 600 : ln ? 300 : chg ? 380 : 330) * U;
     let ax = dx / dl * want * th, ay = dy / dl * want * th;
-    if (!sk) { ax += -dy / dl * 140 * U * Math.sin(time * 1.3 + d.ph); ay += dx / dl * 140 * U * Math.sin(time * 1.3 + d.ph); }
+    if (!sk) { const sf = ln ? 170 : 140; ax += -dy / dl * sf * U * Math.sin(time * (ln ? 0.7 : 1.3) + d.ph); ay += dx / dl * sf * U * Math.sin(time * (ln ? 0.7 : 1.3) + d.ph); }
+    const locked = d.st === 'aim' || d.st === 'fire' || d.st === 'wind' || d.st === 'dash';
+    if (locked) { ax = 0; ay = 0; }
     const avoid = sk ? rh * 3.2 : Math.max(dR * 0.8, rh * 5);
     if (r < avoid) { ax += (d.x - CX) / r * 700 * U; ay += (d.y - CY) / r * 700 * U; }
     if (follow) { if (r > WR * 0.9) { ax -= (d.x - CX) / r * 500 * U; ay -= (d.y - CY) / r * 500 * U; } }
     else { if (d.x < 0) ax += 400 * U; if (d.x > W) ax -= 400 * U; if (d.y < 0) ay += 400 * U; if (d.y > H) ay -= 400 * U; }
     d.vx += ax * edt; d.vy += ay * edt;
-    const sp = Math.hypot(d.vx, d.vy), cap = (sk ? 430 : 300) * U; if (sp > cap) { d.vx *= cap / sp; d.vy *= cap / sp; }
-    d.x += d.vx * edt; d.y += d.vy * edt; d.ang = Math.atan2(dy, dx);
+    if (d.st === 'dash') { d.vx = Math.cos(d.la) * 980 * U; d.vy = Math.sin(d.la) * 980 * U; }
+    else if (locked) { const dm = Math.pow(0.02, edt); d.vx *= dm; d.vy *= dm; }
+    else { const sp = Math.hypot(d.vx, d.vy), cap = (sk ? 430 : ln ? 230 : chg ? 290 : 300) * U; if (sp > cap) { d.vx *= cap / sp; d.vy *= cap / sp; } }
+    d.x += d.vx * edt; d.y += d.vy * edt;
+    d.ang = (ln && (d.st === 'aim' || d.st === 'fire')) || (chg && d.st !== 'move') ? d.la : Math.atan2(dy, dx);
     if (d.hit > 0) d.hit -= dt;
     d.cd -= edt;
-    if (!sk && ship && d.cd <= 0 && dl < 650 * U && onScreen(d)) {
+    if (ln) {
+      d.stT -= edt;
+      if (d.st === 'move' && ship && d.cd <= 0 && dl < 760 * U && onScreen(d)) { d.st = 'aim'; d.stT = 1.15; d.la = Math.atan2(dy, dx); tone(300, 1.1, 'sine', 0.035, 900); }
+      else if (d.st === 'aim') {
+        if (ship && d.stT > 0.45) { const ta = Math.atan2(ship.y - d.y, ship.x - d.x); let da = ta - d.la; da = Math.atan2(Math.sin(da), Math.cos(da)); d.la += da * Math.min(1, edt * 6); }
+        if (d.stT <= 0) { d.st = 'fire'; d.stT = 0.3; shake = Math.min(25, shake + 5); tone(140, 0.35, 'sawtooth', 0.09, 60); flash = Math.max(flash, 0.12); flashCol = DK.lancer.c; }
+      } else if (d.st === 'fire') {
+        if (ship && ship.inv <= 0) {
+          const ux = Math.cos(d.la), uy = Math.sin(d.la), rx = ship.x - d.x, ry = ship.y - d.y, along = rx * ux + ry * uy;
+          if (along > 0 && along < 1700 * U && Math.abs(rx * uy - ry * ux) < 11 * U) hurt();
+        }
+        if (d.stT <= 0) { d.st = 'move'; d.cd = rand(2.6, 3.8) / Math.sqrt(EB()); }
+      }
+    } else if (chg) {
+      d.stT -= edt;
+      if (d.st === 'move' && ship && d.cd <= 0 && dl < 420 * U && onScreen(d)) { d.st = 'wind'; d.stT = 0.7; d.la = Math.atan2(dy, dx); tone(180, 0.7, 'square', 0.03, 420); }
+      else if (d.st === 'wind') {
+        if (ship && d.stT > 0.18) d.la = Math.atan2(ship.y - d.y, ship.x - d.x);
+        if (d.stT <= 0) { d.st = 'dash'; d.stT = 0.5; tone(520, 0.25, 'sawtooth', 0.05, 120); ring(d.x, d.y, 40, DK.charger.c, 0.3, 2); }
+      } else if (d.st === 'dash') {
+        if (Math.random() < 0.9) part(d.x, d.y, -d.vx * 0.15, -d.vy * 0.15, 0.35, DK.charger.c, 2.4 * Math.max(1, U), 0, 0.9);
+        if (d.stT <= 0) { d.st = 'rest'; d.stT = 0.8; }
+      } else if (d.st === 'rest' && d.stT <= 0) { d.st = 'move'; d.cd = rand(1.8, 2.8); }
+    }
+    if (kd === 'drone' && ship && d.cd <= 0 && dl < 650 * U && onScreen(d)) {
       d.cd = rand(1.4, 2.6);
       const s = 320 * U * EB(), t = dl / s, px = ship.x + ship.vx * t * 0.6, py = ship.y + ship.vy * t * 0.6, a = Math.atan2(py - d.y, px - d.x);
       eShot(d.x, d.y, Math.cos(a) * s, Math.sin(a) * s, 4, 0.4, 4 * U, '255,80,120');
@@ -2075,7 +2137,7 @@ function update(dt, rdt) {
     }
     if (r < rh) { swallow(d, 0.03); drones.splice(i, 1); continue; }
     if (ship && ship.inv <= 0 && dist2(d, ship) < (d.R + 9 * U) ** 2) { hurt(); killDrone(i, false); continue; }
-    if (Math.random() < 0.5) part(d.x - Math.cos(d.ang) * 10 * U, d.y - Math.sin(d.ang) * 10 * U, -Math.cos(d.ang) * 80 * U, -Math.sin(d.ang) * 80 * U, 0.25, sk ? '255,160,40' : '255,70,110', 1.8 * Math.max(1, U), 0.2, 0.95);
+    if (Math.random() < 0.5) part(d.x - Math.cos(d.ang) * 10 * U, d.y - Math.sin(d.ang) * 10 * U, -Math.cos(d.ang) * 80 * U, -Math.sin(d.ang) * 80 * U, 0.25, dCol(d), 1.8 * Math.max(1, U), 0.2, 0.95);
   }
 
   // ---- boss ----
@@ -2111,7 +2173,7 @@ function update(dt, rdt) {
     }
     if (st === 'seekers' || all || enraged) {
       b.cd4 -= edt;
-      if (b.cd4 <= 0) { b.cd4 = st === 'seekers' ? 5 : 6.5; for (let k = 0; k < 2; k++) { const s = mkDrone('seeker'); s.x = b.x + rand(-30, 30) * U; s.y = b.y + rand(-30, 30) * U; drones.push(s); } }
+      if (b.cd4 <= 0) { b.cd4 = st === 'seekers' ? 5 : 6.5; for (let k = 0; k < 2; k++) { const s = mkDrone('seeker'); s.extra = true; s.x = b.x + rand(-30, 30) * U; s.y = b.y + rand(-30, 30) * U; drones.push(s); } }
     }
     if (st === 'mines' || all) {
       b.cd5 -= edt;
@@ -2203,9 +2265,19 @@ function update(dt, rdt) {
 
   // ---- wave / sector flow ----
   if (mode === 'play') {
-    const empty = !asts.length && !drones.length && !queue.length && !boss;
+    const unitsQ = queue.some(q => q.u);
+    const empty = wave >= WPS ? !boss && !unitsQ : !boss && !unitsQ && (wave === 0 || waveLeft() <= Math.floor(waveTot * 0.1));
+    if (wave > 0 && wave < WPS && !clearing && waveTimer <= 0 && ship && (sector - 1) * 2 + wave >= 2) {
+      reinT -= dt;
+      if (reinT <= 0) {
+        const ew = (sector - 1) * 2 + wave, pool = ['drone', 'drone'];
+        if (ew >= 3) pool.push('seeker'); if (ew >= 4) pool.push('lancer', 'lancer'); if (ew >= 5) pool.push('charger', 'charger');
+        if (drones.length < 7) spawnKind(pool[Math.random() * pool.length | 0], 0, true);
+        reinT = rand(11, 17) * Math.max(0.6, 1 - ew * 0.03);
+      }
+    }
     if (empty && waveTimer <= 0) {
-      if (wave >= WPS) { clearing = true; waveTimer = 2.2; }
+      if (wave >= WPS) { clearing = true; waveTimer = 2.2; if (ship) ship.inv = Math.max(ship.inv, 3); }
       else {
         if (wave > 0) { const b = 300 * wave + 200 * (sector - 1); score += b; secScore += b; scorePop = 1; announce('Wave clear', { sub: '+' + fmt(b) + ' points', col: '143,255,214', dur: 1.8 }); }
         waveTimer = 2.4;
@@ -2493,6 +2565,49 @@ function drawShip() {
 }
 function drawDrone(d) {
   const k = U;
+  if (d.kind === 'lancer') {
+    if (d.st === 'aim' || d.st === 'fire') {
+      const L = 1700 * k, ux = Math.cos(d.la), uy = Math.sin(d.la);
+      ctx.save(); ctx.lineCap = 'round';
+      if (d.st === 'aim') {
+        const pr = 1 - d.stT / 1.15, on = Math.sin(time * (14 + 40 * pr)) > -0.2;
+        ctx.strokeStyle = `rgba(${DK.lancer.c},${on ? 0.25 + 0.6 * pr : 0.08})`; ctx.lineWidth = (1 + 2 * pr) * Math.max(1, k);
+        if (pr < 0.6) ctx.setLineDash([10 * k, 8 * k]);
+        ctx.beginPath(); ctx.moveTo(d.x, d.y); ctx.lineTo(d.x + ux * L, d.y + uy * L); ctx.stroke();
+        ctx.setLineDash([]);
+      } else {
+        const f = clamp(d.stT / 0.3, 0, 1);
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.strokeStyle = `rgba(${DK.lancer.c},${0.35 * f + 0.1})`; ctx.lineWidth = 26 * k * (0.6 + 0.4 * f);
+        ctx.beginPath(); ctx.moveTo(d.x, d.y); ctx.lineTo(d.x + ux * L, d.y + uy * L); ctx.stroke();
+        ctx.strokeStyle = `rgba(230,200,255,${0.9 * f + 0.1})`; ctx.lineWidth = 7 * k * (0.5 + 0.5 * f);
+        ctx.beginPath(); ctx.moveTo(d.x, d.y); ctx.lineTo(d.x + ux * L, d.y + uy * L); ctx.stroke();
+      }
+      ctx.restore();
+    }
+    ctx.save(); ctx.translate(d.x, d.y); ctx.rotate(d.ang);
+    ctx.fillStyle = d.hit > 0 ? '#fff' : '#170a26'; ctx.strokeStyle = '#be78ff'; ctx.lineWidth = 2; ctx.lineJoin = 'round';
+    ctx.beginPath(); ctx.moveTo(18 * k, 0); ctx.lineTo(2 * k, 6 * k); ctx.lineTo(-6 * k, 14 * k); ctx.lineTo(-12 * k, 5 * k); ctx.lineTo(-12 * k, -5 * k); ctx.lineTo(-6 * k, -14 * k); ctx.lineTo(2 * k, -6 * k); ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    const glow = d.st === 'aim' ? 0.5 + 0.5 * Math.sin(time * 30) : d.st === 'fire' ? 1 : 0.55;
+    ctx.fillStyle = `rgba(225,190,255,${glow})`; ctx.beginPath(); ctx.arc(5 * k, 0, 3.2 * k, 0, TAU); ctx.fill();
+    ctx.restore(); return;
+  }
+  if (d.kind === 'charger') {
+    if (d.st === 'wind') {
+      const pr = 1 - d.stT / 0.7, on = Math.sin(time * (16 + 30 * pr)) > 0, L = 480 * k;
+      ctx.save(); ctx.strokeStyle = `rgba(${DK.charger.c},${on ? 0.2 + 0.55 * pr : 0.06})`; ctx.lineWidth = 14 * k; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(d.x, d.y); ctx.lineTo(d.x + Math.cos(d.la) * L, d.y + Math.sin(d.la) * L); ctx.stroke(); ctx.restore();
+    }
+    const jit = d.st === 'wind' ? 2.5 * k : 0;
+    ctx.save(); ctx.translate(d.x + rand(-jit, jit), d.y + rand(-jit, jit)); ctx.rotate(d.ang);
+    const hot = d.st === 'wind' || d.st === 'dash';
+    ctx.fillStyle = d.hit > 0 ? '#fff' : hot ? '#3a2a06' : '#221a06'; ctx.strokeStyle = hot ? '#fff1b0' : '#ffd75a'; ctx.lineWidth = 2.2; ctx.lineJoin = 'round';
+    ctx.beginPath(); ctx.moveTo(17 * k, 0); ctx.lineTo(6 * k, 5 * k); ctx.lineTo(9 * k, 13 * k); ctx.lineTo(-11 * k, 11 * k); ctx.lineTo(-7 * k, 0); ctx.lineTo(-11 * k, -11 * k); ctx.lineTo(9 * k, -13 * k); ctx.lineTo(6 * k, -5 * k); ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    ctx.fillStyle = hot ? '#fff6c8' : '#ffd75a'; ctx.beginPath(); ctx.arc(-1 * k, 0, (hot ? 3.6 : 2.6) * k, 0, TAU); ctx.fill();
+    ctx.restore(); return;
+  }
   if (d.kind === 'seeker') {
     ctx.save(); ctx.translate(d.x, d.y); ctx.rotate(time * 9);
     ctx.fillStyle = d.hit > 0 ? '#fff' : '#2a1404'; ctx.strokeStyle = '#ffae40'; ctx.lineWidth = 2;
@@ -2606,7 +2721,8 @@ function drawHUDi(W, H) {
   const lbl = TH.deep ? TH.name.toUpperCase() : 'SECTOR ' + sector;
   const lw = spaced(lbl, W - 20, 27, 2.2, 'right');
   ctx.fillStyle = `rgb(${TH.danger})`; ctx.beginPath(); ctx.arc(W - 20 - lw - 9, 27, 3.5, 0, TAU); ctx.fill();
-  const curDone = !asts.length && !drones.length && !queue.length && !boss;
+  const wFrac = wave > 0 && wave < WPS && waveTot > 0 ? clamp((waveTot - waveLeft()) / Math.max(1, waveTot - Math.floor(waveTot * 0.1)), 0, 1) : 0;
+  const curDone = wave > 0 && (wave >= WPS ? !boss && waveTimer > 0 : waveTimer > 0 || wFrac >= 1);
   const segW = 15, gap = 4, totW = WPS * segW + (WPS - 1) * gap, x0 = W - 20 - totW;
   for (let i = 1; i <= WPS; i++) {
     const x = x0 + (i - 1) * (segW + gap), y = 40;
@@ -2618,8 +2734,9 @@ function drawHUDi(W, H) {
       ctx.fillRect(-4, -4, 8, 8); ctx.restore();
     } else {
       rr(x, y, segW, 4, 2);
-      ctx.fillStyle = done ? `rgb(${TH.danger})` : cur ? `rgba(255,255,255,${pulse})` : next ? `rgba(255,255,255,${0.2 + 0.2 * pulse})` : 'rgba(255,255,255,0.16)';
+      ctx.fillStyle = done ? `rgb(${TH.danger})` : cur ? 'rgba(255,255,255,0.22)' : next ? `rgba(255,255,255,${0.2 + 0.2 * pulse})` : 'rgba(255,255,255,0.16)';
       ctx.fill();
+      if (cur && wFrac > 0) { rr(x, y, Math.max(4, segW * wFrac), 4, 2); ctx.fillStyle = `rgba(${TH.danger},${0.75 + 0.25 * pulse})`; ctx.fill(); }
     }
   }
   const dp = 1 + dustPop * 0.22;
@@ -2645,6 +2762,16 @@ function drawHUDi(W, H) {
     ctx.save(); if (bombs <= 0) ctx.globalAlpha *= 0.45;
     badge(xb, y, r, 'bombbay', PICK.bomb.c, bombs > 0 ? 1 : 0, String(bombs), false); ctx.restore();
     ctx.save(); ctx.globalAlpha *= 0.7; keycap(xd, H - 12, 'SHIFT'); keycap(xb, H - 12, 'E'); ctx.restore();
+  }
+  // wave progress bar (fills up to the point where the next wave starts)
+  if (!boss && wave > 0 && wave < WPS && mode === 'play') {
+    const bwid = Math.min(touch ? 170 : 260, W * 0.34), x = cx - bwid / 2, y = touch ? 70 : 34, full = curDone;
+    ctx.font = `600 11px ${FONT}`; ctx.textBaseline = 'middle';
+    ctx.fillStyle = full ? '#8fffd6' : 'rgba(233,238,247,0.75)';
+    spaced(full ? 'WAVE ' + wave + ' CLEAR' : 'WAVE ' + wave + ' / ' + (WPS - 1), cx, y - 11, 3, 'center');
+    rr(x, y, bwid, 5, 2.5); ctx.fillStyle = 'rgba(255,255,255,0.1)'; ctx.fill();
+    const f = full ? 1 : wFrac;
+    if (f > 0) { rr(x, y, Math.max(5, bwid * f), 5, 2.5); ctx.fillStyle = full ? '#8fffd6' : `rgb(${TH.danger})`; ctx.fill(); }
   }
   // boss bar
   if (boss) {
@@ -2839,7 +2966,7 @@ function drawIndicators() {
   if (!follow || mode !== 'play' || hudA < 0.05) return;
   const list = [];
   if (boss) list.push([boss, TH.boss, 9]);
-  for (const d of drones) list.push([d, d.kind === 'seeker' ? '255,170,60' : '255,80,120', 6]);
+  for (const d of drones) list.push([d, dCol(d), 6]);
   for (const p of pickups) list.push([p, PICK[p.type].c, 5]);
   list.push([{ x: CX, y: CY, bh: true }, TH.ring, 7]);
   const m = 26, l = SAL + m, r_ = W - SAR - m, t = SAT + m + 70, b = H - SAB - m - (isTouch() ? 0 : 40);
