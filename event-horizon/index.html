@@ -502,7 +502,7 @@ body.paused .tbtn{display:none!important}
 <script>
 'use strict';
 // Versioning (renumbered by request): next version -> next whole number (3.00), sub version -> +0.01 (2.01)
-const VERSION = '2.16';
+const VERSION = '2.17';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -687,6 +687,8 @@ const RAR = {
   mythic: { n: 'Mythic', c: '255,70,120', dup: 900 },
 };
 const RORDER = ['common', 'rare', 'epic', 'legendary', 'mythic'];
+const RRANK = { basic: 0, common: 1, rare: 2, epic: 3, legendary: 4, mythic: 5 };
+const byRarity = (a, b) => RRANK[a.rar] - RRANK[b.rar] || a.cost - b.cost;
 const SKINS = [
   { id: 'scrap', name: 'Scrap Runner', rar: 'basic', cost: 0, info: 'Standard issue. It flies.', shape: 'arrow', fill: '#1d2127', stroke: '#717a85', cockpit: '#8c949e', trail: '120,128,138', eng: ['140,140,140', '170,130,100'], fx: null },
   { id: 'patrol', name: 'Patrol', rar: 'common', cost: 150, info: 'Clean cyan lines and a bright cockpit.', shape: 'arrow', fill: '#0b1c28', stroke: '#a5ffff', cockpit: '#e8ffff', trail: '90,220,255', eng: ['120,220,255', '255,170,90'], fx: 'accent' },
@@ -1634,7 +1636,7 @@ function renderNodes() {
   $('gB').innerHTML = `<div class="gbg"><div class="ghd">Power-ups</div><div class="gbr">${by('POWER').map(u => nodeHTML(u, true)).join('')}</div></div><div class="gbg"><div class="ghd">Unlocks</div><div class="gbr">${by('UNLOCK').map(u => nodeHTML(u, true)).join('')}</div></div>`;
 }
 function renderOwned() {
-  const row = (list, owned, cur, sub) => list.filter(x => owned.includes(x.id)).sort((a, b) => a.cost - b.cost || 0).map(it => {
+  const row = (list, owned, cur, sub) => list.filter(x => owned.includes(x.id)).sort(byRarity).map(it => {
     const id = sub + ':' + it.id, eq = cur.id === it.id;
     return `<button class="skc sm${shopSel.G === id ? ' sel' : ''}${eq ? ' eq' : ''}" data-sel="${id}" style="--c:${RAR[it.rar].c}" title="${it.name}"><canvas class="sth" data-${sub === 'ship' ? 's' : 'b'}="${it.id}"></canvas><span class="skn">${it.name}</span></button>`;
   }).join('');
@@ -1679,7 +1681,7 @@ for (const id of ['skShips', 'skBul']) {
 function renderSkins() {
   document.querySelectorAll('#skSeg button').forEach(b => b.classList.toggle('on', b.dataset.sub === skSub));
   const ship = skSub === 'ship', list = ship ? SKINS : BSKINS, owned = ship ? (save.skins || ['scrap']) : (save.bskins || ['pellet']), cur = ship ? SK() : BS();
-  const items = list.filter(x => x.rar !== 'mythic').sort((a, b) => a.cost - b.cost).concat(list.filter(x => x.rar === 'mythic'));
+  const items = list.slice().sort(byRarity);
   const L = $('skList'), sl = L.scrollLeft;
   L.innerHTML = items.map(it => {
     const own = owned.includes(it.id), eq = cur.id === it.id, myth = it.rar === 'mythic', id = skSub + ':' + it.id;
