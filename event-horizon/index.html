@@ -624,7 +624,7 @@ body.paused .tbtn{display:none!important}
 <script>
 'use strict';
 // Versioning: next version -> next whole number (4.00), sub version -> +0.01 (3.01)
-const VERSION = '4.29';
+const VERSION = '4.30';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -3212,7 +3212,7 @@ function owBiomeAt(cx, cy) {
   const sd = ow ? ow.seed : 0, outer = r >= 0.65, a = (Math.atan2(cy, cx) / TAU + 1 + (sd % 997) / 997 + (outer ? 0.125 : 0)) % 1;
   return (outer ? [4, 6, 7, 8] : [1, 2, 3, 5])[(Math.floor(a * 4) + (sd >>> 4)) % 4];
 }
-const owDanger = (cx, cy) => { const r = Math.hypot(cx, cy) / OWM; return r < 0.3 ? 0 : clamp(Math.round(1 + 8 * (r - 0.3) / 0.7), 1, 9); };
+const owDanger = (cx, cy) => { const r = Math.hypot(cx, cy) / OWM; return r < SAFEF ? 0 : clamp(Math.round(1 + 8 * (r - SAFEF) / (1 - SAFEF)), 1, 9); };
 const owIn = (cx, cy) => Math.hypot(cx, cy) <= OWM + 0.75;
 // holes and ability orbs for the whole map, identical for everyone sharing the room seed
 function owPre() {
@@ -3227,7 +3227,7 @@ function owPre() {
     for (let i = holes.length - 1; i >= 0; i--) if (Math.hypot(holes[i].x, holes[i].y) > OWM * CH - 350 * U) holes.splice(i, 1);
     if (!cx && !cy) holes.push({ x: 0, y: 0, m: 4.5, rh: 34 * U * Math.pow(4.5, 0.7), white: false, big: true, ck: key, ph: 0 });
     const Ro = rng(hash2(cx, cy, 55 + ow.seed)), orbs = [];
-    const add = (t, i) => { const o = { x: (cx - 0.4 + Ro() * 0.8) * CH, y: (cy - 0.4 + Ro() * 0.8) * CH, ck: key + t + i, ph: Ro() * 6, t }; if (Math.hypot(o.x, o.y) < OWM * CH - 160 * U && Math.hypot(o.x, o.y) > OWM * CH * 0.3 + 120 * U && !holes.some(h => Math.hypot(h.x - o.x, h.y - o.y) < h.rh * 6)) orbs.push(o); };
+    const add = (t, i) => { const o = { x: (cx - 0.4 + Ro() * 0.8) * CH, y: (cy - 0.4 + Ro() * 0.8) * CH, ck: key + t + i, ph: Ro() * 6, t }; if (Math.hypot(o.x, o.y) < OWM * CH - 160 * U && Math.hypot(o.x, o.y) > OWM * CH * SAFEF + 120 * U && !holes.some(h => Math.hypot(h.x - o.x, h.y - o.y) < h.rh * 6)) orbs.push(o); };
     // orb chances are 2/3 of what they were (50% rarer)
     if (dc >= 1.2 && dc <= OWM) { if (Ro() < 0.333) add('b', 0); if (Ro() < 0.133) add('b', 1); if (Ro() < B.orb * 0.333) add('a', 0); if (Ro() < 0.093) add('d', 0); }
     ow.all.set(key, { holes, orbs });
@@ -3248,7 +3248,7 @@ function startWorld(seed, sx, sy) {
   asts = []; drones = []; boss = null; bullets = []; ebullets = []; pickups = []; queue = []; missiles = []; dust = []; bw = null; rbul = [];
   wave = 0; clearing = false; waveTimer = 1e9; surge = 0; surgeWarn = 0; surgeK = 1;
   sector = 1; TH = SECTORS[0]; buildNebula(); buildStars();
-  ship = mkShip(); { const a0 = rand(0, TAU); ship.x = (sx != null ? sx : Math.cos(a0) * 1300) * U; ship.y = (sy != null ? sy : Math.sin(a0) * 1300) * U; } ship.vx = 0; ship.vy = 0; ship.inv = 2.5;
+  ship = mkShip(); if (sx != null) { ship.x = sx * U; ship.y = sy * U; } else { ow.dx = ow.R; ow.dy = 0; const [x0, y0] = owSpawnPos(); ship.x = x0; ship.y = y0; } ship.vx = 0; ship.vy = 0; ship.inv = 2.5;
   camX = ship.x; camY = ship.y;
   mode = 'play'; timeScale = 1; paused = false; ann = null; annQ = [];
   owUpdateChunks(true);
@@ -3460,7 +3460,8 @@ function owRespawn() {
 }
 // enemies chase whichever pilot is closest
 // only plain red drones go into the safe zone; everything else ignores pilots inside it and waits at the edge
-const owSafeR = () => ow ? ow.R * 0.3 : 0;
+const SAFEF = 0.2;
+const owSafeR = () => ow ? ow.R * SAFEF : 0;
 function owTarget(d) {
   const list = mp ? mpPl : ship ? [ship] : [], safeOK = d.kind === 'drone' && !d.mini, SZ = owSafeR();
   let best = null, bd = 1e18, near = null, nd = 1e18;
@@ -3470,7 +3471,16 @@ function owTarget(d) {
     if (!safeOK && Math.hypot(p.x, p.y) < SZ) continue;
     if (q < bd) { bd = q; best = p; }
   }
-  if (best || !near) return best;
+  // interest: pick up a pilot within ~1150, drop them once they are ~1700 away; then drift around where it lost them
+  const reach = (d.hunt ? 1700 : 1150) * U;
+  if (best && bd > reach * reach) best = null;
+  d.hunt = !!best;
+  if (best) { d.hx = null; return best; }
+  if (!near || Math.sqrt(nd) > reach) {
+    if (d.hx == null) { d.hx = d.x; d.hy = d.y; }
+    d.cd = Math.max(d.cd, 0.5); if (d.st !== 'move' && d.st !== 'rest') { d.st = 'move'; d.stT = 0; }
+    return { x: d.hx + Math.cos(time * 0.35 + d.ph) * 260 * U, y: d.hy + Math.sin(time * 0.35 + d.ph) * 260 * U, vx: 0, vy: 0 };
+  }
   // everyone it could chase is in the safe zone: hover outside the edge near them and hold fire
   const a = Math.atan2(near.y, near.x) + Math.sin(time * 0.25 + d.ph) * 0.5, r = SZ + 280 * U;
   d.cd = Math.max(d.cd, 0.5); if (d.st !== 'move' && d.st !== 'rest') { d.st = 'move'; d.stT = 0; }
@@ -3515,9 +3525,9 @@ function owTick(dt) {
       ow.spawnT = rand(2.6, 4.6) / B.en / Math.sqrt(pl.length);
       const near = drones.filter(d => !d.mini && Math.abs(d.x - P.x) < 1600 * U && Math.abs(d.y - P.y) < 1600 * U).length;
       if (drones.length < 40 && near < Math.min(14, 3 + dg * 2) && (dg > 0 || Math.random() < 0.5)) {
-        const pool = KINDS.slice(0, Math.min(KINDS.length, 1 + dg)), k = pool[Math.random() * pool.length | 0], a = rand(0, TAU), r = 1000 * U;
+        const pool = KINDS.slice(0, Math.min(KINDS.length, 1 + Math.max(1, dg))), k = pool[Math.random() * pool.length | 0], a = rand(0, TAU), r = 1000 * U;
         sector = Math.min(NS, 1 + dg);
-        let ex = P.x + Math.cos(a) * r, ey = P.y + Math.sin(a) * r; const el = Math.hypot(ex, ey), lim = ow.R - 60 * U; if (el > lim) { ex *= lim / el; ey *= lim / el; }
+        let ex = P.x + Math.cos(a) * r, ey = P.y + Math.sin(a) * r; const el = Math.hypot(ex, ey) || 1, lim = ow.R - 60 * U, inner = owSafeR() + 260 * U; if (el > lim) { ex *= lim / el; ey *= lim / el; } else if (el < inner) { ex *= inner / el; ey *= inner / el; }
         const d = droneObj(ex, ey, k); d.extra = true;
         if (k === 'seeker') { drones.push(d); for (let j = 0; j < 2; j++) { const d2 = droneObj(d.x + rand(-30, 30) * U, d.y + rand(-30, 30) * U, 'seeker'); d2.extra = true; drones.push(d2); } } else drones.push(d);
       }
@@ -3604,6 +3614,7 @@ function owMiniBuild(Sz) {
   }
   g.strokeStyle = 'rgba(255,255,255,0.08)'; g.lineWidth = 1;
   for (const f of [0.3, 0.65]) { g.beginPath(); g.arc(h, h, h * f, 0, TAU); g.stroke(); }
+  g.strokeStyle = 'rgba(143,255,214,0.45)'; g.setLineDash([2, 2]); g.beginPath(); g.arc(h, h, h * SAFEF, 0, TAU); g.stroke(); g.setLineDash([]);
   for (const P of ow.all.values()) for (const o of P.holes) {
     const x = h + o.x * k, y = h + o.y * k;
     if (o.big) { g.fillStyle = '#000'; g.beginPath(); g.arc(x, y, 3.6, 0, TAU); g.fill(); g.strokeStyle = 'rgba(255,170,90,0.9)'; g.lineWidth = 1.2; g.beginPath(); g.arc(x, y, 4.4, 0, TAU); g.stroke(); }
@@ -4047,7 +4058,7 @@ function mpPoll(rdt) {
       mp.seed = H_.sd; mp.pub = !!H_.pub; mp.j = Math.max(...ps.map(q => q.j)) + 1; mp.state = 'play'; mp.hostId = H_.id; mp.host = false;
       for (const q of ps) q.seen = true;
       const a = rand(0, TAU), hx = H_.alive ? H_.sx / U : 0, hy = H_.alive ? H_.sy / U : 0;
-      if (Math.hypot(hx, hy) * U < OWM * 1000 * U * 0.3 - 200 * U) startWorld(mp.seed, hx + Math.cos(a) * 140, hy + Math.sin(a) * 140);
+      if (Math.hypot(hx, hy) * U < owSafeR() - 200 * U) startWorld(mp.seed, hx + Math.cos(a) * 140, hy + Math.sin(a) * 140);
       else { startWorld(mp.seed); if (ow && ship) { const [x, y] = owSpawnPos(); ship.x = x; ship.y = y; camX = x; camY = y; owUpdateChunks(true); } }
     } else if (now - mp.t0 > 7000) mpFail(mp.ok || RT_MOCK ? mpRoom() + ' has closed' : "Can't reach the multiplayer server");
     return;
