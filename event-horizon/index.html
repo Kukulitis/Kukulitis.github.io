@@ -585,7 +585,7 @@ body.paused .tbtn{display:none!important}
 <script>
 'use strict';
 // Versioning: next version -> next whole number (4.00), sub version -> +0.01 (3.01)
-const VERSION = '4.01';
+const VERSION = '4.02';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -1707,7 +1707,7 @@ function setPause(p) {
   if (mode !== 'play') return;
   paused = p; $('pause').classList.toggle('hidden', !p); document.body.classList.toggle('paused', p);
   if (p) { beamSound(false); buildKeysRef(); }
-  $('pRoom').innerHTML = mp && gmode === 'world' ? `Room <b style="color:#fff;letter-spacing:.2em">${mp.code}</b> · ${1 + Object.keys(mp.peers).length}/${MPMAX} pilots · the galaxy keeps running, you're shielded` : '';
+  $('pRoom').innerHTML = mp && gmode === 'world' ? `Room <b style="color:#fff;letter-spacing:.2em">${mp.code}</b> · ${1 + Object.keys(mp.peers).length}/${MPMAX} pilots · the galaxy keeps running, you're not protected while paused` : '';
 }
 function goMenu() {
   mpLeave(); closeLobby();
@@ -3272,7 +3272,7 @@ function owTick(dt) {
     if (n !== ow.pickN) { ow.pickN = n; $('owTm').textContent = 'Auto-pick in ' + n + 's'; if (n <= 3 && n > 0) tone(880, 0.08, 'sine', 0.04); }
     if (s <= 0) { const cs = document.querySelectorAll('#owC .owcard'); if (cs.length) owChoose(cs[Math.random() * cs.length | 0].dataset.k, true); else { owChoosing = false; $('owPick').classList.add('hidden'); } }
   }
-  if (owChoosing || paused) ow.safe = 2; else ow.safe = Math.max(0, ow.safe - dt);
+  if (owChoosing) ow.safe = 2; else ow.safe = Math.max(0, ow.safe - dt);
   if (ship && ow.safe > 0) ship.inv = Math.max(ship.inv, 0.3);
   if (mp) mpWorld(dt);
   if (Math.random() < 0.02) { const now = performance.now(); for (const k in ow.taken) if (now - ow.taken[k] > 150000) delete ow.taken[k]; }
