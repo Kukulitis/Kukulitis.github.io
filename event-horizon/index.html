@@ -203,6 +203,12 @@ svg{stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-l
 .skall:hover{background:rgba(255,255,255,.09)}
 .skall.can::after{content:'';position:absolute;top:-3px;right:-3px;width:8px;height:8px;border-radius:50%;background:var(--mint);box-shadow:0 0 6px var(--mint)}
 .skc.sm{width:auto;flex-direction:row;gap:8px;padding:5px 12px 5px 5px}
+.skscroll.car{--iw:150px;scroll-snap-type:x mandatory;padding:4px calc(50% - var(--iw) / 2);gap:10px;-webkit-mask-image:linear-gradient(90deg,transparent,#000 22%,#000 78%,transparent);mask-image:linear-gradient(90deg,transparent,#000 22%,#000 78%,transparent);scrollbar-width:none}
+.skscroll.car::-webkit-scrollbar{display:none}
+.car .skc.sm{width:var(--iw);justify-content:flex-start;scroll-snap-align:center;opacity:.55;transform:scale(.9);transition:opacity .2s,transform .2s,border-color .2s,background .2s}
+.car .skc.sm.eq,.car .skc.sm.mid{opacity:1;transform:none}
+.car .skc.sm .skn{overflow:hidden;text-overflow:ellipsis}
+.skbar{position:relative}
 .skc.sm canvas{width:34px;height:34px;flex:none}
 .skc.sm .skn{font-size:12px}
 .gskins{display:none;grid-area:s;min-height:0;flex-direction:column;gap:10px;z-index:1}
@@ -228,7 +234,7 @@ svg{stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-l
 .gcol{display:flex;flex-direction:column;gap:9px;justify-content:center;min-height:0;z-index:1}
 .gl{grid-area:l}.gr{grid-area:r}
 @media (max-width:900px) and (min-height:521px){.garage.skmode{grid-template-columns:minmax(0,1fr);grid-template-rows:repeat(3,max-content);grid-template-areas:"c" "d" "s"}.skgrid{overflow:visible;grid-template-columns:repeat(auto-fill,minmax(96px,1fr))}.skbar{grid-template-columns:minmax(0,1fr) auto}.skl{display:none}.skall{grid-column:2}}
-@media (max-height:520px){.garage.skmode{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);grid-template-rows:max-content max-content 1fr;grid-template-areas:"s c" "s d" "s ."}.skc.sm{padding:3px 8px 3px 3px}.skc.sm canvas{width:26px;height:26px}.skc.sm .skn{display:none}.skbar{row-gap:4px;margin:4px 0}.skall{padding:4px 10px}.skl{width:auto;font-size:9px}}
+@media (max-height:520px){.garage.skmode{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);grid-template-rows:max-content max-content 1fr;grid-template-areas:"s c" "s d" "s ."}.skc.sm{padding:3px 8px 3px 3px}.skc.sm canvas{width:26px;height:26px}.skc.sm .skn{display:none}.skscroll.car{--iw:40px;gap:6px}.car .skc.sm{justify-content:center;padding:3px}.skbar{row-gap:4px;margin:4px 0}.skall{padding:4px 10px}.skl{width:auto;font-size:9px}}
 .gbay{grid-area:c;min-height:0;display:flex;z-index:1;position:relative}
 #pvCv{display:block;width:100%;height:100%;min-height:200px;border-radius:50% / 46%;background:radial-gradient(ellipse at 50% 50%,rgba(var(--c),.12),rgba(0,0,0,.25) 60%,rgba(0,0,0,0) 72%);cursor:pointer}
 .gdet{grid-area:d;z-index:1;display:flex;align-items:center;gap:14px;padding:12px 14px;border-radius:14px;background:rgba(10,12,24,.75);border:1px solid rgba(var(--c),.4);height:104px;box-sizing:border-box;overflow:hidden;text-align:left;transition:border-color .25s}
@@ -445,7 +451,7 @@ body.paused .tbtn{display:none!important}
 
 <div id="hangar" class="ov scr hidden">
   <div class="hd a1"><div><div class="h3" id="hTitle">GARAGE</div><div class="sub" id="hSub"></div></div><div class="hdr"><button class="gorb" id="gOrbBtn"><span id="gOrbT">Orbs</span><i class="hidden" id="gOrbDot"></i></button><div class="pill">◆ <span id="hDust">0</span></div></div></div>
-  <div class="skbar a2" id="skBar"><div class="skl">Ships</div><div class="skscroll" id="skShips"></div><div class="skl">Bullets</div><div class="skscroll" id="skBul"></div><button class="skall" id="skAllBtn"><b>All skins</b><small id="skAllN"></small></button></div>
+  <div class="skbar a2" id="skBar"><div class="skl">Ships</div><div class="skscroll car" id="skShips"></div><div class="skl">Bullets</div><div class="skscroll car" id="skBul"></div><button class="skall" id="skAllBtn"><b>All skins</b><small id="skAllN"></small></button></div>
   <div class="garage a3" id="garage">
     <div class="gskins" id="gS"><div class="gsh"><button class="sec" id="skBack">◂ Garage</button><div class="subseg" id="skSeg"><button data-sub="ship">Ships</button><button data-sub="bullet">Bullets</button></div></div><div class="skgrid" id="skList"></div></div>
     <canvas id="gLines"></canvas>
@@ -496,7 +502,7 @@ body.paused .tbtn{display:none!important}
 <script>
 'use strict';
 // Versioning (renumbered by request): next version -> next whole number (3.00), sub version -> +0.01 (2.01)
-const VERSION = '2.15';
+const VERSION = '2.16';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -1633,12 +1639,42 @@ function renderOwned() {
     return `<button class="skc sm${shopSel.G === id ? ' sel' : ''}${eq ? ' eq' : ''}" data-sel="${id}" style="--c:${RAR[it.rar].c}" title="${it.name}"><canvas class="sth" data-${sub === 'ship' ? 's' : 'b'}="${it.id}"></canvas><span class="skn">${it.name}</span></button>`;
   }).join('');
   const os = save.skins || ['scrap'], ob = save.bskins || ['pellet'];
-  const a = $('skShips'), b = $('skBul'), sa = a.scrollLeft, sb = b.scrollLeft;
+  const a = $('skShips'), b = $('skBul');
+  carLock = true;
   a.innerHTML = row(SKINS, os, SK(), 'ship'); b.innerHTML = row(BSKINS, ob, BS(), 'bullet');
-  a.scrollLeft = sa; b.scrollLeft = sb;
+  carCentre(a, false); carCentre(b, false);
+  requestAnimationFrame(() => { carCentre(a, false); carCentre(b, false); setTimeout(() => { carLock = false; }, 120); });
   $('skAllN').textContent = `${os.length + ob.length}/${SKINS.length + BSKINS.length} owned`;
   $('skAllBtn').classList.toggle('can', skinAffordable());
   drawThumbs('#skBar');
+}
+// carousel rows: the skin in the middle is the one you fly with
+let carLock = false;
+function carCentre(row, smooth, el) {
+  el = el || row.querySelector('.skc.eq') || row.querySelector('.skc'); if (!el) return;
+  const rr = row.getBoundingClientRect(), er = el.getBoundingClientRect(), left = row.scrollLeft + (er.left - rr.left) - (rr.width - er.width) / 2;
+  if (smooth) row.scrollTo({ left, behavior: 'smooth' }); else row.scrollLeft = left;
+}
+function carMid(row) {
+  const r = row.getBoundingClientRect(), mid = r.left + r.width / 2; let best = null, bd = 1e9;
+  row.querySelectorAll('.skc').forEach(el => { const q = el.getBoundingClientRect(), d = Math.abs(q.left + q.width / 2 - mid); if (d < bd) { bd = d; best = el; } });
+  return best;
+}
+function carEquip(el) {
+  const id = el.dataset.sel, ship = id.startsWith('ship:'), sid = id.slice(ship ? 5 : 7);
+  if ((ship ? save.skin : save.bskin) === sid) return;
+  if (ship) save.skin = sid; else save.bskin = sid;
+  persist(); sfx.ui(); buzz(10);
+  el.parentElement.querySelectorAll('.skc').forEach(x => x.classList.toggle('eq', x === el));
+  shopSel.G = ''; renderPrevInfo();
+}
+for (const id of ['skShips', 'skBul']) {
+  const row = $(id); let t = 0;
+  row.addEventListener('scroll', () => {
+    if (carLock) return;
+    const m = carMid(row); if (m) row.querySelectorAll('.skc').forEach(x => x.classList.toggle('mid', x === m));
+    clearTimeout(t); t = setTimeout(() => { const m2 = carMid(row); if (m2) carEquip(m2); }, 160);
+  }, { passive: true });
 }
 function renderSkins() {
   document.querySelectorAll('#skSeg button').forEach(b => b.classList.toggle('on', b.dataset.sub === skSub));
@@ -1738,7 +1774,7 @@ function skinClick(e) {
   document.querySelectorAll('#garage .gnode').forEach(r => r.classList.remove('sel'));
 }
 $('skList').addEventListener('click', skinClick);
-$('skBar').addEventListener('click', e => { if (e.target.closest('#skAllBtn')) return; skinClick(e); });
+$('skBar').addEventListener('click', e => { if (e.target.closest('#skAllBtn')) return; const b = e.target.closest('.skc'); if (!b) return; const row = b.parentElement; carCentre(row, true, b); if (!b.classList.contains('eq')) setTimeout(() => carEquip(b), 380); });
 $('skAllBtn').onclick = () => { sfx.ui(); hTab = 'SK'; shopSel.G = ''; const k = shopSel.G; renderHangar(); };
 $('skBack').onclick = () => { sfx.ui(); hTab = 'G'; shopSel.G = ''; renderHangar(); };
 $('skSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b || b.dataset.sub === skSub) return; skSub = b.dataset.sub; sfx.ui(); renderSkins(); });
