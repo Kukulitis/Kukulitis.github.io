@@ -144,6 +144,12 @@ svg{stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-l
 .fld:focus{border-color:var(--amber)}
 textarea.fld{word-break:break-all;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px}
 .pmsg{font-size:12px;min-height:16px;color:var(--mint)}.pmsg.err{color:#ff8a7a}
+.accrow{display:flex;gap:8px}.accrow .fld{flex:1;min-width:0}.accrow .buy{flex:none}
+.accst{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--dim)}.accst b{color:#fff;font-size:16px;font-weight:600}
+.cdot{width:8px;height:8px;border-radius:50%;background:#8fffd6;box-shadow:0 0 8px #8fffd6;flex:none}.cdot.sync{background:#ffb070;box-shadow:0 0 8px #ffb070;animation:cpulse 1s infinite}.cdot.err{background:#ff8a7a;box-shadow:0 0 8px #ff8a7a}
+@keyframes cpulse{50%{opacity:.35}}
+.accpick{display:grid;grid-template-columns:1fr 1fr;gap:8px}.accpick button{display:flex;flex-direction:column;align-items:flex-start;gap:3px;text-align:left;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.04);color:#eaf6ff;cursor:pointer;font:600 13px var(--f)}.accpick button:hover{border-color:var(--amber)}.accpick small{font-weight:400;font-size:12px;color:var(--dim);line-height:1.4}
+.ib span{max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tbtn{position:fixed;z-index:4;display:none;width:66px;height:66px;padding:0;border-radius:50%;background:rgba(8,12,24,.45);border:1.5px solid rgba(var(--c),.65);color:rgb(var(--c));touch-action:none;transition:transform .1s,opacity .2s;overflow:hidden}
 .tbtn svg{width:28px;height:28px;position:relative;z-index:1}
 .tbtn:active{transform:scale(.9)}
@@ -248,10 +254,15 @@ body.paused .tbtn{display:none!important}
 </div>
 
 <div id="profile" class="ov scr hidden">
-  <div class="hd a1"><div><div class="h3">PROFILE</div><div class="sub">Your progress is saved in this browser. Use a save code to back it up or continue on another device.</div></div><div class="pill" id="pSum"></div></div>
+  <div class="hd a1"><div><div class="h3">PROFILE</div><div class="sub">Log in with a username to keep your progress on all your devices.</div></div><div class="pill" id="pSum"></div></div>
   <div class="list a2" style="margin-top:14px"><div class="pgrid">
-    <div class="card" style="--c:255,176,112"><div class="ct"><div class="ico"><i data-ic="user"></i></div><div class="cn">Name<div class="cd">Optional. Saved inside your save code.</div></div></div><input class="fld" id="pName" maxlength="16" placeholder="Your name" autocomplete="off" spellcheck="false"></div>
-    <div class="card" style="--c:143,255,214"><div class="ct"><div class="ico"><i data-ic="copy"></i></div><div class="cn">Your save code<div class="cd">Keep it somewhere safe. It updates as you play.</div></div></div><textarea class="fld" id="pCode" rows="4" readonly></textarea><button class="buy ctr" id="pCopy">Copy code</button><div class="pmsg" id="pCopyMsg"></div></div>
+    <div class="card" style="--c:143,200,255"><div class="ct"><div class="ico"><i data-ic="cloud"></i></div><div class="cn">Account<div class="cd" id="accD">Pick a username. Use the same one on any device to continue.</div></div></div>
+      <div class="accrow" id="accIn"><input class="fld" id="accU" maxlength="20" placeholder="Username" autocomplete="username" autocapitalize="off" spellcheck="false"><button class="buy ctr" id="accGo">Log in</button></div>
+      <div id="accOut" class="hidden"><div class="accst"><i class="cdot" id="accDot"></i><b id="accName"></b><span id="accSt"></span></div></div>
+      <div class="accpick hidden" id="accPick"><button id="accUseCloud">Use account<small id="accCloudS"></small></button><button id="accUseLocal">Use this device<small id="accLocalS"></small></button></div>
+      <button class="sec hidden" id="accOutBtn">Log out</button>
+      <div class="pmsg" id="accMsg"></div></div>
+    <div class="card" style="--c:143,255,214"><div class="ct"><div class="ico"><i data-ic="copy"></i></div><div class="cn">Backup save code<div class="cd">Optional. Works without an account.</div></div></div><textarea class="fld" id="pCode" rows="4" readonly></textarea><button class="buy ctr" id="pCopy">Copy code</button><div class="pmsg" id="pCopyMsg"></div></div>
     <div class="card" style="--c:120,200,255"><div class="ct"><div class="ico"><i data-ic="download"></i></div><div class="cn">Load a save code<div class="cd">Replaces the progress in this browser.</div></div></div><textarea class="fld" id="pIn" rows="4" placeholder="Paste a code starting with EH-" spellcheck="false"></textarea><button class="buy ctr" id="pLoad">Load save</button><div class="pmsg" id="pMsg"></div></div>
   </div></div>
   <div class="ft a3"><button class="play sm" id="pBack"><span class="pm">DONE</span></button></div>
@@ -265,7 +276,7 @@ body.paused .tbtn{display:none!important}
 <script>
 'use strict';
 // Versioning (renumbered by request): next version -> next whole number (3.00), sub version -> +0.01 (2.01)
-const VERSION = '2.01';
+const VERSION = '2.02';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -308,6 +319,7 @@ const ICONS = {
   map: ['M9 4L3 6v14l6-2 6 2 6-2V4l-6 2z', 'M9 4v14M15 6v14'],
   wrench: ['M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z'],
   user: [C(12, 8, 4), 'M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6'],
+  cloud: ['M7 18a4.5 4.5 0 0 1-.6-9A6 6 0 0 1 18 8.5a4.8 4.8 0 0 1-.5 9.5z'],
   home: ['M3 11l9-7 9 7', 'M5 10v10h14V10'],
   sound: ['M4 9v6h4l5 4V5L8 9z', 'M16 8.5a5 5 0 0 1 0 7', 'M18.5 6a8.5 8.5 0 0 1 0 12'],
   mute: ['M4 9v6h4l5 4V5L8 9z', 'M16 9l5 6M21 9l-5 6'],
@@ -369,6 +381,8 @@ let TH = SECTORS[0];
 
 // ================= SAVE / UPGRADES =================
 let save = { dust: 0, up: {}, unlocked: 1, sel: 1, best: 0, sbest: {}, lb: [], deep: 0, name: '', tut: 0, cam: 'follow', shake: true, skins: ['scrap'], skin: 'scrap', bskins: ['pellet'], bskin: 'pellet', orbs: { void: 0, stellar: 0 } };
+const SAVE0 = JSON.stringify(save);
+let lastPacked = '';
 function loadSave() {
   try {
     const s = JSON.parse(localStorage.getItem('eh_save2') || 'null');
@@ -377,7 +391,12 @@ function loadSave() {
   } catch (e) {}
 }
 let saveDirty = false, saveT = 0;
-function persist() { saveDirty = false; try { localStorage.setItem('eh_save2', JSON.stringify(save)); } catch (e) {} }
+function persist() {
+  saveDirty = false;
+  const pk = JSON.stringify(packSave());
+  if (pk !== lastPacked) { lastPacked = pk; save.ts = Date.now(); cloudSoon(); }
+  try { localStorage.setItem('eh_save2', JSON.stringify(save)); } catch (e) {}
+}
 const tier = k => save.up[k] || 0;
 const CATS = [['SHIP', 'Ship'], ['WEAPON', 'Weapons'], ['POWER', 'Power-ups'], ['UNLOCK', 'Unlocks'], ['SKIN', 'Skins'], ['ORB', 'Orbs']];
 const CATCOL = { SHIP: '120,230,255', WEAPON: '255,180,100', POWER: '143,255,214', UNLOCK: '200,150,255', SKIN: '255,140,220', ORB: '160,120,255' };
@@ -1212,6 +1231,7 @@ function goMenu() {
   applyTheme(save.sel); bhMass = TH.mods.mass || 1;
   asts = []; for (let i = 0; i < 8; i++) spawnOrbital(1 + (i % 3));
   refreshMenu(); show('menu');
+  if (cloudUser && cloudDirty) cloudPush();
 }
 
 // ================= UI: overlays =================
@@ -1227,6 +1247,7 @@ function refreshMenu() {
   $('playSub').textContent = playLabel(save.sel);
   $('shopDot').classList.toggle('hidden', !affordable());
   $('ver').textContent = 'V ' + VERSION;
+  $('pilotBtn').querySelector('span').textContent = cloudUser ? (save.name || cloudUser) : 'Profile';
   $('ctrlHint').textContent = isTouch() ? 'Left thumb moves · Right thumb aims and fires' : 'WASD move · Mouse aim and fire · Shift dash · E bomb';
 }
 function buildKeysRef() {
@@ -1458,9 +1479,11 @@ function renderMap() {
 
 // ================= SAVE CODES / PROFILE =================
 function hashStr(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36); }
+function packSave() {
+  return { v: 1, n: save.name || '', d: save.dust, u: save.up, k: save.unlocked, s: save.sel, b: save.best, sb: save.sbest, dp: save.deep || 0, sk: save.skins || ['scrap'], ss: save.skin || 'scrap', bk: save.bskins || ['pellet'], bs: save.bskin || 'pellet', ob: save.orbs || {} };
+}
 function encodeSave() {
-  const o = { v: 1, n: save.name || '', d: save.dust, u: save.up, k: save.unlocked, s: save.sel, b: save.best, sb: save.sbest, dp: save.deep || 0, sk: save.skins || ['scrap'], ss: save.skin || 'scrap', bk: save.bskins || ['pellet'], bs: save.bskin || 'pellet', ob: save.orbs || {} };
-  const b64 = btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/=+$/, '');
+  const b64 = btoa(unescape(encodeURIComponent(JSON.stringify(packSave())))).replace(/=+$/, '');
   return 'EH-' + b64 + '-' + hashStr(b64);
 }
 function decodeSave(code) {
@@ -1469,6 +1492,9 @@ function decodeSave(code) {
   if (hashStr(m[1]) !== m[2]) throw new Error('This code is incomplete or was changed. Copy the whole code and try again.');
   const o = JSON.parse(decodeURIComponent(escape(atob(m[1] + '==='.slice((m[1].length + 3) % 4)))));
   if (!o || typeof o !== 'object') throw new Error('Unreadable save code.');
+  return unpackSave(o);
+}
+function unpackSave(o) {
   const num = (v, lo, hi) => clamp(Math.floor(+v || 0), lo, hi);
   const up = {};
   for (const u of UPG) if (o.u && o.u[u.k]) up[u.k] = num(o.u[u.k], 0, u.max);
@@ -1482,10 +1508,11 @@ function decodeSave(code) {
 let loadArmed = null;
 function openProfile() {
   hideAll(); show('profile');
-  $('pName').value = save.name || '';
+  renderAcc();
   $('pCode').value = encodeSave();
   $('pIn').value = ''; $('pMsg').textContent = ''; $('pMsg').className = 'pmsg'; $('pCopyMsg').textContent = '';
   $('pLoad').textContent = 'Load save'; loadArmed = null;
+  cloudPending = null; logoutArmed = false; $('accOutBtn').textContent = 'Log out'; accMsg(''); renderAcc();
   profSum();
 }
 function profSum() { $('pSum').innerHTML = `◆ ${fmt(save.dust)} <small>${Math.min(8, save.unlocked - 1)}/8 SECTORS</small>`; }
@@ -1505,7 +1532,6 @@ $('settings').addEventListener('click', e => {
   persist(); sfx.ui(); renderSettings();
 });
 $('pBack').onclick = () => goMenu();
-$('pName').addEventListener('input', () => { save.name = $('pName').value.replace(/[<>]/g, '').trim().slice(0, 16); persist(); $('pCode').value = encodeSave(); });
 $('pCopy').onclick = () => {
   const code = encodeSave(); $('pCode').value = code;
   const ok = () => { $('pCopyMsg').textContent = 'Copied. Keep it somewhere safe.'; sfx.ui(); };
@@ -1523,12 +1549,148 @@ $('pLoad').onclick = () => {
     $('pLoad').textContent = 'Confirm load';
     return;
   }
-  Object.assign(save, o); persist(); calcStats();
+  Object.assign(save, o); lastPacked = ''; persist(); calcStats();
   applyTheme(save.sel); bhMass = TH.mods.mass || 1;
-  $('pName').value = save.name; $('pCode').value = encodeSave(); $('pIn').value = '';
+  $('pCode').value = encodeSave(); $('pIn').value = '';
   $('pLoad').textContent = 'Load save'; loadArmed = null; profSum();
   msg.className = 'pmsg'; msg.textContent = 'Save loaded' + (save.name ? '. Welcome back, ' + save.name + '!' : '.');
   sfx.buy();
+};
+
+// ================= CLOUD ACCOUNTS (Supabase, username only) =================
+const SB_URL = 'https://xnahswreqzourxiklqea.supabase.co/rest/v1/saves';
+const SB_KEY = 'sb_publishable_Dc7yWsRu6FBo4gMZjsNI6w_18CEmAT1';
+const SB_H = { apikey: SB_KEY, 'Content-Type': 'application/json' };
+const HOME_URL = 'kukulitis.github.io/event-horizon';
+let cloudUser = ''; try { cloudUser = localStorage.getItem('eh_user') || ''; } catch (e) {}
+let cloudState = cloudUser ? 'sync' : 'idle', cloudT = null, cloudBusy = false, cloudAgain = false, cloudDirty = false, cloudPending = null, logoutArmed = false;
+const normUser = v => String(v || '').trim().toLowerCase();
+const cloudData = () => Object.assign(packSave(), { ts: save.ts || 0 });
+const isFresh = () => !save.dust && save.unlocked <= 1 && !Object.keys(save.up || {}).length && (save.skins || []).length <= 1 && (save.bskins || []).length <= 1 && !(save.orbs || {}).stellar && ((save.orbs || {}).void || 0) <= 1;
+const sumTxt = o => `◆ ${fmt(o.dust)} · ${Math.min(8, o.unlocked - 1)}/8 sectors · best ${fmt(o.best)}`;
+function cloudSoon() {
+  if (!cloudUser) return;
+  cloudDirty = true;
+  if (cloudT) return;
+  cloudT = setTimeout(() => { cloudT = null; cloudPush(); }, mode === 'play' ? 10000 : 1200);
+}
+function setCloud(st) { cloudState = st; renderAcc(); }
+async function cloudReq(url, opt) {
+  const r = await fetch(url, Object.assign({ cache: 'no-store' }, opt, { headers: Object.assign({}, SB_H, (opt || {}).headers) }));
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return r;
+}
+async function cloudGet(u) {
+  const r = await cloudReq(SB_URL + '?select=data&username=eq.' + encodeURIComponent(u));
+  const rows = await r.json();
+  return rows && rows[0] ? rows[0].data : null;
+}
+async function cloudPush(keep) {
+  if (!cloudUser) return true;
+  if (cloudBusy && !keep) { cloudAgain = true; return false; }
+  cloudBusy = true; cloudDirty = false; setCloud('sync');
+  try {
+    await cloudReq(SB_URL, { method: 'POST', keepalive: !!keep, headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
+      body: JSON.stringify({ username: cloudUser, data: cloudData(), updated_at: new Date().toISOString() }) });
+    setCloud('ok'); return true;
+  } catch (e) {
+    cloudDirty = true; setCloud('err');
+    clearTimeout(cloudT); cloudT = setTimeout(() => { cloudT = null; cloudPush(); }, 20000);
+    return false;
+  } finally { cloudBusy = false; if (cloudAgain) { cloudAgain = false; cloudSoon(); } }
+}
+function applyCloud(d) {
+  Object.assign(save, unpackSave(d)); save.ts = +d.ts || 0;
+  lastPacked = JSON.stringify(packSave()); cloudDirty = false;
+  try { localStorage.setItem('eh_save2', JSON.stringify(save)); } catch (e) {}
+  calcStats(); applyTheme(save.sel); bhMass = TH.mods.mass || 1;
+  if (mode !== 'play') refreshMenu();
+  if (!$('profile').classList.contains('hidden')) { $('pCode').value = encodeSave(); profSum(); }
+}
+async function cloudPull() {
+  if (!cloudUser || cloudBusy) return;
+  setCloud('sync');
+  try {
+    const d = await cloudGet(cloudUser);
+    if (!d) return void cloudPush();
+    const ct = +d.ts || 0, lt = save.ts || 0;
+    if (ct > lt) { if (mode === 'play') { setCloud('ok'); return; } applyCloud(d); }
+    else if (lt > ct || cloudDirty) return void cloudPush();
+    setCloud('ok');
+  } catch (e) { setCloud('err'); }
+}
+function renderAcc() {
+  if (!$('accIn')) return;
+  const inn = !!cloudUser, picking = !!cloudPending;
+  $('accIn').classList.toggle('hidden', inn || picking);
+  $('accOut').classList.toggle('hidden', !inn);
+  $('accOutBtn').classList.toggle('hidden', !inn);
+  $('accPick').classList.toggle('hidden', !picking);
+  $('accD').textContent = picking ? 'This username already has progress. Which one do you want to keep?' : inn ? 'Your progress saves automatically. Log in with the same username on any device.' : 'Pick a username. Use the same one on any device to continue.';
+  if (inn) {
+    $('accName').textContent = save.name || cloudUser;
+    $('accDot').className = 'cdot' + (cloudState === 'sync' ? ' sync' : cloudState === 'err' ? ' err' : '');
+    $('accSt').textContent = cloudState === 'sync' ? 'Syncing...' : cloudState === 'err' ? 'Offline - will retry' : 'Synced';
+  }
+  if (mode !== 'play' && !$('menu').classList.contains('hidden')) refreshMenu();
+}
+function accMsg(t, err) { $('accMsg').textContent = t; $('accMsg').className = 'pmsg' + (err ? ' err' : ''); }
+function setUser(u) { cloudUser = u; try { if (u) localStorage.setItem('eh_user', u); else localStorage.removeItem('eh_user'); } catch (e) {} }
+$('accGo').onclick = async () => {
+  const raw = $('accU').value.replace(/[<>]/g, '').trim(), u = normUser(raw);
+  if (!/^[a-z0-9_.-]{3,20}$/.test(u)) return accMsg('Use 3-20 letters, numbers, dots, dashes or underscores.', true);
+  $('accGo').disabled = true; accMsg('Connecting...');
+  let d;
+  try { d = await cloudGet(u); }
+  catch (e) { $('accGo').disabled = false; return accMsg(/github\.io$/.test(location.hostname) ? 'Could not reach the save server. Check your connection and try again.' : 'Cloud saves only work on ' + HOME_URL + ' - open the game there to log in.', true); }
+  $('accGo').disabled = false; sfx.ui();
+  if (!d) {
+    setUser(u); save.name = raw.slice(0, 16); lastPacked = ''; persist();
+    const ok = await cloudPush();
+    accMsg(ok ? 'Account created. Your progress now saves to ' + save.name + '.' : 'Account created. It will upload when you are back online.', !ok);
+  } else if (isFresh()) {
+    setUser(u); applyCloud(d); setCloud('ok');
+    accMsg('Welcome back, ' + (save.name || u) + '!');
+    sfx.buy();
+  } else {
+    let cs; try { cs = unpackSave(d); } catch (e) { return accMsg('That account has an unreadable save.', true); }
+    cloudPending = { u, d };
+    $('accCloudS').textContent = sumTxt(cs);
+    $('accLocalS').textContent = sumTxt(save);
+    accMsg('');
+  }
+  renderAcc();
+};
+$('accU').addEventListener('keydown', e => { if (e.key === 'Enter') $('accGo').click(); });
+$('accUseCloud').onclick = () => {
+  if (!cloudPending) return;
+  const { u, d } = cloudPending; cloudPending = null;
+  setUser(u); applyCloud(d); setCloud('ok'); sfx.buy();
+  accMsg('Loaded your account. Welcome back, ' + (save.name || u) + '!');
+};
+$('accUseLocal').onclick = async () => {
+  if (!cloudPending) return;
+  const { u } = cloudPending; cloudPending = null;
+  setUser(u); if (!save.name) save.name = u; lastPacked = ''; persist();
+  const ok = await cloudPush(); sfx.ui();
+  accMsg(ok ? 'This device\'s progress is now saved to ' + (save.name || u) + '.' : 'Saved here. It will upload when you are back online.', !ok);
+};
+$('accOutBtn').onclick = async () => {
+  if (!logoutArmed) { logoutArmed = true; $('accOutBtn').textContent = 'Tap again to log out'; accMsg('Your progress stays in the account. This device will start fresh.'); return; }
+  logoutArmed = false; $('accOutBtn').textContent = 'Log out';
+  if (cloudDirty || cloudState === 'err') {
+    accMsg('Saving first...');
+    if (!(await cloudPush())) return accMsg('Could not save to the cloud yet. Try again when you are online.', true);
+  }
+  const keep = { cam: save.cam, shake: save.shake, muted: save.muted, tut: save.tut, gift2: true };
+  for (const k of Object.keys(save)) delete save[k];
+  Object.assign(save, JSON.parse(SAVE0), keep);
+  setUser(''); cloudState = 'idle';
+  lastPacked = JSON.stringify(packSave()); save.ts = 0;
+  try { localStorage.setItem('eh_save2', JSON.stringify(save)); } catch (e) {}
+  calcStats(); applyTheme(save.sel); bhMass = TH.mods.mass || 1;
+  $('accU').value = ''; $('pCode').value = encodeSave(); profSum(); renderAcc();
+  accMsg('Logged out.'); sfx.ui();
 };
 
 // ================= INPUT =================
@@ -1591,7 +1753,7 @@ const tend = e => {
 cv.addEventListener('touchend', tend); cv.addEventListener('touchcancel', tend);
 addEventListener('touchstart', () => { if (!isTouch()) { document.body.classList.add('touch'); refreshMenu(); } }, { passive: true });
 document.addEventListener('gesturestart', e => e.preventDefault());
-document.addEventListener('visibilitychange', () => { if (document.hidden) { if (mode === 'play') setPause(true); persist(); } });
+document.addEventListener('visibilitychange', () => { if (document.hidden) { if (mode === 'play') setPause(true); persist(); if (cloudUser && cloudDirty) cloudPush(true); } else if (cloudUser && mode !== 'play') cloudPull(); });
 if ('ontouchstart' in window && LOW) document.body.classList.add('touch');
 const tapBtn = (id, fn) => { $(id).addEventListener('touchstart', e => { e.preventDefault(); fn(); }, { passive: false }); $(id).addEventListener('click', fn); };
 tapBtn('bombBtn', () => { wantBomb = true; });
@@ -2698,13 +2860,14 @@ function drawIndicators() {
 }
 
 // ================= BOOT =================
-loadSave(); calcStats();
+loadSave(); lastPacked = JSON.stringify(packSave()); calcStats();
 if (!save.gift2) { save.orbs = save.orbs || { void: 0, stellar: 0 }; save.orbs.void = (save.orbs.void || 0) + 1; save.gift2 = true; persist(); }
 save.sel = clamp(save.sel || 1, 1, save.unlocked);
 TH = themeFor(save.sel); bhMass = TH.mods.mass || 1;
 resize(); buildDisk();
 for (let i = 0; i < 8; i++) spawnOrbital(1 + (i % 3));
 refreshMenu(); setMute(!!save.muted);
+if (cloudUser) cloudPull();
 try { for (const w of ['300', '500', '600', '700']) document.fonts.load(`${w} 16px "Chakra Petch"`); } catch (e) {}
 let last = performance.now();
 function loop(now) {
