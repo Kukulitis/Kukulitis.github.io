@@ -164,6 +164,12 @@ svg{stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-l
 @media (max-height:520px){.mgrid{grid-template-columns:repeat(3,1fr);margin:8px 0}.mcd{min-height:0;padding:12px;gap:5px}.mcx{display:none}.mct{font-size:17px}}
 #owPick{position:fixed;inset:0;z-index:25;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at center,rgba(3,2,12,.62),rgba(3,2,12,.2) 70%);padding:16px;pointer-events:none}
 #owPick .owcard{pointer-events:auto}
+#mmEd{position:fixed;inset:0;z-index:40;background:#04060d;touch-action:none}#mmEd.hidden{display:none}
+#mmCv{position:absolute;inset:0;width:100%;height:100%;cursor:default}
+.mmp{position:absolute;left:50%;transform:translateX(-50%);top:calc(64px + env(safe-area-inset-top));width:min(360px,88vw);padding:14px 16px;border-radius:16px;background:rgba(7,10,22,.88);border:1px solid var(--line);display:flex;flex-direction:column;gap:10px;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.5)}
+.mmp.low{top:auto;bottom:calc(18px + env(safe-area-inset-bottom))}
+.mmt{font-size:12px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgb(220,190,255)}.mmx{font-size:12.5px;color:var(--dim);line-height:1.45}
+#mmSz{width:100%;accent-color:rgb(200,150,255)}.mmb{display:flex;gap:8px}.mmb>*{flex:1}
 .owt{width:min(320px,70vw);height:4px;border-radius:2px;background:rgba(255,255,255,.12);overflow:hidden}.owt i{display:block;height:100%;background:rgb(200,150,255);transform-origin:left;transition:transform .12s linear}
 .owtm{font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgb(220,190,255)}
 .mpw{flex:1;min-height:0;width:100%;max-width:940px;display:grid;grid-template-columns:1fr 1fr;gap:16px;align-content:center;margin:16px 0;overflow-y:auto}
@@ -472,8 +478,8 @@ body.paused .tbtn{display:none!important}
       <div class="opts" data-set="snd"><button data-v="on">On</button><button data-v="off">Off</button></div></div>
     <div class="card" style="--c:255,176,112"><div class="ct"><div class="ico"><i data-ic="shake"></i></div><div class="cn">Screen shake<div class="cd">Camera shake on explosions and hits.</div></div></div>
       <div class="opts" data-set="shake"><button data-v="on">On</button><button data-v="off">Off</button></div></div>
-    <div class="card" style="--c:200,150,255"><div class="ct"><div class="ico"><i data-ic="map"></i></div><div class="cn">Minimap<div class="cd">Where the round map sits in Multiplayer.</div></div></div>
-      <div class="opts" data-set="mm"><button data-v="bc">Bottom center</button><button data-v="bl">Bottom left</button><button data-v="br">Bottom right</button><button data-v="tr">Top right</button></div></div>
+    <div class="card" style="--c:200,150,255"><div class="ct"><div class="ico"><i data-ic="map"></i></div><div class="cn">Minimap<div class="cd">Move and resize the round map used in Multiplayer.</div></div></div>
+      <button class="buy ctr" id="sMM">Edit minimap layout</button></div>
     <div class="card" style="--c:200,150,255"><div class="ct"><div class="ico"><i data-ic="map"></i></div><div class="cn">Tutorial<div class="cd">Learn the controls step by step.</div></div></div>
       <button class="buy ctr" id="sTut">Play tutorial</button></div>
   </div></div>
@@ -527,6 +533,12 @@ body.paused .tbtn{display:none!important}
 </div>
 
 <div id="owPick" class="hidden"><div class="owp"><div class="h3" style="font-size:24px">CHOOSE AN ABILITY</div><div class="sub">The game keeps going - you're shielded while you choose. Lose your ship and you lose every ability you picked.</div><div class="owt"><i id="owBar"></i></div><div class="owtm" id="owTm"></div><div class="owc" id="owC"></div></div></div>
+
+<div id="mmEd" class="hidden"><canvas id="mmCv"></canvas>
+  <div class="mmp" id="mmP"><div class="mmt">Minimap layout</div><div class="mmx" id="mmX"></div>
+    <input type="range" id="mmSz" min="48" max="220" step="1" aria-label="Minimap size">
+    <div class="mmb"><button class="sec" id="mmReset">Reset</button><button class="buy ctr" id="mmDone">Done</button></div></div>
+</div>
 
 <div id="mp" class="ov scr hidden">
   <div class="hd a1"><div><div class="h3">MULTIPLAYER</div><div class="sub">One shared galaxy for up to 4 pilots. Everyone starts with a bare ship and builds a loadout from ability orbs.</div></div></div>
@@ -585,7 +597,7 @@ body.paused .tbtn{display:none!important}
 <script>
 'use strict';
 // Versioning: next version -> next whole number (4.00), sub version -> +0.01 (3.01)
-const VERSION = '4.02';
+const VERSION = '4.03';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -2547,7 +2559,7 @@ function openProfile() {
 function profSum() { $('pSum').innerHTML = `◆ ${fmt(save.dust)} <small>${Math.min(NS, save.unlocked - 1)}/${NS} SECTORS</small>`; }
 $('pilotBtn').onclick = () => { audio(); sfx.ui(); openProfile(); };
 function renderSettings() {
-  const cur = { cam: save.cam === 'fixed' ? 'fixed' : 'follow', snd: muted ? 'off' : 'on', shake: save.shake === false ? 'off' : 'on', mm: mmPos() };
+  const cur = { cam: save.cam === 'fixed' ? 'fixed' : 'follow', snd: muted ? 'off' : 'on', shake: save.shake === false ? 'off' : 'on' };
   document.querySelectorAll('#settings .opts').forEach(g => g.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === cur[g.dataset.set])));
 }
 $('setBtn').onclick = () => { audio(); sfx.ui(); hideAll(); show('settings'); renderSettings(); };
@@ -2557,7 +2569,6 @@ $('settings').addEventListener('click', e => {
   const k = b.parentElement.dataset.set, v = b.dataset.v;
   if (k === 'cam') save.cam = v;
   if (k === 'shake') save.shake = v === 'on';
-  if (k === 'mm') save.mm = v;
   if (k === 'snd') { save.muted = v === 'off'; setMute(save.muted); }
   persist(); sfx.ui(); renderSettings();
 });
@@ -3363,8 +3374,14 @@ function drawAura(x, y, a, col) {
   ctx.beginPath(); ctx.arc(x, y, R, 0, TAU); ctx.stroke(); ctx.setLineDash([]);
   ctx.restore();
 }
-const mmPos = () => ['bc', 'bl', 'br', 'tr'].includes(save.mm) ? save.mm : 'bc';
-const mmSize = touch => touch ? 68 : 84;
+// minimap layout: centre (as a fraction of the screen) + diameter, saved separately for touch and mouse
+const MM_MIN = 48, MM_MAX = 220;
+function mmLayout(touch, W, H) {
+  const L = touch ? save.mmT : save.mmD, sz = L && L.s ? clamp(L.s, MM_MIN, MM_MAX) : (touch ? 68 : 84);
+  let cx = L ? L.x * W : W / 2, cy = L ? L.y * H : H - (touch ? 14 : 18) - sz / 2;
+  cx = clamp(cx, sz / 2 + 6, W - sz / 2 - 6); cy = clamp(cy, sz / 2 + 16, H - sz / 2 - 6);
+  return [Math.round(cx - sz / 2), Math.round(cy - sz / 2), Math.round(sz)];
+}
 function owMiniBuild(Sz) {
   const c = document.createElement('canvas'), d = DPR || 1; c.width = c.height = Math.round(Sz * d);
   const g = c.getContext('2d'); g.scale(d, d);
@@ -3386,16 +3403,9 @@ function owMiniBuild(Sz) {
   g.restore();
   return c;
 }
-function mmBox(W, H, touch) {
-  const Sz = mmSize(touch), pos = mmPos(), m = touch ? 14 : 18;
-  if (pos === 'bl') return [m, H - Sz - m, Sz];
-  if (pos === 'br') return [W - Sz - m, H - Sz - (touch ? m : 84), Sz];
-  if (pos === 'tr') return [W - Sz - m, touch ? 92 : 100, Sz];
-  return [Math.round(W / 2 - Sz / 2), H - Sz - m, Sz];
-}
 function drawMinimap(W, H) {
   if (!ow || !ow.all) return;
-  const touch = isTouch(), [x0, y0, Sz] = mmBox(W, H, touch), h = Sz / 2, ox = x0 + h, oy = y0 + h;
+  const touch = isTouch(), [x0, y0, Sz] = mmLayout(touch, W, H), h = Sz / 2, ox = x0 + h, oy = y0 + h;
   if (!ow.mm || ow.mmS !== Sz) { ow.mm = owMiniBuild(Sz); ow.mmS = Sz; }
   const k = Sz / (ow.R * 2), X = v => ox + v * k, Y = v => oy + v * k;
   ctx.save(); ctx.globalAlpha *= 0.82;
@@ -3410,11 +3420,85 @@ function drawMinimap(W, H) {
   if (ship) { ctx.save(); ctx.translate(X(ship.x), Y(ship.y)); ctx.rotate(ship.ang); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.moveTo(4.5, 0); ctx.lineTo(-3, 2.8); ctx.lineTo(-1.5, 0); ctx.lineTo(-3, -2.8); ctx.closePath(); ctx.fill(); ctx.restore(); }
   else { ctx.strokeStyle = 'rgba(255,120,120,0.9)'; ctx.lineWidth = 1.3; const px = X(ow.dx), py = Y(ow.dy); ctx.beginPath(); ctx.moveTo(px - 2.5, py - 2.5); ctx.lineTo(px + 2.5, py + 2.5); ctx.moveTo(px + 2.5, py - 2.5); ctx.lineTo(px - 2.5, py + 2.5); ctx.stroke(); }
   ctx.restore();
-  const dg = owDanger(ow.cx, ow.cy), pos = mmPos();
-  ctx.font = `600 9px ${FONT}`; ctx.textBaseline = 'middle'; ctx.fillStyle = dg ? `rgba(${TH.danger},0.85)` : 'rgba(143,255,214,0.8)';
-  spaced(dg ? 'DANGER ' + dg : 'SAFE ZONE', ox, pos === 'tr' ? y0 + Sz + 11 : y0 - 9, 1.4, 'center');
+  const dg = owDanger(ow.cx, ow.cy);
+  ctx.font = `600 ${Sz > 110 ? 10 : 9}px ${FONT}`; ctx.textBaseline = 'middle'; ctx.fillStyle = dg ? `rgba(${TH.danger},0.85)` : 'rgba(143,255,214,0.8)';
+  spaced(dg ? 'DANGER ' + dg : 'SAFE ZONE', ox, y0 < 40 ? y0 + Sz + 11 : y0 - 9, 1.4, 'center');
   ctx.restore();
 }
+
+// ---- minimap layout editor (Settings) ----
+let mmE = null;
+function openMMEd() {
+  const touch = isTouch(), w = innerWidth, h = innerHeight, [x0, y0, sz] = mmLayout(touch, w, h);
+  const keep = ow; ow = { seed: 4242, CH: owCH(), taken: {} }; ow.R = OWM * ow.CH; owPre(); const demo = ow; ow = keep;
+  const st = []; for (let i = 0; i < 160; i++) st.push([Math.random(), Math.random(), Math.random() * 1.4 + 0.3, Math.random()]);
+  mmE = { touch, x: x0 + sz / 2, y: y0 + sz / 2, s: sz, drag: null, demo, img: null, imgS: 0, st };
+  $('mmSz').value = sz;
+  $('mmX').textContent = 'Drag the map to move it. Drag the round handle or the slider to resize. Saved for ' + (touch ? 'touch screens' : 'mouse and keyboard') + '.';
+  $('mmEd').classList.remove('hidden'); mmPanel(); requestAnimationFrame(mmLoop);
+}
+function mmClampE() { const w = innerWidth, h = innerHeight, r = mmE.s / 2; mmE.x = clamp(mmE.x, r + 6, w - r - 6); mmE.y = clamp(mmE.y, r + 16, h - r - 6); }
+function mmPanel() { $('mmP').classList.toggle('low', mmE.y < innerHeight * 0.45); }
+function mmLoop() {
+  if (!mmE) return;
+  const c = $('mmCv'), w = innerWidth, h = innerHeight, d = DPR || 1;
+  if (c.width !== Math.round(w * d) || c.height !== Math.round(h * d)) { c.width = Math.round(w * d); c.height = Math.round(h * d); }
+  const g = c.getContext('2d'); g.setTransform(d, 0, 0, d, 0, 0);
+  const bg = g.createRadialGradient(w * 0.4, h * 0.4, 0, w * 0.5, h * 0.5, Math.hypot(w, h) * 0.7); bg.addColorStop(0, '#141a3a'); bg.addColorStop(1, '#04060d');
+  g.fillStyle = bg; g.fillRect(0, 0, w, h);
+  for (const [x, y, r, p] of mmE.st) { g.globalAlpha = 0.35 + 0.35 * Math.sin(rtime * 1.5 + p * 9); g.fillStyle = '#fff'; g.fillRect(x * w, y * h, r, r); }
+  g.globalAlpha = 1;
+  // ghost HUD so you can see what the map might cover
+  const t = mmE.touch, ghost = 'rgba(255,255,255,0.28)';
+  g.font = `600 30px ${FONT}`; g.fillStyle = ghost; g.textBaseline = 'top'; g.textAlign = 'left'; g.fillText('1,250', 20, 20);
+  g.font = `600 11px ${FONT}`; g.textBaseline = 'middle'; g.fillText('ROOM ABCD  ·  2/4 PILOTS', 20, t ? 96 : 88);
+  g.textAlign = 'right'; g.fillText('THE DRIFT', w - 20, 27); g.font = `600 15px ${FONT}`; g.fillText('◆ 500', w - 20, 64);
+  g.strokeStyle = ghost; g.lineWidth = 1.5;
+  const circ = (x, y, r) => { g.beginPath(); g.arc(x, y, r, 0, TAU); g.stroke(); };
+  for (let i = 0; i < 4; i++) circ(34 + i * 38, t ? 128 : h - 58, 14);
+  if (t) { circ(w / 2, 29, 21); circ(w - 49, h - 265, 33); circ(w - 49, h - 183, 33); }
+  else { circ(w - 86, h - 42, 16); circ(w - 38, h - 42, 16); }
+  drawShipModel(g, SK(), w / 2, h / 2, -0.6, 1.3, rtime, false);
+  // the minimap itself
+  const s = Math.round(mmE.s), r = s / 2, x0 = mmE.x - r, y0 = mmE.y - r;
+  if (!mmE.img || mmE.imgS !== s) { const keep = ow; ow = mmE.demo; mmE.img = owMiniBuild(s); ow = keep; mmE.imgS = s; }
+  g.save(); g.globalAlpha = 0.82;
+  g.beginPath(); g.arc(mmE.x, mmE.y, r + 1, 0, TAU); g.fillStyle = 'rgba(0,0,0,0.55)'; g.fill(); g.strokeStyle = 'rgba(255,255,255,0.14)'; g.lineWidth = 1; g.stroke();
+  g.save(); g.beginPath(); g.arc(mmE.x, mmE.y, r, 0, TAU); g.clip(); g.drawImage(mmE.img, x0, y0, s, s);
+  g.translate(mmE.x + r * 0.35, mmE.y - r * 0.2); g.rotate(-0.6); g.fillStyle = '#fff'; g.beginPath(); g.moveTo(4.5, 0); g.lineTo(-3, 2.8); g.lineTo(-1.5, 0); g.lineTo(-3, -2.8); g.closePath(); g.fill();
+  g.restore();
+  g.font = `600 ${s > 110 ? 10 : 9}px ${FONT}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = 'rgba(143,255,214,0.8)'; g.fillText('SAFE ZONE', mmE.x, y0 < 40 ? y0 + s + 11 : y0 - 9);
+  g.restore();
+  // edit affordances: dashed ring + resize handle
+  g.strokeStyle = mmE.drag ? 'rgba(200,150,255,0.95)' : 'rgba(200,150,255,0.55)'; g.lineWidth = 1.5; g.setLineDash([5, 5]); g.lineDashOffset = -rtime * 20;
+  g.beginPath(); g.arc(mmE.x, mmE.y, r + 6, 0, TAU); g.stroke(); g.setLineDash([]);
+  const hx = mmE.x + (r + 6) * Math.SQRT1_2, hy = mmE.y + (r + 6) * Math.SQRT1_2;
+  g.fillStyle = 'rgb(200,150,255)'; g.beginPath(); g.arc(hx, hy, t ? 11 : 8, 0, TAU); g.fill();
+  g.strokeStyle = '#120a22'; g.lineWidth = 1.6; g.beginPath(); g.moveTo(hx - 3.5, hy - 3.5); g.lineTo(hx + 3.5, hy + 3.5); g.moveTo(hx + 3.5, hy); g.lineTo(hx + 3.5, hy + 3.5); g.lineTo(hx, hy + 3.5); g.moveTo(hx - 3.5, hy); g.lineTo(hx - 3.5, hy - 3.5); g.lineTo(hx, hy - 3.5); g.stroke();
+  requestAnimationFrame(mmLoop);
+}
+$('mmCv').addEventListener('pointerdown', e => {
+  if (!mmE) return;
+  const r = mmE.s / 2, hx = mmE.x + (r + 6) * Math.SQRT1_2, hy = mmE.y + (r + 6) * Math.SQRT1_2, grab = mmE.touch ? 26 : 16;
+  if (Math.hypot(e.clientX - hx, e.clientY - hy) < grab) mmE.drag = { k: 'size' };
+  else if (Math.hypot(e.clientX - mmE.x, e.clientY - mmE.y) < r + 14) mmE.drag = { k: 'move', ox: mmE.x - e.clientX, oy: mmE.y - e.clientY };
+  else return;
+  e.preventDefault(); try { $('mmCv').setPointerCapture(e.pointerId); } catch (x) {}
+});
+$('mmCv').addEventListener('pointermove', e => {
+  if (!mmE) return;
+  const r = mmE.s / 2, hx = mmE.x + (r + 6) * Math.SQRT1_2, hy = mmE.y + (r + 6) * Math.SQRT1_2;
+  if (!mmE.drag) { $('mmCv').style.cursor = Math.hypot(e.clientX - hx, e.clientY - hy) < 16 ? 'nwse-resize' : Math.hypot(e.clientX - mmE.x, e.clientY - mmE.y) < r + 14 ? 'grab' : 'default'; return; }
+  if (mmE.drag.k === 'move') { mmE.x = e.clientX + mmE.drag.ox; mmE.y = e.clientY + mmE.drag.oy; }
+  else { mmE.s = clamp(Math.round(Math.hypot(e.clientX - mmE.x, e.clientY - mmE.y) * 2 / 1.06), MM_MIN, MM_MAX); $('mmSz').value = mmE.s; }
+  mmClampE(); mmPanel();
+});
+const mmUp = () => { if (mmE) mmE.drag = null; };
+$('mmCv').addEventListener('pointerup', mmUp); $('mmCv').addEventListener('pointercancel', mmUp);
+$('mmSz').addEventListener('input', e => { if (!mmE) return; mmE.s = clamp(+e.target.value, MM_MIN, MM_MAX); mmClampE(); mmPanel(); });
+$('mmReset').onclick = () => { if (!mmE) return; delete save[mmE.touch ? 'mmT' : 'mmD']; const [x0, y0, sz] = mmLayout(mmE.touch, innerWidth, innerHeight); mmE.x = x0 + sz / 2; mmE.y = y0 + sz / 2; mmE.s = sz; $('mmSz').value = sz; mmPanel(); sfx.ui(); };
+$('mmDone').onclick = () => { if (!mmE) return; save[mmE.touch ? 'mmT' : 'mmD'] = { x: +(mmE.x / innerWidth).toFixed(4), y: +(mmE.y / innerHeight).toFixed(4), s: Math.round(mmE.s) }; persist(); mmE = null; $('mmEd').classList.add('hidden'); if (ow) ow.mm = null; sfx.buy(); };
+$('sMM').onclick = () => { audio(); sfx.ui(); openMMEd(); };
 
 // ================= MULTIPLAYER: Supabase Realtime broadcast channels =================
 // Every pilot sends one small packet 5 times a second. The longest-standing pilot is the host:
@@ -4913,7 +4997,7 @@ function drawHUDi(W, H) {
   if (pw.shield > 0) { badge(bx, by, 14, 'shieldpk', PICK.shield.c, 1, pw.shield > 1 ? '×' + pw.shield : '', false); bx += 38; }
   else if (S.shieldRe && ship) { ctx.save(); ctx.globalAlpha *= 0.55; badge(bx, by, 14, 'shieldpk', PICK.shield.c, shieldReT / S.shieldRe, '', false); ctx.restore(); bx += 38; }
   const timers = [['multi', PICK.multi.c, pw.multi, S.multiDur], ['rapid', PICK.rapid.c, pw.rapid, S.rapidDur], ['seekpk', PICK.seek.c, pw.seek, S.seekDur], ['u_drones', PICK.sats.c, pw.sats, S.satsDur], ['u_beam', PICK.beam.c, pw.beam, S.beamDur], ['u_time', PICK.slow.c, pw.slow, S.slowDur], ['deflpk', PICK.defl.c, pw.defl, S.deflDur], ['barrpk', PICK.barr.c, pw.barr, S.barrDur], ['wellpk', PICK.well.c, pw.well, S.wellDur]];
-  if (gmode === 'world' && ow) { let ry = by; const mpos = mmPos(), msz = mmSize(touch); if (!touch && mpos === 'bl') bx = Math.max(bx, 18 + msz + 34); const lim = touch ? W - 40 : mpos === 'bc' ? cx - msz / 2 - 40 : W * 0.5; for (const k in ow.ab) { if (bx > lim) { bx = 34; ry += touch ? 38 : -38; } badge(bx, ry, 14, OWA[k].ic, '200,150,255', 1, ow.ab[k] > 1 ? String(ow.ab[k]) : '', false); bx += 38; } }
+  if (gmode === 'world' && ow) { let ry = by; const [mx0, my0, msz] = mmLayout(touch, W, H), inRow = !touch && my0 < by + 20 && my0 + msz > by - 20; if (inRow && mx0 < 200) bx = Math.max(bx, mx0 + msz + 34); const lim = touch ? W - 40 : inRow && mx0 >= 200 ? mx0 - 30 : W * 0.55; for (const k in ow.ab) { if (bx > lim) { bx = 34; ry += touch ? 38 : -38; } badge(bx, ry, 14, OWA[k].ic, '200,150,255', 1, ow.ab[k] > 1 ? String(ow.ab[k]) : '', false); bx += 38; } }
   else for (const [ic, c, t, mxT] of timers) if (t > 0) { badge(bx, by, 14, ic, c, t / mxT, '', t < 2.5); bx += 38; }
   // desktop: dash + bomb
   if (!touch && ship) {
@@ -4954,7 +5038,8 @@ function drawTip(W, H, touch) {
   const a = clamp(Math.min(tip.t / 0.6, (tip.dur - tip.t) / 0.5), 0, 1);
   if (a <= 0) return;
   ctx.save(); ctx.globalAlpha *= a;
-  const y = touch ? H * 0.62 : H - 108 - (gmode === 'world' && mmPos() === 'bc' ? 90 : 0), cx = W / 2;
+  let y = touch ? H * 0.62 : H - 108; const cx = W / 2;
+  if (!touch && gmode === 'world' && ow) { const [mx0, my0, msz] = mmLayout(false, W, H); if (mx0 < cx + 160 && mx0 + msz > cx - 160 && my0 < y + 24) y = my0 - 34; }
   if (tip.k === 'controls') {
     const items = [[['W', 'A', 'S', 'D'], 'Move'], [['Mouse'], 'Aim'], [['Click'], 'Fire'], [['Shift'], 'Dash'], [['E'], 'Bomb']];
     const gK = 4, gL = 7, gI = 20;
