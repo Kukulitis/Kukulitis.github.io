@@ -301,7 +301,13 @@ svg{stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-l
 .gdet .pvn{font-size:17px}.gdet .pvd{font-size:12.5px;margin-top:3px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .gda .buy span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.gda .cs{white-space:nowrap}.gda .cs span{overflow:hidden;text-overflow:ellipsis}
 .gdet .cs{padding:6px 10px}
-.garage.mpg .gcol,.garage.mpg .gbot,.garage.mpg #gLines{visibility:hidden;pointer-events:none}
+#hangar .garage.mpg:not(.skmode){grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr);grid-template-areas:"c";overflow:hidden}
+#hangar .garage.mpg:not(.skmode) .gcol,#hangar .garage.mpg:not(.skmode) .gbot,#hangar .garage.mpg:not(.skmode) #gLines{display:none}
+#hangar .garage.mpg:not(.skmode) .gbay{width:100%;max-width:1100px;justify-self:center}
+#hangar .garage.mpg:not(.skmode) .gdet{position:absolute;left:50%;bottom:6px;transform:translateX(-50%);width:min(640px,94%)}
+@media (min-width:901px) and (min-height:521px) and (max-height:820px){#hangar .gcol{gap:4px}#hangar .gcol .gnode{padding:3px 10px 3px 5px;gap:8px;grid-template-columns:28px minmax(0,1fr) auto}#hangar .gcol .gnode .ico{width:28px;height:28px;border-radius:8px}#hangar .gcol .gnode .ico svg{width:15px;height:15px}#hangar .gcol .gnode .srs{margin-top:1px}}
+@media (max-width:520px){#hangar .ft{gap:6px}#hangar .ft .sec{padding:12px 9px;font-size:10.5px;letter-spacing:.08em}#hangar .ft .play{flex:1;min-width:0}#hangar .ft .play .pm{font-size:15px}#hangar .ft .play .ps{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;display:block}}
+@media (min-width:901px) and (min-height:521px){#hangar .garage:not(.skmode){grid-template-rows:minmax(0,1fr) auto;grid-template-areas:"l c r" "b b b"}#hangar .garage:not(.skmode) .gdet{position:absolute;grid-area:c;left:50%;transform:translateX(-50%);width:min(560px,96%);bottom:4px}}
 .gbot{grid-area:b;z-index:1;display:flex;gap:24px;justify-content:space-between}
 .gbot .gbg{flex:1}
 .clh{font-size:15px;line-height:0;margin-right:2px}
@@ -620,7 +626,7 @@ body.paused .tbtn{display:none!important}
 <script>
 'use strict';
 // Versioning: next version -> next whole number (4.00), sub version -> +0.01 (3.01)
-const VERSION = '4.18';
+const VERSION = '4.19';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
