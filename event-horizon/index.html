@@ -373,7 +373,7 @@ body.paused .tbtn{display:none!important}
 <script>
 'use strict';
 // Versioning (renumbered by request): next version -> next whole number (3.00), sub version -> +0.01 (2.01)
-const VERSION = '2.07';
+const VERSION = '2.08';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -756,9 +756,9 @@ function skinAffordable() { return SKINS.some(x => x.rar !== 'mythic' && !(save.
 
 // ================= ORBS =================
 const ORBS = {
-  void: { name: 'Void Orb', cost: 400, col: '160,120,255', col2: '90,200,255', odds: { common: 50, rare: 28, epic: 14, legendary: 6.5, mythic: 1.5 } },
-  stellar: { name: 'Stellar Orb', cost: 1200, col: '255,200,110', col2: '255,110,180', odds: { rare: 45, epic: 32, legendary: 16, mythic: 7 } },
-  quasar: { name: 'Quasar Orb', cost: 3000, col: '70,240,200', col2: '210,255,120', odds: { epic: 55, legendary: 32, mythic: 13 } },
+  void: { name: 'Void Orb', cost: 400, col: '160,120,255', col2: '90,200,255', odds: { common: 52.9, rare: 29.6, epic: 14.8, legendary: 2.2, mythic: 0.5 } },
+  stellar: { name: 'Stellar Orb', cost: 1200, col: '255,200,110', col2: '255,110,180', odds: { rare: 54, epic: 38.4, legendary: 5.3, mythic: 2.3 } },
+  quasar: { name: 'Quasar Orb', cost: 3000, col: '70,240,200', col2: '210,255,120', odds: { epic: 85, legendary: 10.7, mythic: 4.3 } },
 };
 const orbCount = () => (save.orbs ? (save.orbs.void || 0) + (save.orbs.stellar || 0) + (save.orbs.quasar || 0) : 0);
 function rollOrb(kind) {
