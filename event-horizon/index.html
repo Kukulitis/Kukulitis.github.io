@@ -188,9 +188,9 @@ svg{stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-l
 .mpl{display:flex;flex-direction:column;gap:8px;max-height:230px;overflow-y:auto}
 .mpr{display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.04);cursor:pointer;color:#fff;font:inherit;text-align:left;transition:border-color .15s,background .15s}
 .mpr:hover{border-color:rgba(200,150,255,.7);background:rgba(200,150,255,.1)}.mpr:disabled{opacity:.45;cursor:default}
-.mpr b{font-size:16px;letter-spacing:.22em}.mpr span{flex:1;font-size:12.5px;color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.mpr i{font-style:normal;font-size:12px;font-weight:600;color:rgb(143,255,214)}
+.mpr b{font-size:15px;letter-spacing:.02em;max-width:52%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.mpr span{flex:1;font-size:12.5px;color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.mpr i{font-style:normal;font-size:12px;font-weight:600;color:rgb(143,255,214)}
 .mpe{font-size:12.5px;color:var(--dim);padding:6px 2px}
-#mpCode{text-transform:uppercase;letter-spacing:.35em;text-align:center;font-weight:600}
+#mpName{width:100%;box-sizing:border-box}
 #mpMsg{min-height:18px}
 @media (max-width:760px){.mpw{grid-template-columns:1fr;align-content:start;gap:10px;margin:10px 0}.mpc{padding:16px;gap:10px}}
 #owPick.hidden{display:none}
@@ -574,14 +574,12 @@ body.paused .tbtn{display:none!important}
   <div class="mpw a2">
     <div class="mpc">
       <div class="mpt">Create a room</div>
-      <div class="mpx">You get a 4-letter code to share. Friends can drop in any time while you play.</div>
-      <div class="mprow" id="mpPub"><button class="mpo on" data-pub="1">Public<small>Listed for everyone</small></button><button class="mpo" data-pub="0">Private<small>Code only</small></button></div>
+      <div class="mpx">Give your room a name. It shows up in everyone's room list, and friends can drop in any time while you play.</div>
+      <input class="fld" id="mpName" maxlength="24" placeholder="Room name" autocomplete="off" spellcheck="false">
       <button class="buy ctr" id="mpCreate">Create room</button>
     </div>
     <div class="mpc">
       <div class="mpt">Join a room</div>
-      <div class="accrow"><input class="fld" id="mpCode" maxlength="4" placeholder="CODE" autocapitalize="characters" autocomplete="off" spellcheck="false"><button class="buy ctr" id="mpJoin">Join</button></div>
-      <div class="mpt mpt2">Open rooms</div>
       <div class="mpl" id="mpList"></div>
     </div>
   </div>
@@ -626,7 +624,7 @@ body.paused .tbtn{display:none!important}
 <script>
 'use strict';
 // Versioning: next version -> next whole number (4.00), sub version -> +0.01 (3.01)
-const VERSION = '4.23';
+const VERSION = '4.24';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -1758,7 +1756,7 @@ function setPause(p) {
   if (mode !== 'play') return;
   paused = p; $('pause').classList.toggle('hidden', !p); document.body.classList.toggle('paused', p);
   if (p) { beamSound(false); buildKeysRef(); }
-  $('pRoom').innerHTML = mp && gmode === 'world' ? `Room <b style="color:#fff;letter-spacing:.2em">${mp.code}</b> · ${1 + Object.keys(mp.peers).length}/${MPMAX} pilots · the galaxy keeps running, you're not protected while paused` : '';
+  $('pRoom').innerHTML = mp && gmode === 'world' ? `Room <b style="color:#fff">${escH(mpRoom())}</b> · ${1 + Object.keys(mp.peers).length}/${MPMAX} pilots · the galaxy keeps running, you're not protected while paused` : '';
 }
 function goMenu() {
   mpLeave(); closeLobby();
@@ -3238,7 +3236,7 @@ function startWorld(seed, sx, sy) {
   mode = 'play'; timeScale = 1; paused = false; ann = null; annQ = [];
   owUpdateChunks(true);
   const host = mp && !mp.host ? Object.values(mp.peers).find(p => p.id === mp.hostId) : null;
-  announce('Multiplayer', { big: true, kick: mp ? 'Room ' + mp.code : 'Explore', sub: host ? 'You joined ' + host.n + "'s galaxy" : 'Share the code ' + (mp ? mp.code : '') + ' with friends', col: '200,150,255', dur: 3.4 });
+  announce('Multiplayer', { big: true, kick: mp ? mpRoom() : 'Explore', sub: host ? 'You joined ' + host.n + "'s room" : 'Friends can join from the room list', col: '200,150,255', dur: 3.4 });
   sfx.warp();
 }
 function owApply() {
@@ -3900,15 +3898,16 @@ const MPCOL = ['255,170,90', '143,255,214', '255,120,200', '255,225,110', '150,1
 const MPST = ['move', 'aim', 'fire', 'wind', 'dash', 'rest', 'fade'];
 const escH = s => String(s).replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';');
 let mp = null, mpBy = null, mpKill = null, lobby = null, mpPub = true, rbul = [], mpPl = [], mpHidT = 0;
+const mpRoom = () => mp ? (mp.name || mp.code) : '';
 const mpRid = () => Math.random().toString(36).slice(2, 8);
-function mpNewCode() { const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let s = ''; for (let i = 0; i < 4; i++) s += A[Math.random() * A.length | 0]; return s; }
-function mpStart(code, join) {
+function mpNewCode() { const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let s = ''; for (let i = 0; i < 7; i++) s += A[Math.random() * A.length | 0]; return s; }
+function mpStart(code, join, name) {
   mpLeave();
-  mp = { code, id: mpRid(), j: join ? 0 : Date.now(), pub: join ? false : mpPub, seed: join ? null : (Math.random() * 1e9 | 0), peers: {}, host: !join, hostId: null, state: join ? 'join' : 'play', sendT: 0, ev: [], hits: {}, shots: [], dead: {}, nid: (Math.random() * 2e6 | 0) * 1000, t0: performance.now(), firstT: 0, adT: 0, ok: false, warned: false, tkT: 0 };
+  mp = { code, name: String(name || '').slice(0, 24), id: mpRid(), j: join ? 0 : Date.now(), pub: true, seed: join ? null : (Math.random() * 1e9 | 0), peers: {}, host: !join, hostId: null, state: join ? 'join' : 'play', sendT: 0, ev: [], hits: {}, shots: [], dead: {}, nid: (Math.random() * 2e6 | 0) * 1000, t0: performance.now(), firstT: 0, adT: 0, ok: false, warned: false, tkT: 0 };
   const me = mp;
   mp.ch = rtChannel('eh-room-' + code, (ev, p) => { if (mp === me) mpOn(ev, p); }, st => { if (mp !== me) return; if (st === 'ok') mp.ok = true; else if (st === 'err' && mp.state === 'join') mpFail("Can't reach the multiplayer server"); });
   if (!join) startWorld(mp.seed);
-  else mpMsg('Joining room ' + code + '…');
+  else mpMsg('Joining ' + (name || 'room') + '…');
 }
 function mpLeave() {
   if (!mp) return;
@@ -3933,7 +3932,7 @@ function mpOn(ev, p) {
   if (ev !== 'p' || !p || typeof p.i !== 'string' || p.i === mp.id) return;
   const now = performance.now(), P = mpPeer(p.i), fresh = P.isNew; P.isNew = false;
   if (p.ev && p.ev.some(e => e && e[0] === 'bye')) { if (!fresh) mpDrop(p.i, true); else delete mp.peers[p.i]; return; }
-  P.n = String(p.n || 'Pilot').slice(0, 20); P.j = +p.j || 0; P.sd = p.sd; P.pub = p.pub; P.last = now; P.k = +p.k || 0; P.away = false; P.out = !!p.o; P.pw = +p.pw || 0;
+  P.n = String(p.n || 'Pilot').slice(0, 20); P.j = +p.j || 0; P.sd = p.sd; P.pub = p.pub; P.last = now; P.k = +p.k || 0; P.away = false; P.out = !!p.o; if (!mp.name && p.rn) mp.name = String(p.rn).slice(0, 24); P.pw = +p.pw || 0;
   P.sk = SKINS.find(x => x.id === p.sk) || SKINS[0]; P.bs = BSKINS.find(x => x.id === p.bs) || BSKINS[0];
   const s = Array.isArray(p.s) ? p.s : null;
   if (s) { P.sx = s[0] * U; P.sy = s[1] * U; P.svx = s[2] * U; P.svy = s[3] * U; P.sa = +s[4] || 0; P.safe = !!s[5]; P.php = s[6] == null ? PVPHP : +s[6]; P.rt = now; }
@@ -3968,7 +3967,7 @@ function mpDrop(id, said) {
   if (mp.state === 'play') { announce(P.n + ' left', { kick: 'Pilot', col: '255,170,120', dur: 1.8 }); if (P.alive) burst(P.x, P.y, 30, P.col, 160, 0.8, 2); }
   mpElect();
 }
-function mpClash() { const c = mp.code; mpLeave(); goMenu(); openMP(); mpMsg('Room ' + c + ' was already taken. Create a new room.', true); }
+function mpClash() { mpLeave(); goMenu(); openMP(); mpMsg('Something went wrong creating that room. Please try again.', true); }
 // clients mirror the host's enemies: create missing ones, nudge positions, adopt health and attack states
 function mpSnap(E) {
   const now = performance.now(), seen = new Set(), map = new Map();
@@ -3999,7 +3998,7 @@ function mpSend() {
   const R = Math.round;
   for (const nid in mp.hits) mp.ev.push(['h', +nid, R(mp.hits[nid] * 100) / 100, 1]);
   mp.hits = {};
-  const pk = { i: mp.id, n: cloudUser, j: mp.j, sd: mp.seed, pub: mp.pub ? 1 : 0, sk: save.skin, bs: save.bskin, k: score, o: ow && ow.out ? 1 : 0, pw: ow ? owPower(ow.bs, ow.ab) : 0,
+  const pk = { i: mp.id, n: cloudUser, rn: mp.name, j: mp.j, sd: mp.seed, pub: mp.pub ? 1 : 0, sk: save.skin, bs: save.bskin, k: score, o: ow && ow.out ? 1 : 0, pw: ow ? owPower(ow.bs, ow.ab) : 0,
     s: ship ? [R(ship.x / U), R(ship.y / U), R(ship.vx / U), R(ship.vy / U), R(ship.ang * 100) / 100, (ow && ow.safe > 0) || ship.inv > 0 ? 1 : 0, R(ship.php == null ? PVPHP : ship.php)] : null };
   if (mp.shots.length) { pk.b = mp.shots; mp.shots = []; }
   if (mp.ev.length) { pk.ev = mp.ev; mp.ev = []; }
@@ -4024,13 +4023,13 @@ function mpPoll(rdt) {
   if (mp.state === 'join') {
     if (mp.firstT && now - mp.firstT > 1200) {
       const ps = Object.values(mp.peers);
-      if (ps.length >= MPMAX) { mpFail('Room ' + mp.code + ' is full (' + MPMAX + '/' + MPMAX + ')'); return; }
+      if (ps.length >= MPMAX) { mpFail(mpRoom() + ' is full (' + MPMAX + '/' + MPMAX + ')'); return; }
       let H_ = ps[0]; for (const q of ps) if (q.j < H_.j || (q.j === H_.j && q.id < H_.id)) H_ = q;
       mp.seed = H_.sd; mp.pub = !!H_.pub; mp.j = Math.max(...ps.map(q => q.j)) + 1; mp.state = 'play'; mp.hostId = H_.id; mp.host = false;
       for (const q of ps) q.seen = true;
       const a = rand(0, TAU), hx = H_.alive ? H_.sx / U : 0, hy = H_.alive ? H_.sy / U : 0;
       startWorld(mp.seed, hx + Math.cos(a) * 140, hy + Math.sin(a) * 140);
-    } else if (now - mp.t0 > 7000) mpFail(mp.ok || RT_MOCK ? 'Room ' + mp.code + ' not found' : "Can't reach the multiplayer server");
+    } else if (now - mp.t0 > 7000) mpFail(mp.ok || RT_MOCK ? mpRoom() + ' has closed' : "Can't reach the multiplayer server");
     return;
   }
   mpElect();
@@ -4051,7 +4050,7 @@ function mpPoll(rdt) {
   if (mp.sendT <= 0) { mp.sendT = MPRATE; mpSend(); }
   if (mp.host && mp.pub) {
     mp.adT -= rdt;
-    if (mp.adT <= 0) { mp.adT = 3; if (!mp.lob) mp.lob = rtChannel('eh-lobby', () => {}, () => {}); mp.lob.send('ad', { c: mp.code, n: cloudUser, k: 1 + Object.keys(mp.peers).length }); }
+    if (mp.adT <= 0) { mp.adT = 3; if (!mp.lob) mp.lob = rtChannel('eh-lobby', () => {}, () => {}); mp.lob.send('ad', { c: mp.code, nm: mp.name, n: cloudUser, k: 1 + Object.keys(mp.peers).length }); }
   }
 }
 // remote bullets are only visual - damage is reported by whoever fired them
@@ -4094,10 +4093,10 @@ function mpDraw() {
 
 // ---- lobby UI ----
 function openMP() {
-  hideAll(); show('mp'); mpMsg(''); $('mpCode').value = '';
+  hideAll(); show('mp'); mpMsg(''); $('mpName').value = '';
   if (!lobby) {
     const L = lobby = { rooms: {}, ok: false, t0: performance.now(), rt: 0 };
-    L.ch = rtChannel('eh-lobby', (ev, p) => { if (lobby !== L || ev !== 'ad' || !p || typeof p.c !== 'string') return; L.rooms[p.c] = { c: p.c.slice(0, 4), n: String(p.n || 'Pilot').slice(0, 20), k: +p.k || 1, t: performance.now() }; renderRooms(); }, st => { if (lobby !== L) return; L.ok = st === 'ok'; renderRooms(); });
+    L.ch = rtChannel('eh-lobby', (ev, p) => { if (lobby !== L || ev !== 'ad' || !p || typeof p.c !== 'string') return; L.rooms[p.c] = { c: p.c.slice(0, 8), nm: String(p.nm || p.c).slice(0, 24), n: String(p.n || 'Pilot').slice(0, 20), k: +p.k || 1, t: performance.now() }; renderRooms(); }, st => { if (lobby !== L) return; L.ok = st === 'ok'; renderRooms(); });
   }
   renderRooms();
 }
@@ -4105,20 +4104,21 @@ function closeLobby() { if (lobby) { const L = lobby; lobby = null; L.ch.leave()
 function renderRooms() {
   if (!lobby) return;
   const now = performance.now(), rs = Object.values(lobby.rooms).filter(r => now - r.t < 9000), el = $('mpList');
-  if (!rs.length) { el.innerHTML = `<div class="mpe">${lobby.ok ? 'No open rooms right now. Create one!' : now - lobby.t0 > 7000 ? "Can't reach the multiplayer server right now." : 'Looking for rooms…'}</div>`; return; }
-  el.innerHTML = rs.map(r => `<button class="mpr" data-c="${escH(r.c)}"${r.k >= MPMAX ? ' disabled' : ''}><b>${escH(r.c)}</b><span>${escH(r.n)}'s galaxy</span><i>${r.k}/${MPMAX}</i></button>`).join('');
+  if (!rs.length) { el.innerHTML = `<div class="mpe">${lobby.ok ? 'No rooms open right now. Create one!' : now - lobby.t0 > 7000 ? "Can't reach the multiplayer server right now." : 'Looking for rooms…'}</div>`; return; }
+  el.innerHTML = rs.map(r => `<button class="mpr" data-c="${escH(r.c)}"${r.k >= MPMAX ? ' disabled' : ''}><b>${escH(r.nm)}</b><span>Host ${escH(r.n)}</span><i>${r.k >= MPMAX ? 'Full' : r.k + '/' + MPMAX}</i></button>`).join('');
 }
-function mpJoinCode(c) {
+function mpJoinCode(c, name) {
   c = String(c || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
-  if (c.length !== 4) { mpMsg('Room codes are 4 letters or numbers', true); return; }
-  audio(); sfx.ui(); mpStart(c, true);
+  if (c.length < 4) return;
+  audio(); sfx.ui(); mpStart(c, true, name);
 }
-$('mpCreate').onclick = () => { audio(); goFull(); mpStart(mpNewCode(), false); };
-$('mpJoin').onclick = () => mpJoinCode($('mpCode').value);
-$('mpCode').addEventListener('keydown', e => { if (e.key === 'Enter') mpJoinCode($('mpCode').value); });
-$('mpCode').addEventListener('input', e => { const v = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); if (v !== e.target.value) e.target.value = v; });
-$('mpList').addEventListener('click', e => { const b = e.target.closest('.mpr'); if (b && !b.disabled) mpJoinCode(b.dataset.c); });
-$('mpPub').addEventListener('click', e => { const b = e.target.closest('.mpo'); if (!b) return; mpPub = b.dataset.pub === '1'; for (const x of $('mpPub').children) x.classList.toggle('on', x === b); sfx.ui(); });
+function mpCreate() {
+  const nm = $('mpName').value.replace(/\s+/g, ' ').trim().slice(0, 24) || (cloudUser ? cloudUser + "'s galaxy" : 'New galaxy');
+  audio(); goFull(); mpStart(mpNewCode(), false, nm);
+}
+$('mpCreate').onclick = mpCreate;
+$('mpName').addEventListener('keydown', e => { if (e.key === 'Enter') mpCreate(); });
+$('mpList').addEventListener('click', e => { const b = e.target.closest('.mpr'); if (b && !b.disabled) mpJoinCode(b.dataset.c, lobby && lobby.rooms[b.dataset.c] ? lobby.rooms[b.dataset.c].nm : ''); });
 $('mpBack').onclick = () => { mpLeave(); closeLobby(); goMenu(); };
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) { mpHidT = performance.now(); return; }
@@ -5366,7 +5366,7 @@ function drawHUDi(W, H) {
   // lives & power-up timers
   const ly = touch ? 96 : H - 22, by = touch ? (gmode === 'world' && ow ? upBox(W, H, true)[1] + upBox(W, H, true)[3] + 24 : 128) : H - 58;
   if (gmode !== 'world') for (let i = 0; i < lives; i++) miniShip(28 + i * 20, ly, 0.85);
-  else if (mp) { const ry = touch ? 96 : 88; for (let i = 0; i < lives; i++) miniShip(28 + i * 20, ry, 0.85); ctx.font = `600 11px ${FONT}`; ctx.fillStyle = 'rgba(233,238,247,0.62)'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; spaced('ROOM ' + mp.code + '  ·  ' + (1 + Object.values(mp.peers).filter(q => !q.away).length) + '/' + MPMAX + ' PILOTS' + (mp.host ? '  ·  HOST' : ''), 28 + Math.max(1, lives) * 20, ry, 1.6, 'left'); }
+  else if (mp) { const ry = touch ? 96 : 88; for (let i = 0; i < lives; i++) miniShip(28 + i * 20, ry, 0.85); ctx.font = `600 11px ${FONT}`; ctx.fillStyle = 'rgba(233,238,247,0.62)'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; spaced(mpRoom().toUpperCase() + '  ·  ' + (1 + Object.values(mp.peers).filter(q => !q.away).length) + '/' + MPMAX + ' PILOTS' + (mp.host ? '  ·  HOST' : ''), 28 + Math.max(1, lives) * 20, ry, 1.6, 'left'); }
   if (gmode === 'world' && ow) { drawMinimap(W, H); if (mp) drawScoreboard(W, H, touch); }
   let bx = 34;
   if (pw.shield > 0) { badge(bx, by, 14, 'shieldpk', PICK.shield.c, 1, pw.shield > 1 ? '×' + pw.shield : '', false); bx += 38; }
