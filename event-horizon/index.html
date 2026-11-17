@@ -506,7 +506,7 @@ body.paused .tbtn{display:none!important}
 <script>
 'use strict';
 // Versioning (renumbered by request): next version -> next whole number (3.00), sub version -> +0.01 (2.01)
-const VERSION = '2.23';
+const VERSION = '2.24';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -682,29 +682,29 @@ const LUCKC = [60, 80, 120, 170, 250, 360];
 const hasAb = id => id === 'shield' || id === 'vac' || !!(save.abil && save.abil[id]);
 const migTier = (k, v) => UPMIG[k] ? UPMIG[k][Math.min(3, v)] : /^u_/.test(k) ? v : v * 2;
 const UPG = [
-  { k: 'hull', cat: 'SHIP', name: 'Reinforced hull', info: 'Odd levels add a starting ship, even levels raise the ship limit.', stat: 'Ships', val: t => `${3 + Math.ceil(t / 2)} start / ${5 + Math.floor(t / 2)} max`, max: 6, cost: gcost(60, 520, 6) },
-  { k: 'engine', cat: 'SHIP', name: 'Ion engines', info: 'Faster thrust and higher top speed.', stat: 'Engine power', val: t => t ? '+' + t * 6 + '%' : 'Base', max: 6, cost: gcost(40, 320, 6) },
-  { k: 'dash', cat: 'SHIP', name: 'Phase dash', info: 'Dash recharges faster and protects you longer.', stat: 'Dash recharge', val: t => (1.1 * (1 - 0.1 * t)).toFixed(2) + 's', max: 6, cost: gcost(40, 300, 6) },
-  { k: 'shieldgen', cat: 'SHIP', name: 'Shield generator', info: 'Start each sector shielded. Higher levels recharge it.', stat: 'Auto shield', val: t => ['None', 'Each sector', 'Every 60s', 'Every 45s', 'Every 32s', 'Every 22s'][t], max: 5, cost: gcost(90, 560, 5) },
-  { k: 'bombbay', cat: 'SHIP', name: 'Bomb bay', info: 'Odd levels add a starting bomb, even levels let you carry more.', stat: 'Bombs', val: t => `${2 + Math.ceil(t / 2)} start / ${5 + Math.floor(t / 2)} max`, max: 6, cost: gcost(50, 360, 6) },
-  { k: 'magnet', cat: 'SHIP', name: 'Tractor field', info: 'Pull stardust and power-ups from further away.', stat: 'Pull range', val: t => t ? '+' + t * 25 + '%' : 'Base', max: 6, cost: gcost(35, 250, 6) },
-  { k: 'velocity', cat: 'WEAPON', name: 'Rail accelerator', info: 'Faster bullets that bend less near the black hole.', stat: 'Bullet speed', val: t => t ? '+' + (t * 7.5) + '%' : 'Base', max: 6, cost: gcost(40, 300, 6) },
-  { k: 'rate', cat: 'WEAPON', name: 'Autoloader', info: 'Shoot faster.', stat: 'Fire rate', val: t => t ? '+' + [0, 5, 11, 18, 25, 34, 43][t] + '%' : 'Base', max: 6, cost: gcost(60, 460, 6) },
-  { k: 'damage', cat: 'WEAPON', name: 'Plasma rounds', info: 'Every shot hits harder.', stat: 'Damage', val: t => '×' + [1, 1.17, 1.35, 1.52, 1.7, 1.9, 2.1][t], max: 6, cost: gcost(70, 520, 6) },
-  { k: 'pierce', cat: 'WEAPON', name: 'Neutron core', info: 'Bullets can punch through enemies.', stat: 'Pierce', val: t => ['Off', '50% chance +1', '+1 target', '+1, 50% +2', '+2 targets'][t], max: 4, cost: gcost(120, 450, 4) },
-  { k: 'missile', cat: 'WEAPON', name: 'Missile pods', info: 'Homing missiles fire on their own.', stat: 'Missiles', val: t => ['None', '1 every 3.6s', '1 every 3s', '2 every 3s', '2 every 2.6s', '3 every 2.6s', '3 every 2.2s'][t], max: 6, cost: gcost(160, 760, 6) },
-  { k: 'multi', cat: 'POWER', name: 'Multishot', info: 'Upgrades the spread shot drop.', stat: 'Spread shot', val: t => ['Triple 12s', 'Triple 15s', 'Quad 15s', 'Quad 18s', 'Penta 18s'][t], max: 4, cost: gcost(100, 420, 4) },
-  { k: 'rapid', cat: 'POWER', name: 'Overclock', info: 'Rapid fire lasts longer and shoots faster.', stat: 'Rapid fire', val: t => (12 + 2.5 * t) + 's', max: 4, cost: gcost(60, 260, 4) },
-  { k: 'shieldpk', cat: 'POWER', name: 'Hardlight shield', info: 'Shield drops absorb more hits and keep you safe longer when they break.', stat: 'Shield hits', val: t => (1 + Math.floor(t / 2)) + (t % 2 ? ' + longer safety' : ''), max: 4, cost: gcost(70, 300, 4) },
-  { k: 'vacpk', cat: 'POWER', name: 'Vacuum', info: 'A power-up that pulls every bit of stardust and every power-up around you straight into your ship.', stat: 'Pull range', val: t => ['Large', 'Huge', 'Massive', 'Whole map'][t], max: 3, cost: gcost(60, 260, 3) },
-  { k: 'seekpk', cat: 'POWER', name: 'Seeker rounds', info: 'Bullets gently curve toward enemies ahead of them.', stat: 'Duration', val: t => (10 + 2 * t) + 's', max: 3, cost: gcost(90, 300, 3) },
-  { k: 'u_beam', cat: 'POWER', name: 'Photon beam', info: 'A piercing laser that bends around the black hole.', stat: 'Duration', val: t => (7 + 1.5 * t) + 's', max: 3, cost: gcost(140, 420, 3) },
-  { k: 'u_nova', cat: 'POWER', name: 'Supernova', info: 'A free gravity bomb plus a ring of homing bolts.', stat: 'Bolts', val: t => 20 + 6 * t, max: 3, cost: gcost(120, 380, 3) },
-  { k: 'u_drones', cat: 'POWER', name: 'Orbital drones', info: 'Two satellites circle you, shoot enemies and block bullets.', stat: 'Duration', val: t => (15 + 3 * t) + 's', max: 3, cost: gcost(110, 360, 3) },
-  { k: 'deflpk', cat: 'POWER', name: 'Deflector', info: 'Rotating shield arcs around your ship destroy enemy shots.', stat: 'Duration', val: t => (9 + 2 * t) + 's', max: 3, cost: gcost(120, 400, 3) },
-  { k: 'barrpk', cat: 'POWER', name: 'Missile barrage', info: 'Fires a stream of homing missiles at everything nearby.', stat: 'Duration', val: t => (7 + 1.5 * t) + 's', max: 3, cost: gcost(140, 440, 3) },
-  { k: 'u_time', cat: 'POWER', name: 'Slow time', info: 'Slows every enemy and enemy bullet.', stat: 'Duration', val: t => (7 + 1.5 * t) + 's', max: 3, cost: gcost(110, 360, 3) },
-  { k: 'wellpk', cat: 'POWER', name: 'Gravity well', info: 'Drops a small black hole that pulls enemies in and grinds them down.', stat: 'Duration', val: t => (6 + 1.5 * t) + 's', max: 3, cost: gcost(160, 480, 3) },
+  { k: 'hull', cat: 'SHIP', name: 'Reinforced hull', info: 'Odd levels add a starting ship, even levels raise the ship limit.', stat: 'Ships', val: t => `${3 + Math.ceil(t / 2)} start / ${5 + Math.floor(t / 2)} max`, max: 6, cost: gcost(120, 1400, 6) },
+  { k: 'engine', cat: 'SHIP', name: 'Ion engines', info: 'Faster thrust and higher top speed.', stat: 'Engine power', val: t => t ? '+' + t * 6 + '%' : 'Base', max: 6, cost: gcost(80, 800, 6) },
+  { k: 'dash', cat: 'SHIP', name: 'Phase dash', info: 'Dash recharges faster and protects you longer.', stat: 'Dash recharge', val: t => (1.1 * (1 - 0.1 * t)).toFixed(2) + 's', max: 6, cost: gcost(80, 750, 6) },
+  { k: 'shieldgen', cat: 'SHIP', name: 'Shield generator', info: 'Start each sector shielded. Higher levels recharge it.', stat: 'Auto shield', val: t => ['None', 'Each sector', 'Every 60s', 'Every 45s', 'Every 32s', 'Every 22s'][t], max: 5, cost: gcost(180, 1400, 5) },
+  { k: 'bombbay', cat: 'SHIP', name: 'Bomb bay', info: 'Odd levels add a starting bomb, even levels let you carry more.', stat: 'Bombs', val: t => `${2 + Math.ceil(t / 2)} start / ${5 + Math.floor(t / 2)} max`, max: 6, cost: gcost(100, 900, 6) },
+  { k: 'magnet', cat: 'SHIP', name: 'Tractor field', info: 'Pull stardust and power-ups from further away.', stat: 'Pull range', val: t => t ? '+' + t * 25 + '%' : 'Base', max: 6, cost: gcost(70, 600, 6) },
+  { k: 'velocity', cat: 'WEAPON', name: 'Rail accelerator', info: 'Faster bullets that bend less near the black hole.', stat: 'Bullet speed', val: t => t ? '+' + (t * 7.5) + '%' : 'Base', max: 6, cost: gcost(80, 750, 6) },
+  { k: 'rate', cat: 'WEAPON', name: 'Autoloader', info: 'Shoot faster.', stat: 'Fire rate', val: t => t ? '+' + [0, 5, 11, 18, 25, 34, 43][t] + '%' : 'Base', max: 6, cost: gcost(120, 1200, 6) },
+  { k: 'damage', cat: 'WEAPON', name: 'Plasma rounds', info: 'Every shot hits harder.', stat: 'Damage', val: t => '×' + [1, 1.17, 1.35, 1.52, 1.7, 1.9, 2.1][t], max: 6, cost: gcost(140, 1400, 6) },
+  { k: 'pierce', cat: 'WEAPON', name: 'Neutron core', info: 'Bullets can punch through enemies.', stat: 'Pierce', val: t => ['Off', '50% chance +1', '+1 target', '+1, 50% +2', '+2 targets'][t], max: 4, cost: gcost(240, 1100, 4) },
+  { k: 'missile', cat: 'WEAPON', name: 'Missile pods', info: 'Homing missiles fire on their own.', stat: 'Missiles', val: t => ['None', '1 every 3.6s', '1 every 3s', '2 every 3s', '2 every 2.6s', '3 every 2.6s', '3 every 2.2s'][t], max: 6, cost: gcost(300, 1900, 6) },
+  { k: 'multi', cat: 'POWER', name: 'Multishot', info: 'Upgrades the spread shot drop.', stat: 'Spread shot', val: t => ['Triple 12s', 'Triple 15s', 'Quad 15s', 'Quad 18s', 'Penta 18s'][t], max: 4, cost: gcost(150, 600, 4) },
+  { k: 'rapid', cat: 'POWER', name: 'Overclock', info: 'Rapid fire lasts longer and shoots faster.', stat: 'Rapid fire', val: t => (12 + 2.5 * t) + 's', max: 4, cost: gcost(380, 1200, 4) },
+  { k: 'shieldpk', cat: 'POWER', name: 'Hardlight shield', info: 'Shield drops absorb more hits and keep you safe longer when they break.', stat: 'Shield hits', val: t => (1 + Math.floor(t / 2)) + (t % 2 ? ' + longer safety' : ''), max: 4, cost: gcost(120, 700, 4) },
+  { k: 'vacpk', cat: 'POWER', name: 'Vacuum', info: 'A power-up that pulls every bit of stardust and every power-up around you straight into your ship.', stat: 'Pull range', val: t => ['Large', 'Huge', 'Massive', 'Whole map'][t], max: 3, cost: gcost(100, 500, 3) },
+  { k: 'seekpk', cat: 'POWER', name: 'Seeker rounds', info: 'Bullets gently curve toward enemies ahead of them.', stat: 'Duration', val: t => (10 + 2 * t) + 's', max: 3, cost: gcost(220, 800, 3) },
+  { k: 'u_beam', cat: 'POWER', name: 'Photon beam', info: 'A piercing laser that bends around the black hole.', stat: 'Duration', val: t => (7 + 1.5 * t) + 's', max: 3, cost: gcost(300, 1000, 3) },
+  { k: 'u_nova', cat: 'POWER', name: 'Supernova', info: 'A free gravity bomb plus a ring of homing bolts.', stat: 'Bolts', val: t => 20 + 6 * t, max: 3, cost: gcost(460, 1400, 3) },
+  { k: 'u_drones', cat: 'POWER', name: 'Orbital drones', info: 'Two satellites circle you, shoot enemies and block bullets.', stat: 'Duration', val: t => (15 + 3 * t) + 's', max: 3, cost: gcost(540, 1600, 3) },
+  { k: 'deflpk', cat: 'POWER', name: 'Deflector', info: 'Rotating shield arcs around your ship destroy enemy shots.', stat: 'Duration', val: t => (9 + 2 * t) + 's', max: 3, cost: gcost(620, 1800, 3) },
+  { k: 'barrpk', cat: 'POWER', name: 'Missile barrage', info: 'Fires a stream of homing missiles at everything nearby.', stat: 'Duration', val: t => (7 + 1.5 * t) + 's', max: 3, cost: gcost(700, 2000, 3) },
+  { k: 'u_time', cat: 'POWER', name: 'Slow time', info: 'Slows every enemy and enemy bullet.', stat: 'Duration', val: t => (7 + 1.5 * t) + 's', max: 3, cost: gcost(780, 2200, 3) },
+  { k: 'wellpk', cat: 'POWER', name: 'Gravity well', info: 'Drops a small black hole that pulls enemies in and grinds them down.', stat: 'Duration', val: t => (6 + 1.5 * t) + 's', max: 3, cost: gcost(900, 2600, 3) },
 ];
 // ================= SKINS =================
 const RAR = {
