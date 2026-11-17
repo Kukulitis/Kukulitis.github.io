@@ -626,7 +626,7 @@ body.paused .tbtn{display:none!important}
 <script>
 'use strict';
 // Versioning: next version -> next whole number (4.00), sub version -> +0.01 (3.01)
-const VERSION = '4.21';
+const VERSION = '4.22';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -3427,7 +3427,10 @@ function owOut() {
   if (!ow || ow.out) return;
   ow.out = true; overTimer = 1e9; owChoosing = false; $('owPick').classList.add('hidden');
   document.body.classList.remove('playing');
-  $('mpOutSub').textContent = 'Score ' + fmt(score) + '  ·  ' + kills + ' kills  ·  ◆ ' + fmt(runDust) + ' stardust this session';
+  $('mpOutSub').textContent = 'Final score ' + fmt(score) + '  ·  ' + kills + ' kills  ·  ◆ ' + fmt(runDust) + ' stardust this session';
+  // out of ships: your score on the board starts over
+  save.best = Math.max(save.best, score); persist();
+  score = 0; dispScore = 0; kills = 0; mult = 1; lastMultInt = 1; chain = 0; chainT = 0;
   show('mpOut');
 }
 function owRespawn() {
