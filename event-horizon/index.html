@@ -147,6 +147,10 @@ svg{stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-l
 .pvi{display:flex;flex-direction:column;gap:10px;text-align:left}
 .slist,.sprev{text-align:left}
 .orbc .row2{margin-top:auto}
+.logb{width:min(420px,92vw);display:flex;flex-direction:column;gap:10px;text-align:center}
+.logb .accrow .fld{font-size:16px;padding:12px 14px}.logb .accrow .buy{padding:0 22px;font-size:14px;letter-spacing:.14em;text-transform:uppercase}
+.logb .pmsg{min-height:18px}
+#lgLink{text-decoration:none}
 .pvh{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .pvn{font-size:19px;font-weight:600;color:#fff}
 .pvd{font-size:13px;line-height:1.5;color:var(--dim)}
@@ -245,6 +249,19 @@ body.paused .tbtn{display:none!important}
   </div>
 </div>
 
+<div id="login" class="ov hidden">
+  <div class="top"><div class="title">EVENT HORIZON</div></div>
+  <div class="hole"></div>
+  <div class="bot logb a2">
+    <div class="sub" id="lgSub">Enter a username to play. Use the same one on any device to keep your progress.</div>
+    <div class="accrow" id="lgIn"><input class="fld" id="lgU" maxlength="20" placeholder="Username" autocomplete="username" autocapitalize="off" spellcheck="false"><button class="buy ctr" id="lgGo">Play</button></div>
+    <div class="accpick hidden" id="lgPick"><button id="lgCloud">Use account<small id="lgCloudS"></small></button><button id="lgLocal">Use this device<small id="lgLocalS"></small></button></div>
+    <a class="buy ctr hidden" id="lgLink" href="https://kukulitis.github.io/event-horizon/" target="_blank" rel="noopener">Open the game</a>
+    <div class="pmsg" id="lgMsg"></div>
+  </div>
+  <div class="ver" id="lgVer"></div>
+</div>
+
 <div id="crate" class="ov hidden">
   <div class="kick" id="crK">VOID ORB</div>
   <canvas id="crCv"></canvas>
@@ -325,7 +342,7 @@ body.paused .tbtn{display:none!important}
 <script>
 'use strict';
 // Versioning (renumbered by request): next version -> next whole number (3.00), sub version -> +0.01 (2.01)
-const VERSION = '2.05';
+const VERSION = '2.06';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -1094,6 +1111,7 @@ const TIPS = {
   dust: ['Grab ◆ stardust before the black hole eats it', 'Spend it on upgrades in the Shop'],
 };
 function startRun(sec) {
+  if (!cloudUser) { goMenu(); return; }
   calcStats();
   score = 0; dispScore = 0; lives = S.lives; bombs = S.bombs; maxMult = 1; swallowed = 0; kills = 0; runDust = 0; sectorsCleared = 0;
   pw = freshPw(); mult = 1; lastMultInt = 1; bestFlag = false; newBestT = 0; runBest = save.best;
@@ -1302,12 +1320,14 @@ function goMenu() {
   beamSound(false); follow = false; camX = CX; camY = CY;
   applyTheme(save.sel); bhMass = TH.mods.mass || 1;
   asts = []; for (let i = 0; i < 8; i++) spawnOrbital(1 + (i % 3));
-  refreshMenu(); show('menu');
-  if (cloudUser && cloudDirty) cloudPush();
+  refreshMenu();
+  if (!cloudUser) { showLogin(); return; }
+  show('menu');
+  if (cloudDirty) cloudPush();
 }
 
 // ================= UI: overlays =================
-const OVS = ['menu', 'over', 'pause', 'cleared', 'hangar', 'roadmap', 'profile', 'settings', 'crate'];
+const OVS = ['login', 'menu', 'over', 'pause', 'cleared', 'hangar', 'roadmap', 'profile', 'settings', 'crate'];
 function hideAll() { for (const id of OVS) $(id).classList.add('hidden'); }
 function show(id) { $(id).classList.remove('hidden'); }
 const playLabel = n => (n > 8 ? 'Endless' : 'Sector ' + n) + ' · ' + themeFor(n).name;
@@ -2107,8 +2127,49 @@ $('accOutBtn').onclick = async () => {
   try { localStorage.setItem('eh_save2', JSON.stringify(save)); } catch (e) {}
   calcStats(); applyTheme(save.sel); bhMass = TH.mods.mass || 1;
   $('accU').value = ''; $('pCode').value = encodeSave(); profSum(); renderAcc();
-  accMsg('Logged out.'); sfx.ui();
+  sfx.ui(); goMenu();
 };
+
+// ---- required login screen ----
+const CLOUD_OK = location.protocol === 'file:' || /(^|\.)github\.io$|^localhost$|^127\.0\.0\.1$/.test(location.hostname);
+let lgPending = null;
+function lgMsg(t, err) { $('lgMsg').textContent = t; $('lgMsg').className = 'pmsg' + (err ? ' err' : ''); }
+function showLogin() {
+  hideAll(); show('login'); lgPending = null;
+  $('lgVer').textContent = 'V ' + VERSION;
+  $('lgPick').classList.add('hidden');
+  $('lgIn').classList.toggle('hidden', !CLOUD_OK);
+  $('lgLink').classList.toggle('hidden', CLOUD_OK);
+  $('lgSub').textContent = CLOUD_OK ? 'Enter a username to play. Use the same one on any device to keep your progress.' : 'Accounts only work on the full version of the game. Open it to log in and play.';
+  lgMsg('');
+}
+function lgDone(t) { $('lgGo').disabled = false; $('lgU').value = ''; renderAcc(); goMenu(); if (t) announceMenu(t); }
+function announceMenu(t) { const h = $('ctrlHint'); if (!h) return; const o = h.textContent; h.textContent = t; h.style.color = 'var(--mint)'; setTimeout(() => { h.textContent = o; h.style.color = ''; }, 3500); }
+$('lgGo').onclick = async () => {
+  audio();
+  const raw = $('lgU').value.replace(/[<>]/g, '').trim(), u = normUser(raw);
+  if (!/^[a-z0-9_.-]{3,20}$/.test(u)) return lgMsg('Use 3-20 letters, numbers, dots, dashes or underscores.', true);
+  $('lgGo').disabled = true; lgMsg('Connecting...');
+  let d;
+  try { d = await cloudGet(u); }
+  catch (e) { $('lgGo').disabled = false; return lgMsg('Could not reach the save server. Check your connection and try again.', true); }
+  sfx.ui();
+  if (!d) {
+    setUser(u); save.name = raw.slice(0, 16); lastPacked = ''; persist();
+    await cloudPush();
+    return lgDone('Welcome, ' + save.name + '! Your progress now saves to your account.');
+  }
+  if (isFresh()) { setUser(u); applyCloud(d); setCloud('ok'); sfx.buy(); return lgDone('Welcome back, ' + (save.name || u) + '!'); }
+  let cs; try { cs = unpackSave(d); } catch (e) { $('lgGo').disabled = false; return lgMsg('That account has an unreadable save.', true); }
+  lgPending = { u, d };
+  $('lgCloudS').textContent = sumTxt(cs); $('lgLocalS').textContent = sumTxt(save);
+  $('lgIn').classList.add('hidden'); $('lgPick').classList.remove('hidden');
+  $('lgSub').textContent = 'This username already has progress, and so does this device. Which one do you want to keep?';
+  lgMsg(''); $('lgGo').disabled = false;
+};
+$('lgU').addEventListener('keydown', e => { if (e.key === 'Enter') $('lgGo').click(); });
+$('lgCloud').onclick = () => { if (!lgPending) return; const { u, d } = lgPending; lgPending = null; setUser(u); applyCloud(d); setCloud('ok'); sfx.buy(); lgDone('Welcome back, ' + (save.name || u) + '!'); };
+$('lgLocal').onclick = async () => { if (!lgPending) return; const { u } = lgPending; lgPending = null; setUser(u); if (!save.name) save.name = u; lastPacked = ''; persist(); await cloudPush(); sfx.ui(); lgDone('This device\'s progress is now saved to ' + (save.name || u) + '.'); };
 
 // ================= INPUT =================
 const keys = {};
@@ -3389,7 +3450,7 @@ TH = themeFor(save.sel); bhMass = TH.mods.mass || 1;
 resize(); buildDisk();
 for (let i = 0; i < 8; i++) spawnOrbital(1 + (i % 3));
 refreshMenu(); setMute(!!save.muted);
-if (cloudUser) cloudPull();
+if (cloudUser) cloudPull(); else showLogin();
 try { for (const w of ['300', '500', '600', '700']) document.fonts.load(`${w} 16px "Chakra Petch"`); } catch (e) {}
 let last = performance.now();
 function loop(now) {
