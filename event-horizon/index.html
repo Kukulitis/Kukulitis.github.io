@@ -624,7 +624,7 @@ body.paused .tbtn{display:none!important}
 <script>
 'use strict';
 // Versioning: next version -> next whole number (4.00), sub version -> +0.01 (3.01)
-const VERSION = '4.28';
+const VERSION = '4.29';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -3430,14 +3430,15 @@ function drawMini(d) {
 function owSpawnPos() {
   let best = null, bs = -1;
   for (let t = 0; t < 40; t++) {
-    const a = rand(0, TAU), r = rand(0.18, 0.75) * ow.R, x = Math.cos(a) * r, y = Math.sin(a) * r;
+    // always inside the safe zone, between the central black hole's pull and the zone edge
+    const a = rand(0, TAU), r = rand(0.55, 0.88) * owSafeR(), x = Math.cos(a) * r, y = Math.sin(a) * r;
     let sc = Math.min(4000 * U, Math.hypot(x - ow.dx, y - ow.dy));
-    for (const P of ow.all.values()) for (const h of P.holes) sc = Math.min(sc, (Math.hypot(h.x - x, h.y - y) - h.rh * 12) * 3);
+    for (const P of ow.all.values()) for (const h of P.holes) sc = Math.min(sc, (Math.hypot(h.x - x, h.y - y) - h.rh * (h.big ? 8 : 12)) * 3);
     for (const d of drones) sc = Math.min(sc, Math.hypot(d.x - x, d.y - y) * 2);
     if (mp) for (const k in mp.peers) { const P = mp.peers[k]; if (P.alive) sc = Math.min(sc, Math.hypot(P.x - x, P.y - y) * 2); }
     if (sc > bs) { bs = sc; best = [x, y]; }
   }
-  return best || [0, ow.R * 0.3];
+  return best || [0, owSafeR() * 0.7];
 }
 function owOut() {
   if (!ow || ow.out) return;
@@ -4046,7 +4047,8 @@ function mpPoll(rdt) {
       mp.seed = H_.sd; mp.pub = !!H_.pub; mp.j = Math.max(...ps.map(q => q.j)) + 1; mp.state = 'play'; mp.hostId = H_.id; mp.host = false;
       for (const q of ps) q.seen = true;
       const a = rand(0, TAU), hx = H_.alive ? H_.sx / U : 0, hy = H_.alive ? H_.sy / U : 0;
-      startWorld(mp.seed, hx + Math.cos(a) * 140, hy + Math.sin(a) * 140);
+      if (Math.hypot(hx, hy) * U < OWM * 1000 * U * 0.3 - 200 * U) startWorld(mp.seed, hx + Math.cos(a) * 140, hy + Math.sin(a) * 140);
+      else { startWorld(mp.seed); if (ow && ship) { const [x, y] = owSpawnPos(); ship.x = x; ship.y = y; camX = x; camY = y; owUpdateChunks(true); } }
     } else if (now - mp.t0 > 7000) mpFail(mp.ok || RT_MOCK ? mpRoom() + ' has closed' : "Can't reach the multiplayer server");
     return;
   }
