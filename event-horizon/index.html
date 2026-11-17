@@ -486,6 +486,7 @@ body.paused .tbtn{display:none!important}
   <div class="hd a1"><div><div class="h3">SETTINGS</div><div class="sub">Saved in this browser. Camera changes apply from your next run.</div></div></div>
   <div class="list a2" style="margin-top:14px"><div class="pgrid">
     <div class="card" style="--c:120,230,255"><div class="ct"><div class="ico"><i data-ic="camera"></i></div><div class="cn">Camera<div class="cd">How the view moves during play.</div></div></div>
+      <div class="opts" data-set="look" style="margin-top:8px"><button data-v="off">Centered<small>The ship stays in the middle.</small></button><button data-v="on">Look toward cursor<small>Mouse only. Tap Space to re-centre, hold Space to keep it centred.</small></button></div>
       <div class="opts" data-set="cam"><button data-v="follow">Follow ship<small>Big round arena. The view stays on your ship.</small></button><button data-v="fixed">Fixed<small>Classic. The whole arena fits on one screen.</small></button></div></div>
     <div class="card" style="--c:143,255,214"><div class="ct"><div class="ico"><i data-ic="sound"></i></div><div class="cn">Sound<div class="cd">Music and sound effects.</div></div></div>
       <div class="opts" data-set="snd"><button data-v="on">On</button><button data-v="off">Off</button></div></div>
@@ -619,7 +620,7 @@ body.paused .tbtn{display:none!important}
 <script>
 'use strict';
 // Versioning: next version -> next whole number (4.00), sub version -> +0.01 (3.01)
-const VERSION = '4.17';
+const VERSION = '4.18';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -2605,7 +2606,7 @@ function openProfile() {
 function profSum() { $('pSum').innerHTML = `◆ ${fmt(save.dust)} <small>${Math.min(NS, save.unlocked - 1)}/${NS} SECTORS</small>`; }
 $('pilotBtn').onclick = () => { audio(); sfx.ui(); openProfile(); };
 function renderSettings() {
-  const cur = { cam: save.cam === 'fixed' ? 'fixed' : 'follow', snd: muted ? 'off' : 'on', shake: save.shake === false ? 'off' : 'on' };
+  const cur = { look: save.look ? 'on' : 'off', cam: save.cam === 'fixed' ? 'fixed' : 'follow', snd: muted ? 'off' : 'on', shake: save.shake === false ? 'off' : 'on' };
   document.querySelectorAll('#settings .opts').forEach(g => g.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === cur[g.dataset.set])));
 }
 $('setBtn').onclick = () => { audio(); sfx.ui(); setFrom = 'menu'; hideAll(); show('settings'); renderSettings(); $('sTut').closest('.card').classList.remove('hidden'); };
@@ -2616,6 +2617,7 @@ $('settings').addEventListener('click', e => {
   const b = e.target.closest('.opts button'); if (!b) return;
   const k = b.parentElement.dataset.set, v = b.dataset.v;
   if (k === 'cam') save.cam = v;
+  if (k === 'look') save.look = v === 'on';
   if (k === 'shake') save.shake = v === 'on';
   if (k === 'snd') { save.muted = v === 'off'; setMute(save.muted); }
   persist(); sfx.ui(); renderSettings();
@@ -3636,6 +3638,10 @@ const sbDims = (sc, n) => [184 * sc, (22 + n * 19) * sc];
 function sbBox(W, H, touch, n) {
   const L = touch ? save.sbT : save.sbD, sc = L && L.s ? clamp(L.s, SB_MIN, SB_MAX) : (touch ? 0.82 : 1), [w, h] = sbDims(sc, n);
   let x0 = L ? L.x * W : W - 16 - w, y0 = L ? L.y * H : (touch ? 80 : 86);
+  if (!L) { // default spot: slide below (or beside) the minimap if it sits there
+    const [mx, my, ms] = mmLayout(touch, W, H);
+    if (x0 < mx + ms && x0 + w > mx && y0 < my + ms + 14 && y0 + h > my - 14) { if (my + ms + 24 + h < H) y0 = my + ms + 24; else x0 = mx - w - 14; }
+  }
   x0 = clamp(x0, 6, W - w - 6); y0 = clamp(y0, 6, H - h - 6);
   return [Math.round(x0), Math.round(y0), w, h, sc];
 }
@@ -3723,7 +3729,7 @@ function mmLoop() {
   // upgrade panel
   const pb = edPBox();
   drawUpPanel(w, h, t, g, pb, ED_DEMO_BS, ED_DEMO_AB);
-  const sb = edSBox(); drawScoreboard(w, h, t, g, sb, ED_ROWS);
+  const sb = edSBox();
   // minimap
   const s = Math.round(mmE.s), r = s / 2, x0 = mmE.x - r, y0 = mmE.y - r;
   if (!mmE.img || mmE.imgS !== s) { const keep = ow; ow = mmE.demo; mmE.img = owMiniBuild(s); ow = keep; mmE.imgS = s; }
@@ -3734,6 +3740,7 @@ function mmLoop() {
   g.restore();
   g.font = `600 ${s > 110 ? 10 : 9}px ${FONT}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = 'rgba(143,255,214,0.8)'; g.fillText('SAFE ZONE', mmE.x, y0 < 40 ? y0 + s + 11 : y0 - 9);
   g.restore();
+  drawScoreboard(w, h, t, g, sb, ED_ROWS);
   // edit affordances: dashed outline (bright on the selected item) + resize handles
   const handle = (hx, hy, on) => {
     g.fillStyle = on ? 'rgb(200,150,255)' : 'rgba(200,150,255,0.55)'; g.beginPath(); g.arc(hx, hy, t ? 11 : 8, 0, TAU); g.fill();
@@ -3745,6 +3752,9 @@ function mmLoop() {
   g.strokeStyle = mmE.sel === 'sb' ? 'rgba(200,150,255,0.95)' : 'rgba(200,150,255,0.35)'; g.strokeRect(sb[0] - 4, sb[1] - 4, sb[2] + 8, sb[3] + 8);
   g.setLineDash([]);
   handle(...mmHandle(), mmE.sel === 'mm'); handle(...upHandle(), mmE.sel === 'up'); handle(...sbHandle(), mmE.sel === 'sb');
+  g.font = `700 9px ${FONT}`; g.textBaseline = 'bottom'; g.fillStyle = 'rgba(200,150,255,0.85)';
+  g.textAlign = 'left'; g.fillText('UPGRADE PANEL', pb[0] - 4, pb[1] - 8); g.fillText('SCOREBOARD', sb[0] - 4, sb[1] - 8);
+  g.textAlign = 'center'; g.fillText('MINIMAP', mmE.x, mmE.y - r - (y0 < 40 ? -r * 2 - 30 : 22));
   requestAnimationFrame(mmLoop);
 }
 function edHit(x, y) {
@@ -3752,6 +3762,7 @@ function edHit(x, y) {
   if (Math.hypot(x - shx, y - shy) < grab) return ['sb', 'size'];
   if (Math.hypot(x - mhx, y - mhy) < grab) return ['mm', 'size'];
   if (Math.hypot(x - uhx, y - uhy) < grab) return ['up', 'size'];
+  if (x > sx0 - 8 && x < sx0 + sw + 8 && y > sy0 - 8 && y < sy0 + sh + 8) return ['sb', 'move'];
   if (Math.hypot(x - mmE.x, y - mmE.y) < mmE.s / 2 + 14) return ['mm', 'move'];
   if (x > px0 - 8 && x < px0 + pw_ + 8 && y > py0 - 8 && y < py0 + ph + 8) return ['up', 'move'];
   if (x > sx0 - 8 && x < sx0 + sw + 8 && y > sy0 - 8 && y < sy0 + sh + 8) return ['sb', 'move'];
@@ -4806,10 +4817,13 @@ function animUI(rdt) {
   const pcx = camX, pcy = camY;
   let ctx_ = CX, cty = CY, ck = 6;
   if (follow && mode === 'play') {
-    if (ship) { ctx_ = ship.x + ship.vx * 0.22; cty = ship.y + ship.vy * 0.22; ck = 3.2; } else { ctx_ = camX; cty = camY; }
+    if (ship) {
+      ctx_ = ship.x + ship.vx * 0.22; cty = ship.y + ship.vy * 0.22; ck = 3.2;
+      const lo = lookOff(); ctx_ += lo.x; cty += lo.y; if (lo.snap) ck = 7;
+    } else { ctx_ = camX; cty = camY; }
   } else if (follow && mode === 'clear') { ctx_ = camX; cty = camY; }
   camX = lerp(camX, ctx_, k(ck)); camY = lerp(camY, cty, k(ck));
-  if (follow && ship) { const lim = MIN * 0.28, ddx = camX - ship.x, ddy = camY - ship.y, dl = Math.hypot(ddx, ddy); if (dl > lim) { camX = ship.x + ddx / dl * lim; camY = ship.y + ddy / dl * lim; } }
+  if (follow && ship) { const lim = save.look && !isTouch() ? Math.max(W, H) * 0.45 : MIN * 0.28, ddx = camX - ship.x, ddy = camY - ship.y, dl = Math.hypot(ddx, ddy); if (dl > lim) { camX = ship.x + ddx / dl * lim; camY = ship.y + ddy / dl * lim; } }
   const dcx = camX - pcx, dcy = camY - pcy;
   if (dcx || dcy) for (const s of stars) {
     s.x -= dcx * s.z * 0.35; s.y -= dcy * s.z * 0.35;
@@ -5570,6 +5584,16 @@ function drawIndicators() {
     ctx.restore();
   }
   ctx.restore();
+}
+
+// camera look-ahead: lean toward the cursor; tap Space to re-centre, hold it to stay centred
+const look = { ax: null, ay: null };
+function lookOff() {
+  if (!save.look || isTouch() || paused) return { x: 0, y: 0 };
+  if (keys.Space) { look.ax = mx; look.ay = my; return { x: 0, y: 0, snap: true }; }
+  if (look.ax != null) { if (Math.hypot(mx - look.ax, my - look.ay) < 60) return { x: 0, y: 0 }; look.ax = null; }
+  const dx = clamp(mx - W / 2, -W / 2, W / 2), dy = clamp(my - H / 2, -H / 2, H / 2);
+  return { x: dx * 0.45, y: dy * 0.45 };
 }
 
 // ================= BOOT =================
