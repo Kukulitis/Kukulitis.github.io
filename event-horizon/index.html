@@ -171,6 +171,7 @@ svg{stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-l
 .mnav{position:absolute;right:4px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:8px;z-index:2}
 .mnav button{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:rgba(8,10,20,.6);color:#fff;font-size:13px;cursor:pointer}
 .mnav button:hover{background:rgba(255,255,255,.1)}
+#rGo.lockd{opacity:.45;filter:grayscale(.8);cursor:default}
 @media (max-width:640px){.mrow{flex-direction:column!important;gap:12px}.mcard{width:min(420px,84vw);text-align:center}.mt{justify-content:center}.mn{justify-content:center}.mnav{display:none}}
 @media (max-height:520px){.mrow{gap:16px}.mplan{width:84px}.mcard{padding:10px 12px}.mb{display:none}}
 .bgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;padding:2px 2px 14px}
@@ -449,7 +450,7 @@ body.paused .tbtn{display:none!important}
 </div>
 
 <div id="roadmap" class="ov scr hidden">
-  <div class="hd a1"><div><div class="h3">SECTOR MAP</div><div class="sub">Scroll through the sectors. Beat a boss to unlock the next one.</div></div><div class="pill" id="mapProg"></div></div>
+  <div class="hd a1"><div><div class="h3">SECTOR MAP</div><div class="sub">Scroll to a sector and press Play. Tap the centred sector to launch straight away.</div></div><div class="pill" id="mapProg"></div></div>
   <div class="mapw a2"><div class="mapv" id="mapV"><svg id="mapPath"></svg><div id="rList"></div></div><div class="mnav"><button id="mUp" aria-label="Previous sector">▲</button><button id="mDn" aria-label="Next sector">▼</button></div></div>
   <div class="ft a3"><button class="sec" id="rBack">Back</button><button class="play sm" id="rGo"><span class="pm">PLAY</span><span class="ps" id="rGoS"></span></button></div>
 </div>
@@ -477,7 +478,7 @@ body.paused .tbtn{display:none!important}
 <script>
 'use strict';
 // Versioning (renumbered by request): next version -> next whole number (3.00), sub version -> +0.01 (2.01)
-const VERSION = '2.13';
+const VERSION = '2.14';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -2201,11 +2202,19 @@ function drawMapPath() {
   const V = $('mapV'), svg = $('mapPath'), L = $('rList'), vr = L.getBoundingClientRect();
   const pts = [...document.querySelectorAll('#rList .mplan')].map(el => { const r = el.getBoundingClientRect(); return [r.left + r.width / 2 - vr.left, r.top + r.height / 2 - vr.top, el.closest('.mstop')]; });
   svg.setAttribute('width', L.offsetWidth); svg.setAttribute('height', L.offsetHeight); svg.setAttribute('viewBox', `0 0 ${L.offsetWidth} ${L.offsetHeight}`);
+  // smooth wavy path: add a sideways midpoint between stops, then run a Catmull-Rom spline through everything
+  const amp = Math.min(150, L.offsetWidth * 0.2), P = [];
+  for (let i = 0; i < pts.length; i++) {
+    P.push({ x: pts[i][0], y: pts[i][1], seg: i });
+    if (i < pts.length - 1) P.push({ x: (pts[i][0] + pts[i + 1][0]) / 2 + (i % 2 ? amp : -amp), y: (pts[i][1] + pts[i + 1][1]) / 2, seg: i + 1 });
+  }
   let d1 = '', d2 = '';
-  for (let i = 1; i < pts.length; i++) {
-    const [x0, y0] = pts[i - 1], [x1, y1, st] = pts[i], my = (y0 + y1) / 2, sw = (i % 2 ? 1 : -1) * Math.min(160, L.offsetWidth * 0.14);
-    const seg = `M${x0},${y0} C${x0 + sw},${my} ${x1 - sw},${my} ${x1},${y1} `;
-    if (st.classList.contains('locked')) d2 += seg; else d1 += seg;
+  for (let i = 0; i < P.length - 1; i++) {
+    const p0 = P[Math.max(0, i - 1)], p1 = P[i], p2 = P[i + 1], p3 = P[Math.min(P.length - 1, i + 2)];
+    const c1x = p1.x + (p2.x - p0.x) / 6, c1y = p1.y + (p2.y - p0.y) / 6, c2x = p2.x - (p3.x - p1.x) / 6, c2y = p2.y - (p3.y - p1.y) / 6;
+    const seg = `M${p1.x.toFixed(1)},${p1.y.toFixed(1)} C${c1x.toFixed(1)},${c1y.toFixed(1)} ${c2x.toFixed(1)},${c2y.toFixed(1)} ${p2.x.toFixed(1)},${p2.y.toFixed(1)} `;
+    const stop = pts[Math.min(pts.length - 1, Math.ceil((i + 1) / 2))][2];
+    if (stop.classList.contains('locked')) d2 += seg; else d1 += seg;
   }
   svg.innerHTML = `<defs><linearGradient id="mpg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".65"/><stop offset="1" stop-color="#fff" stop-opacity=".25"/></linearGradient></defs>
     <path d="${d1}" fill="none" stroke="url(#mpg)" stroke-width="3" stroke-linecap="round"/><path d="${d1}" fill="none" stroke="#fff" stroke-opacity=".12" stroke-width="12" stroke-linecap="round"/>
@@ -2220,7 +2229,14 @@ function mapScroll() {
   if (!best) return;
   mapStops().forEach(st => st.classList.toggle('focus', st === best));
   const n = +best.dataset.n;
-  if (n !== mapFocus) { mapFocus = n; mapTheme(mapHover || n); }
+  if (n !== mapFocus) { mapFocus = n; mapTheme(mapHover || n); mapSelect(n); }
+}
+function mapSelect(n) {
+  const un = n <= save.unlocked;
+  if (un && save.sel !== n) { save.sel = n; saveDirty = true; }
+  mapStops().forEach(st => st.classList.toggle('sel', un && +st.dataset.n === n));
+  $('rGo').disabled = !un; $('rGo').classList.toggle('lockd', !un);
+  $('rGoS').textContent = un ? playLabel(n) : 'Locked - beat sector ' + (n - 1) + ' first';
 }
 function mapTheme(n) { clearTimeout(mapThemeT); mapThemeT = setTimeout(() => { if (!$('roadmap').classList.contains('hidden') && TH !== themeFor(n)) { applyTheme(n); bhMass = TH.mods.mass || 1; } }, 90); }
 function mapGo(n, smooth) {
@@ -2228,8 +2244,9 @@ function mapGo(n, smooth) {
   const V = $('mapV'); V.scrollTo({ top: st.offsetTop - (V.clientHeight - st.offsetHeight) / 2, behavior: smooth ? 'smooth' : 'auto' });
 }
 $('mapV').addEventListener('scroll', () => mapScroll(), { passive: true });
-$('rList').addEventListener('pointerover', e => { if (e.pointerType !== 'mouse') return; const st = e.target.closest('.mstop'); const n = st ? +st.dataset.n : 0; if (n && n !== mapHover) { mapHover = n; mapTheme(n); } });
-$('rList').addEventListener('pointerleave', () => { mapHover = 0; mapTheme(mapFocus); });
+let mapDwell = 0;
+$('rList').addEventListener('pointerover', e => { if (e.pointerType !== 'mouse') return; const st = e.target.closest('.mstop'); const n = st ? +st.dataset.n : 0; if (n && n !== mapHover) { mapHover = n; mapTheme(n); clearTimeout(mapDwell); if (n !== mapFocus) mapDwell = setTimeout(() => { if (mapHover === n) mapGo(n, true); }, 350); } });
+$('rList').addEventListener('pointerleave', () => { mapHover = 0; clearTimeout(mapDwell); mapTheme(mapFocus); });
 $('mUp').onclick = () => { sfx.ui(); mapGo(Math.max(1, mapFocus - 1), true); };
 $('mDn').onclick = () => { sfx.ui(); mapGo(Math.min(NS + 1, mapFocus + 1), true); };
 
@@ -2875,13 +2892,12 @@ $('hBack').onclick = () => {
 $('hGo').onclick = () => { audio(); goFull(); if (hangarFrom === 'cleared') warpTo(sector + 1); else startRun(save.sel); };
 
 $('rBack').onclick = () => goMenu();
-$('rGo').onclick = () => { audio(); goFull(); startRun(save.sel); };
+$('rGo').onclick = () => { if (mapFocus && mapFocus > save.unlocked) return; audio(); goFull(); startRun(mapFocus && mapFocus <= save.unlocked ? mapFocus : save.sel); };
 $('rList').addEventListener('click', e => {
   const nd = e.target.closest('.mstop'); if (!nd) return;
   const n = +nd.dataset.n;
-  if (n !== mapFocus) mapGo(n, true);
-  if (n > save.unlocked) { sfx.ui(); return; }
-  save.sel = n; persist(); mapStops().forEach(st => st.classList.toggle('sel', +st.dataset.n === n)); $('rGoS').textContent = playLabel(n); sfx.ui();
+  if (n !== mapFocus) mapGo(n, true); else if (n <= save.unlocked) { audio(); goFull(); startRun(n); return; }
+  sfx.ui();
 });
 addEventListener('keydown', e => { if ($('roadmap').classList.contains('hidden')) return; if (e.code === 'ArrowDown' || e.code === 'KeyS') { e.preventDefault(); $('mDn').click(); } if (e.code === 'ArrowUp' || e.code === 'KeyW') { e.preventDefault(); $('mUp').click(); } });
 addEventListener('blur', () => { if (mode === 'play') setPause(true); mdown = false; for (const k in keys) keys[k] = false; });
