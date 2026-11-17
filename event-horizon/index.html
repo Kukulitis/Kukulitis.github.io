@@ -172,6 +172,8 @@ svg{stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-l
 #mmSz{width:100%;}.mmsl{font-size:10.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:rgb(220,190,255);margin-bottom:-4px}#mmSz{accent-color:rgb(200,150,255)}.mmb{display:flex;gap:8px}.mmb>*{flex:1}
 .owt{width:min(320px,70vw);height:4px;border-radius:2px;background:rgba(255,255,255,.12);overflow:hidden}.owt i{display:block;height:100%;background:rgb(200,150,255);transform-origin:left;transition:transform .12s linear}
 .owtm{font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgb(220,190,255)}
+.pmodes{display:flex;gap:10px;width:min(620px,94vw);justify-content:center}.pmodes .play{flex:1;min-width:0;padding-left:10px;padding-right:10px}.pmodes .play .pm{letter-spacing:.16em;white-space:nowrap;font-size:clamp(12px,3.4vw,19px)}.pmodes .play .ps{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:clamp(9.5px,2.6vw,12px)}
+@media (max-width:520px){.pmodes{flex-direction:column;gap:8px;width:min(340px,90vw)}.pmodes .play{padding-top:12px;padding-bottom:12px}}
 .gmsel{display:flex;gap:4px;padding:4px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.04);margin-bottom:12px}
 .gmsel button{padding:8px 14px;border-radius:10px;border:0;background:none;color:var(--dim);font:inherit;font-size:11.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;transition:background .15s,color .15s}
 .gmsel button:hover{color:#fff}.gmsel button.on{background:rgba(255,255,255,.12);color:#fff}
@@ -419,8 +421,11 @@ body.paused .tbtn{display:none!important}
   <div class="top"><div class="title">EVENT HORIZON</div></div>
   <div class="hole"></div>
   <div class="bot">
-    <div class="gmsel a2" id="gmSel"><button data-g="story">Story</button><button data-g="waves">Endless</button><button data-g="world">Multiplayer</button></div>
-    <button class="play a2" id="play"><span class="pm">PLAY</span><span class="ps" id="playSub"></span></button>
+    <div class="pmodes a2" id="pModes">
+      <button class="play" data-g="story"><span class="pm">STORY</span><span class="ps" id="psStory"></span></button>
+      <button class="play" data-g="waves"><span class="pm">ENDLESS</span><span class="ps" id="psWaves"></span></button>
+      <button class="play" data-g="world"><span class="pm">MULTIPLAYER</span><span class="ps">Online · 4 pilots</span></button>
+    </div>
     <div class="icons a3">
       <button class="ib" id="mapBtn"><i data-ic="map"></i><span>Map</span></button>
       <button class="ib" id="shopBtn"><i data-ic="bag"></i><span>Shop</span><i class="dotn hidden" id="shopDot"></i></button>
@@ -526,7 +531,7 @@ body.paused .tbtn{display:none!important}
     <div class="gbot" id="gB"></div>
   </div>
   <div class="orbv a3 hidden" id="orbV"></div>
-  <div class="ft a4"><button class="sec" id="hBack">Back</button><button class="sec hidden" id="hMap">Map</button><button class="play sm" id="hGo"><span class="pm" id="hGoT">PLAY</span><span class="ps" id="hGoS"></span></button></div>
+  <div class="ft a4"><button class="sec" id="hBack">Back</button><button class="sec hidden" id="hBeast">Enemies<i class="dotn hidden" id="hBeastDot"></i></button><button class="sec hidden" id="hMap">Map</button><button class="play sm" id="hGo"><span class="pm" id="hGoT">PLAY</span><span class="ps" id="hGoS"></span></button></div>
 </div>
 
 <div id="modes" class="ov scr hidden">
@@ -613,7 +618,7 @@ body.paused .tbtn{display:none!important}
 <script>
 'use strict';
 // Versioning: next version -> next whole number (4.00), sub version -> +0.01 (3.01)
-const VERSION = '4.13';
+const VERSION = '4.14';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -1776,13 +1781,10 @@ function refreshMenu() {
   $('bestM').textContent = fmt(save.best);
   $('dustM').textContent = fmt(save.dust);
   $('orbM').textContent = orbCount() ? '● ' + orbCount() + ' orb' + (orbCount() > 1 ? 's' : '') : '';
-  const gm = menuMode();
-  for (const b of $('gmSel').children) b.classList.toggle('on', b.dataset.g === gm);
-  $('playSub').textContent = gm === 'story' ? playLabel(Math.min(save.sel, NS)) : gm === 'waves' ? (save.bestWave ? 'Endless · best wave ' + save.bestWave : 'Endless waves') : 'Online · up to 4 pilots';
-  // map only in story; shop and enemies in story and endless; profile and settings everywhere
-  $('mapBtn').classList.toggle('hidden', gm !== 'story');
-  $('shopBtn').classList.toggle('hidden', gm === 'world');
-  $('beastBtn').classList.toggle('hidden', gm === 'world');
+  $('psStory').textContent = playLabel(Math.min(save.sel, NS));
+  $('psWaves').textContent = save.bestWave ? 'Best wave ' + save.bestWave : 'Survive the waves';
+  // map, shop and enemies live in each mode's garage now; the menu keeps profile and settings
+  $('mapBtn').classList.add('hidden'); $('shopBtn').classList.add('hidden'); $('beastBtn').classList.add('hidden');
   $('shopDot').classList.toggle('hidden', !affordable());
   $('ver').textContent = 'V ' + VERSION;
   $('pilotBtn').querySelector('span').textContent = cloudUser ? (save.name || cloudUser) : 'Profile';
@@ -1804,6 +1806,8 @@ function openHangar(from) {
   const mpg = hangarMode === 'world';
   $('garage').classList.toggle('mpg', mpg);
   $('hMap').classList.toggle('hidden', !(hangarMode === 'story' && from !== 'cleared'));
+  $('hBeast').classList.toggle('hidden', mpg || from === 'cleared');
+  $('hBeastDot').classList.toggle('hidden', $('beastDot').classList.contains('hidden'));
   if (from === 'cleared') { $('hGoT').textContent = 'NEXT'; $('hGoS').textContent = playLabel(sector + 1); }
   else { $('hGoT').textContent = 'PLAY'; $('hGoS').textContent = hangarMode === 'story' ? playLabel(save.sel) : hangarMode === 'waves' ? (save.bestWave ? 'Endless · best wave ' + save.bestWave : 'Endless waves') : 'Multiplayer · online'; }
   if (mpg) { shopSel.G = ''; if (hTab === 'G' || !hTab) hTab = 'G'; }
@@ -3124,7 +3128,9 @@ $('bxX').onclick = () => { sfx.ui(); $('bxM').classList.add('hidden'); bxS = nul
 $('bxM').addEventListener('click', e => { if (e.target === $('bxM')) $('bxX').click(); });
 
 $('beastBtn').onclick = () => { if (menuMode() === 'world') return; audio(); sfx.ui(); openBeast(); };
-$('bxBack').onclick = () => { $('bxM').classList.add('hidden'); bxS = null; goMenu(); };
+let beastFrom = 'menu';
+$('bxBack').onclick = () => { $('bxM').classList.add('hidden'); bxS = null; if (beastFrom === 'hangar') { beastFrom = 'menu'; openHangar('menu'); } else goMenu(); };
+$('hBeast').onclick = () => { audio(); sfx.ui(); beastFrom = 'hangar'; openBeast(); };
 $('bxSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; bxTab = b.dataset.t; sfx.ui(); renderBeast(); });
 
 // ================= GAME MODES: Endless Waves + Multiplayer =================
@@ -4115,9 +4121,8 @@ function openModes() {
   $('mdStory').textContent = playLabel(Math.min(save.sel, NS));
   $('mdWaves').textContent = save.bestWave ? 'Best: wave ' + save.bestWave : 'No record yet';
 }
-$('play').onclick = () => { audio(); sfx.ui(); openHangar('menu'); };
+$('pModes').addEventListener('click', e => { const b = e.target.closest('.play'); if (!b) return; save.gm = b.dataset.g; persist(); audio(); sfx.ui(); openHangar('menu'); });
 $('hMap').onclick = () => { audio(); sfx.ui(); mapFrom = 'hangar'; openMap(); };
-$('gmSel').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; save.gm = b.dataset.g; persist(); audio(); sfx.ui(); refreshMenu(); });
 $('mdBack').onclick = () => goMenu();
 $('modes').addEventListener('click', e => { const b = e.target.closest('.mcd'); if (!b) return; audio(); goFull(); const m = b.dataset.m; if (m === 'story') startRun(save.sel); else if (m === 'waves') startWaves(); else openMP(); });
 $('again').onclick = () => { audio(); goFull(); if (gmode === 'waves') startWaves(); else startRun(save.sel); };
