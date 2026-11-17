@@ -619,7 +619,7 @@ body.paused .tbtn{display:none!important}
 <script>
 'use strict';
 // Versioning: next version -> next whole number (4.00), sub version -> +0.01 (3.01)
-const VERSION = '4.15';
+const VERSION = '4.16';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -3202,7 +3202,8 @@ function owPre() {
     if (!cx && !cy) holes.push({ x: 0, y: 0, m: 4.5, rh: 34 * U * Math.pow(4.5, 0.7), white: false, big: true, ck: key, ph: 0 });
     const Ro = rng(hash2(cx, cy, 55 + ow.seed)), orbs = [];
     const add = (t, i) => { const o = { x: (cx - 0.4 + Ro() * 0.8) * CH, y: (cy - 0.4 + Ro() * 0.8) * CH, ck: key + t + i, ph: Ro() * 6, t }; if (Math.hypot(o.x, o.y) < OWM * CH - 160 * U && !holes.some(h => Math.hypot(h.x - o.x, h.y - o.y) < h.rh * 6)) orbs.push(o); };
-    if (dc >= 1.2 && dc <= OWM) { if (Ro() < 0.5) add('b', 0); if (Ro() < 0.2) add('b', 1); if (Ro() < B.orb * 0.5) add('a', 0); if (Ro() < 0.14) add('d', 0); }
+    // orb chances are 2/3 of what they were (50% rarer)
+    if (dc >= 1.2 && dc <= OWM) { if (Ro() < 0.333) add('b', 0); if (Ro() < 0.133) add('b', 1); if (Ro() < B.orb * 0.333) add('a', 0); if (Ro() < 0.093) add('d', 0); }
     ow.all.set(key, { holes, orbs });
   }
 }
@@ -3369,8 +3370,8 @@ function owDrop(t, x, y) {
 }
 function owKillDrops(d, K) {
   if (d.mini) { owDrop('a', d.x, d.y); owDrop('b', d.x, d.y); owDrop('d', d.x, d.y); return; }
-  if (Math.random() < 0.02 + 0.025 * (K.cost || 1)) owDrop('a', d.x, d.y);
-  else if (Math.random() < 0.08) owDrop('b', d.x, d.y);
+  if (Math.random() < (0.02 + 0.025 * (K.cost || 1)) / 1.5) owDrop('a', d.x, d.y);
+  else if (Math.random() < 0.053) owDrop('b', d.x, d.y);
 }
 // mini bosses guard spots around the galaxy: big, tough, always drop an ability orb
 const MINIK = ['drone', 'lancer', 'charger', 'bomber', 'splitter', 'warden', 'gunship', 'phantom', 'carrier'];
