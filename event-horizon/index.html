@@ -257,7 +257,8 @@ svg{stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-l
 .gnode .srs{margin-top:3px}.gnode .srs .lv i{width:12px}
 .gp{font-size:12px;font-weight:600;color:var(--mint);white-space:nowrap}.gp.no{color:var(--dim);opacity:.6}.gp.tag{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:rgb(var(--c))}
 .gnode.mx{opacity:.8}
-.gnode.unl{opacity:1}
+.gnode.lkd{opacity:.7}.gnode.lkd .ico{filter:grayscale(1)}
+.gbr{flex-wrap:wrap}.gbr .gnode.cmp{flex:1 1 calc(16.66% - 7px);min-width:150px}
 .gp.lk{display:flex;align-items:center;gap:6px}.lkt{font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);padding:1px 6px;border-radius:999px;border:1px solid rgba(255,255,255,.18)}
 .gnode.cmp{flex:1;min-width:0;grid-template-columns:32px minmax(0,1fr);row-gap:2px}
 .gbr .gnode{flex:1}
@@ -504,7 +505,7 @@ body.paused .tbtn{display:none!important}
 <script>
 'use strict';
 // Versioning (renumbered by request): next version -> next whole number (3.00), sub version -> +0.01 (2.01)
-const VERSION = '2.21';
+const VERSION = '2.22';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -543,6 +544,10 @@ const ICONS = {
   u_drones: [C(12, 12, 3), C(12, 12, 8), C(20, 12, 1.6), C(4, 12, 1.6)],
   u_beam: ['M3 12h18', 'M6 8h12', 'M6 16h12'],
   u_time: ['M7 3h10M7 21h10', 'M8 3c0 5 8 6 8 9s-8 4-8 9', 'M16 3c0 5-8 6-8 9s8 4 8 9'],
+  seekpk: ['M4 19c2-8 7-12 14-13', 'M14.5 3.5L18 6l-2.6 3.6'],
+  deflpk: ['M12 4a8 8 0 0 1 8 8', 'M12 20a8 8 0 0 1-8-8', C(12, 12, 3)],
+  barrpk: ['M5 19l5-5', 'M19 5l-7 2-3 3 5 5 3-3z', 'M3 13l4-1M11 21l1-4'],
+  wellpk: [C(12, 12, 2.5), 'M12 4a8 8 0 1 1-8 8', 'M12 8a4 4 0 1 1-4 4'],
   u_nova: [C(12, 12, 3), 'M12 2v4M12 18v4M2 12h4M18 12h4M5 5l3 3M16 16l3 3M19 5l-3 3M8 16l-3 3'],
   map: ['M9 4L3 6v14l6-2 6 2 6-2V4l-6 2z', 'M9 4v14M15 6v14'],
   wrench: ['M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z'],
@@ -607,16 +612,16 @@ const SECTORS = [
 const NS = SECTORS.length;
 // one unique boss per sector, each tougher than the last
 const BOSSES = [
-  { name: 'Sentinel', tag: 'Ring bursts and aimed shots', hp: 120, arms: 4, sides: 4, ring: [14, 160, 2.7], aim: [3, 1.45] },
-  { name: 'Brood Mother', tag: 'Hatches seekers', hp: 200, arms: 6, sides: 6, ring: [16, 165, 2.5], aim: [3, 1.35], summon: ['seeker', 2, 6] },
-  { name: 'Prism Lord', tag: 'Charged laser beams', hp: 290, arms: 3, sides: 3, ring: [18, 170, 2.5], aim: [3, 1.3], beams: [2, 4.8] },
-  { name: 'Juggernaut', tag: 'Rams straight at you', hp: 370, arms: 5, sides: 5, ring: [20, 175, 2.4], aim: [3, 1.2], charge: 5.2 },
-  { name: 'Minefather', tag: 'Fills space with mines', hp: 450, arms: 8, sides: 8, ring: [20, 180, 2.4], aim: [3, 1.15], mines: [3, 3.2], summon: ['bomber', 1, 10] },
-  { name: 'Hydra', tag: 'Spiral streams and splitters', hp: 540, arms: 6, sides: 6, ring: [22, 185, 2.3], aim: [3, 1.1], spiral: [2, 0.12], summon: ['splitter', 1, 9] },
-  { name: 'Aegis', tag: 'Rotating shields block shots', hp: 630, arms: 4, sides: 8, ring: [24, 195, 2.2], aim: [3, 1.05], shield: 2, beams: [2, 5.5] },
-  { name: 'Dreadnought', tag: 'Heavy barrages and gunships', hp: 730, arms: 6, sides: 4, ring: [26, 200, 2.1], aim: [5, 1.1], mines: [3, 3.6], summon: ['gunship', 1, 11] },
-  { name: 'Wraith', tag: 'Teleports and fires lasers', hp: 830, arms: 5, sides: 3, ring: [26, 205, 2.0], aim: [3, 1.0], teleport: 4.2, beams: [3, 4.6], summon: ['phantom', 1, 9] },
-  { name: 'Singularity Eye', tag: 'Every attack at once', hp: 960, arms: 10, sides: 10, ring: [30, 210, 1.9], aim: [5, 1.0], spiral: [3, 0.11], beams: [4, 5.2], charge: 7, mines: [3, 4], summon: ['carrier', 1, 13], eye: true },
+  { name: 'Sentinel', ab: 'multi', tag: 'Ring bursts and aimed shots', hp: 120, arms: 4, sides: 4, ring: [14, 160, 2.7], aim: [3, 1.45] },
+  { name: 'Brood Mother', ab: 'seek', tag: 'Hatches seekers', hp: 200, arms: 6, sides: 6, ring: [16, 165, 2.5], aim: [3, 1.35], summon: ['seeker', 2, 6] },
+  { name: 'Prism Lord', ab: 'beam', tag: 'Charged laser beams', hp: 290, arms: 3, sides: 3, ring: [18, 170, 2.5], aim: [3, 1.3], beams: [2, 4.8] },
+  { name: 'Juggernaut', ab: 'rapid', tag: 'Rams straight at you', hp: 370, arms: 5, sides: 5, ring: [20, 175, 2.4], aim: [3, 1.2], charge: 5.2 },
+  { name: 'Minefather', ab: 'nova', tag: 'Fills space with mines', hp: 450, arms: 8, sides: 8, ring: [20, 180, 2.4], aim: [3, 1.15], mines: [3, 3.2], summon: ['bomber', 1, 10] },
+  { name: 'Hydra', ab: 'sats', tag: 'Spiral streams and splitters', hp: 540, arms: 6, sides: 6, ring: [22, 185, 2.3], aim: [3, 1.1], spiral: [2, 0.12], summon: ['splitter', 1, 9] },
+  { name: 'Aegis', ab: 'defl', tag: 'Rotating shields block shots', hp: 630, arms: 4, sides: 8, ring: [24, 195, 2.2], aim: [3, 1.05], shield: 2, beams: [2, 5.5] },
+  { name: 'Dreadnought', ab: 'barr', tag: 'Heavy barrages and gunships', hp: 730, arms: 6, sides: 4, ring: [26, 200, 2.1], aim: [5, 1.1], mines: [3, 3.6], summon: ['gunship', 1, 11] },
+  { name: 'Wraith', ab: 'slow', tag: 'Teleports and fires lasers', hp: 830, arms: 5, sides: 3, ring: [26, 205, 2.0], aim: [3, 1.0], teleport: 4.2, beams: [3, 4.6], summon: ['phantom', 1, 9] },
+  { name: 'Singularity Eye', ab: 'well', tag: 'Every attack at once', hp: 960, arms: 10, sides: 10, ring: [30, 210, 1.9], aim: [5, 1.0], spiral: [3, 0.11], beams: [4, 5.2], charge: 7, mines: [3, 4], summon: ['carrier', 1, 13], eye: true },
 ];
 const bossDef = sec => BOSSES[(sec - 1) % BOSSES.length];
 const bossStyleText = sec => bossDef(sec).name + ' · ' + bossDef(sec).tag;
@@ -629,15 +634,16 @@ function themeFor(n) {
 let TH = SECTORS[0];
 
 // ================= SAVE / UPGRADES =================
-let save = { seen: { k: {}, b: {} }, upv: 2, dust: 0, up: {}, unlocked: 1, sel: 1, best: 0, sbest: {}, lb: [], deep: 0, name: '', tut: 0, cam: 'follow', shake: true, skins: ['scrap'], skin: 'scrap', bskins: ['pellet'], bskin: 'pellet', orbs: { void: 0, stellar: 0 } };
+let save = { abil: {}, abTry: {}, seen: { k: {}, b: {} }, upv: 3, dust: 0, up: {}, unlocked: 1, sel: 1, best: 0, sbest: {}, lb: [], deep: 0, name: '', tut: 0, cam: 'follow', shake: true, skins: ['scrap'], skin: 'scrap', bskins: ['pellet'], bskin: 'pellet', orbs: { void: 0, stellar: 0 } };
 const SAVE0 = JSON.stringify(save);
 let lastPacked = '';
 function loadSave() {
   try {
     const s = JSON.parse(localStorage.getItem('eh_save2') || 'null');
     if (s && typeof s === 'object') Object.assign(save, s);
-    if (s && typeof s === 'object' && s.upv !== 2 && save.up) { for (const k in save.up) save.up[k] = migTier(k, save.up[k]); }
-    save.upv = 2;
+    if (s && typeof s === 'object' && (s.upv || 0) < 2 && save.up) { for (const k in save.up) save.up[k] = migTier(k, save.up[k]); }
+    if (s && typeof s === 'object' && (s.upv || 0) < 3) migAbil(save, s.unlocked);
+    save.upv = 3;
     if (s && typeof s === 'object' && !s.seen) { save.seen = { k: {}, b: {} }; const cl = Math.min(NS, (save.unlocked || 1) - 1); for (let i = 1; i <= cl; i++) { save.seen.k[KINDS[i - 1]] = 1; save.seen.b[i] = 1; } if (save.best) save.seen.k.drone = 1; }
     if (save.up && save.up.homing) { save.dust = (save.dust || 0) + [0, 220, 640][Math.min(2, save.up.homing)]; delete save.up.homing; save.homRefund = true; }
     if (!(s && typeof s === 'object')) save.best = +localStorage.getItem('eh_best') || 0;
@@ -655,9 +661,21 @@ function persist() {
 const tier = k => save.up[k] || 0;
 const CATS = [['SHIP', 'Ship'], ['WEAPON', 'Weapons'], ['POWER', 'Power-ups'], ['UNLOCK', 'Unlocks'], ['SKIN', 'Skins'], ['ORB', 'Orbs']];
 const CATCOL = { SHIP: '120,230,255', WEAPON: '255,180,100', POWER: '200,150,255', UNLOCK: '200,150,255', SKIN: '255,140,220', ORB: '160,120,255' };
-const upCol = u => u.cat === 'UNLOCK' && tier(u.k) < u.max ? '150,160,175' : CATCOL[u.cat];
+const abLocked = u => !!UPAB[u.k] && !hasAb(UPAB[u.k]);
+const upCol = u => abLocked(u) ? '150,160,175' : CATCOL[u.cat];
+function migAbil(o, unlocked) {
+  o.abil = o.abil || {}; o.up = o.up || {};
+  for (const [k, ab] of [['u_drones', 'sats'], ['u_beam', 'beam'], ['u_time', 'slow'], ['u_nova', 'nova']]) if (o.up[k]) { o.abil[ab] = 1; o.up[k] = 0; }
+  if (o.up.multi) o.abil.multi = 1; if (o.up.rapid) o.abil.rapid = 1;
+  const cl = Math.min(10, (unlocked || 1) - 1), order = ['multi', 'seek', 'beam', 'rapid', 'nova', 'sats', 'defl', 'barr', 'slow', 'well'];
+  for (let i = 0; i < cl; i++) o.abil[order[i]] = 1;
+}
 function gcost(a, b, n) { const r = n > 1 ? Math.pow(b / a, 1 / (n - 1)) : 1; return Array.from({ length: n }, (_, i) => Math.round(a * Math.pow(r, i) / 10) * 10); }
 const UPMIG = { shieldgen: [0, 1, 3, 5] };
+// power-up abilities: only the shield is known at the start, each boss can teach you one more
+const ABN = { shield: 'Shield', multi: 'Spread shot', seek: 'Seeker rounds', beam: 'Photon beam', rapid: 'Rapid fire', nova: 'Supernova', sats: 'Orbital drones', defl: 'Deflector', barr: 'Missile barrage', slow: 'Slow time', well: 'Gravity well' };
+const UPAB = { shieldpk: 'shield', multi: 'multi', seekpk: 'seek', u_beam: 'beam', rapid: 'rapid', u_nova: 'nova', u_drones: 'sats', deflpk: 'defl', barrpk: 'barr', u_time: 'slow', wellpk: 'well' };
+const hasAb = id => id === 'shield' || !!(save.abil && save.abil[id]);
 const migTier = (k, v) => UPMIG[k] ? UPMIG[k][Math.min(3, v)] : /^u_/.test(k) ? v : v * 2;
 const UPG = [
   { k: 'hull', cat: 'SHIP', name: 'Reinforced hull', info: 'Odd levels add a starting ship, even levels raise the ship limit.', stat: 'Ships', val: t => `${3 + Math.ceil(t / 2)} start / ${5 + Math.floor(t / 2)} max`, max: 6, cost: gcost(60, 520, 6) },
@@ -675,10 +693,14 @@ const UPG = [
   { k: 'rapid', cat: 'POWER', name: 'Overclock', info: 'Rapid fire lasts longer and shoots faster.', stat: 'Rapid fire', val: t => (12 + 2.5 * t) + 's', max: 4, cost: gcost(60, 260, 4) },
   { k: 'shieldpk', cat: 'POWER', name: 'Hardlight shield', info: 'Shield drops absorb more hits and keep you safe longer when they break.', stat: 'Shield hits', val: t => (1 + Math.floor(t / 2)) + (t % 2 ? ' + longer safety' : ''), max: 4, cost: gcost(70, 300, 4) },
   { k: 'luck', cat: 'POWER', name: 'Salvager', info: 'Enemies drop power-ups more often.', stat: 'Drop chance', val: t => t ? '+' + (t * 17.5) + '%' : 'Base', max: 6, cost: gcost(55, 360, 6) },
-  { k: 'u_drones', cat: 'UNLOCK', name: 'Orbital drones', info: 'New drop: two satellites circle you, shoot enemies and block bullets.', max: 1, cost: [220] },
-  { k: 'u_beam', cat: 'UNLOCK', name: 'Photon beam', info: 'New drop: a piercing laser that bends around the black hole.', max: 1, cost: [320] },
-  { k: 'u_time', cat: 'UNLOCK', name: 'Slow time', info: 'New drop: slows every enemy and enemy bullet for 7 seconds.', max: 1, cost: [200] },
-  { k: 'u_nova', cat: 'UNLOCK', name: 'Supernova', info: 'New drop: a free gravity bomb plus a ring of homing bolts.', max: 1, cost: [260] },
+  { k: 'seekpk', cat: 'POWER', name: 'Seeker rounds', info: 'Bullets gently curve toward enemies ahead of them.', stat: 'Duration', val: t => (10 + 2 * t) + 's', max: 3, cost: gcost(90, 300, 3) },
+  { k: 'u_beam', cat: 'POWER', name: 'Photon beam', info: 'A piercing laser that bends around the black hole.', stat: 'Duration', val: t => (7 + 1.5 * t) + 's', max: 3, cost: gcost(140, 420, 3) },
+  { k: 'u_nova', cat: 'POWER', name: 'Supernova', info: 'A free gravity bomb plus a ring of homing bolts.', stat: 'Bolts', val: t => 20 + 6 * t, max: 3, cost: gcost(120, 380, 3) },
+  { k: 'u_drones', cat: 'POWER', name: 'Orbital drones', info: 'Two satellites circle you, shoot enemies and block bullets.', stat: 'Duration', val: t => (15 + 3 * t) + 's', max: 3, cost: gcost(110, 360, 3) },
+  { k: 'deflpk', cat: 'POWER', name: 'Deflector', info: 'Rotating shield arcs around your ship destroy enemy shots.', stat: 'Duration', val: t => (9 + 2 * t) + 's', max: 3, cost: gcost(120, 400, 3) },
+  { k: 'barrpk', cat: 'POWER', name: 'Missile barrage', info: 'Fires a stream of homing missiles at everything nearby.', stat: 'Duration', val: t => (7 + 1.5 * t) + 's', max: 3, cost: gcost(140, 440, 3) },
+  { k: 'u_time', cat: 'POWER', name: 'Slow time', info: 'Slows every enemy and enemy bullet.', stat: 'Duration', val: t => (7 + 1.5 * t) + 's', max: 3, cost: gcost(110, 360, 3) },
+  { k: 'wellpk', cat: 'POWER', name: 'Gravity well', info: 'Drops a small black hole that pulls enemies in and grinds them down.', stat: 'Duration', val: t => (6 + 1.5 * t) + 's', max: 3, cost: gcost(160, 480, 3) },
 ];
 // ================= SKINS =================
 const RAR = {
@@ -964,7 +986,7 @@ function calcStats() {
     missiles: [0, 1, 1, 2, 2, 3, 3][t('missile')], missileT: [0, 3.6, 3, 3, 2.6, 2.6, 2.2][t('missile')],
     multi: [0, 0, 1, 1, 2][t('multi')], multiDur: [12, 15, 15, 18, 18][t('multi')], rapidDur: 12 + 2.5 * t('rapid'), rapidRate: 1 - 0.06 * t('rapid'),
     shieldHits: 1 + Math.floor(t('shieldpk') / 2), shieldInv: 1.2 + 0.5 * Math.ceil(t('shieldpk') / 2), luck: 1 + 0.175 * t('luck'),
-    sats: t('u_drones'), beam: t('u_beam'), slow: t('u_time'), nova: t('u_nova'),
+    satsDur: 15 + 3 * t('u_drones'), beamDur: 7 + 1.5 * t('u_beam'), slowDur: 7 + 1.5 * t('u_time'), novaN: 20 + 6 * t('u_nova'), seekDur: 10 + 2 * t('seekpk'), deflDur: 9 + 2 * t('deflpk'), barrDur: 7 + 1.5 * t('barrpk'), wellDur: 6 + 1.5 * t('wellpk'),
   };
 }
 
@@ -976,7 +998,7 @@ let bhMass = 1, rh = 20, shake = 0, flash = 0, flashCol = '255,255,255', timeSca
 let waveTimer = 0, clearing = false, paused = false, deadTimer = 0, overTimer = 0, swallowed = 0, kills = 0;
 let ship = null, bullets = [], ebullets = [], asts = [], drones = [], boss = null, missiles = [], dust = [];
 let parts = [], rings = [], texts = [], pickups = [], queue = [];
-let bw = null, bwId = 0, pw = freshPw(), fireCD = 0, wantBomb = false, wantDash = false;
+let barrCD = 0, defA = 0, bw = null, bwId = 0, pw = freshPw(), fireCD = 0, wantBomb = false, wantDash = false;
 let chain = 0, chainT = 0, surgeT = 22, surgeWarn = 0, surge = 0, surgeK = 1, muted = false, ghosts = [], nextBeat = 0, beat = 0;
 let runDust = 0, secDust = 0, secScore = 0, sectorsCleared = 0, missileCD = 0, satA = 0, satCD = 0, shieldReT = 0, beamPath = null;
 let warpT = 0, warpSwapped = false, nextSec = 1, dustSndT = 0;
@@ -989,7 +1011,7 @@ const neb = document.createElement('canvas');
 const bA = document.createElement('canvas'), bB = document.createElement('canvas'), bC = document.createElement('canvas');
 const bxA = bA.getContext('2d'), bxB = bB.getContext('2d'), bxC = bC.getContext('2d');
 let vigGrad = null;
-function freshPw() { return { multi: 0, rapid: 0, shield: 0, sats: 0, beam: 0, slow: 0, seek: 0 }; }
+function freshPw() { return { multi: 0, rapid: 0, shield: 0, sats: 0, beam: 0, slow: 0, seek: 0, defl: 0, barr: 0, well: 0, wx: 0, wy: 0 }; }
 
 // ================= SETUP =================
 function resize() {
@@ -1287,6 +1309,9 @@ const PICK = {
   beam: { c: '235,245,255', ic: 'u_beam', name: () => 'Photon beam' },
   slow: { c: '150,165,255', ic: 'u_time', name: () => 'Slow time' },
   nova: { c: '255,165,70', ic: 'u_nova', name: () => 'Supernova' },
+  defl: { c: '120,220,255', ic: 'deflpk', name: () => 'Deflector' },
+  barr: { c: '255,150,90', ic: 'barrpk', name: () => 'Missile barrage' },
+  well: { c: '200,120,255', ic: 'wellpk', name: () => 'Gravity well' },
 };
 let lastDropT = -9;
 function dropRoll(p) {
@@ -1299,8 +1324,8 @@ function dropRoll(p) {
   return false;
 }
 function dropPickup(x, y) {
-  const w = [['multi', 24], ['rapid', 22], ['seek', 16], ['shield', 20], ['bomb', 10], ['life', 4]];
-  if (S.sats) w.push(['sats', 12]); if (S.beam) w.push(['beam', 11]); if (S.slow) w.push(['slow', 10]); if (S.nova) w.push(['nova', 8]);
+  const w = [['shield', 20], ['bomb', 10], ['life', 4]];
+  for (const [k, wt] of [['multi', 24], ['rapid', 22], ['seek', 16], ['sats', 12], ['beam', 11], ['slow', 10], ['nova', 8], ['defl', 11], ['barr', 10], ['well', 8]]) if (hasAb(k)) w.push([k, wt]);
   let tot = 0; for (const e of w) tot += e[1];
   let r = Math.random() * tot, type = 'multi';
   for (const e of w) { r -= e[1]; if (r <= 0) { type = e[0]; break; } }
@@ -1532,6 +1557,14 @@ function killBoss() {
   shake = 32; buzz([80, 50, 160]); flash = 0.8; flashCol = '255,220,170'; slowmo(0.2, 2);
   lives = Math.min(S.maxLives, lives + 1); bombs = Math.min(S.maxBombs, bombs + 1);
   ebullets.length = 0;
+  const ab = b.def && b.def.ab;
+  if (ab && !hasAb(ab)) {
+    save.abil = save.abil || {}; save.abTry = save.abTry || {};
+    const tries = save.abTry[ab] || 0;
+    if (Math.random() < 0.5 || tries >= 2) { save.abil[ab] = 1; delete save.abTry[ab]; announce('New ability', { big: true, kick: ABN[ab], sub: 'It now drops in battle and can be upgraded in the Garage', col: '200,150,255', dur: 3.4 }); }
+    else { save.abTry[ab] = tries + 1; announce('No ability this time', { kick: ABN[ab], sub: 'Beat ' + b.def.name + ' again for another chance', col: '200,150,255', dur: 2.8 }); }
+    persist();
+  }
 }
 function doBomb(free) {
   if (!ship) return;
@@ -1627,16 +1660,16 @@ function renderHangar(flashK) {
   startShopAnim();
 }
 function nodeHTML(u, compact) {
-  const t = tier(u.k), mx = t >= u.max, cost = mx ? 0 : u.cost[t], ok = save.dust >= cost, unlock = u.cat === 'UNLOCK', sel = shopSel.G === u.k;
-  const sub = unlock ? `<span>${mx ? 'Unlocked' : 'Locked'}</span>` : `<div class="lv">${Array.from({ length: u.max }, (_, i) => `<i class="${i < t ? 'on' : ''}"></i>`).join('')}</div>`;
-  const price = mx ? (unlock ? '<div class="gp tag">Unlocked</div>' : '<div class="gp tag">Max</div>') : unlock ? `<div class="gp lk ${ok ? '' : 'no'}"><span class="lkt">Locked</span> ◆ ${fmt(cost)}</div>` : `<div class="gp ${ok ? '' : 'no'}">◆ ${fmt(cost)}</div>`;
-  return `<button class="gnode${compact ? ' cmp' : ''}${sel ? ' sel' : ''}${mx ? ' mx' : ''}${mx && unlock ? ' unl' : ''}${!mx && ok ? ' can' : ''}" data-sel="${u.k}" style="--c:${upCol(u)}"><div class="ico">${svgIcon(u.k)}</div><div class="gn"><div class="srn">${u.name}</div><div class="srs">${sub}</div></div>${price}</button>`;
+  const t = tier(u.k), mx = t >= u.max, cost = mx ? 0 : u.cost[t], lk = abLocked(u), ok = !lk && save.dust >= cost, unlock = false, sel = shopSel.G === u.k;
+  const sub = lk ? '<span>Locked</span>' : `<div class="lv">${Array.from({ length: u.max }, (_, i) => `<i class="${i < t ? 'on' : ''}"></i>`).join('')}</div>`;
+  const price = lk ? '<div class="gp lk"><span class="lkt">Locked</span></div>' : mx ? '<div class="gp tag">Max</div>' : `<div class="gp ${ok ? '' : 'no'}">◆ ${fmt(cost)}</div>`;
+  return `<button class="gnode${compact ? ' cmp' : ''}${sel ? ' sel' : ''}${mx ? ' mx' : ''}${lk ? ' lkd' : ''}${!mx && ok ? ' can' : ''}" data-sel="${u.k}" style="--c:${upCol(u)}"><div class="ico">${svgIcon(u.k)}</div><div class="gn"><div class="srn">${u.name}</div><div class="srs">${sub}</div></div>${price}</button>`;
 }
 function renderNodes() {
   const by = c => UPG.filter(u => u.cat === c);
   $('gL').innerHTML = '<div class="ghd">Ship</div>' + by('SHIP').map(u => nodeHTML(u)).join('');
   $('gR').innerHTML = '<div class="ghd">Weapons</div>' + by('WEAPON').map(u => nodeHTML(u)).join('');
-  $('gB').innerHTML = `<div class="gbg"><div class="ghd">Power-ups</div><div class="gbr">${by('POWER').concat(by('UNLOCK')).map(u => nodeHTML(u, true)).join('')}</div></div>`;
+  $('gB').innerHTML = `<div class="gbg"><div class="ghd">Power-ups</div><div class="gbr">${by('POWER').sort((a, b) => (hasAb(UPAB[b.k] || 'shield') ? 1 : 0) - (hasAb(UPAB[a.k] || 'shield') ? 1 : 0)).map(u => nodeHTML(u, true)).join('')}</div></div>`;
 }
 function renderOwned() {
   const row = (list, owned, cur, sub) => list.filter(x => owned.includes(x.id)).sort(byRarity).map(it => {
@@ -1715,11 +1748,12 @@ function renderPrevInfo() {
   if (s.type === 'idle') {
     h = `<div class="gdt"><div class="pvh"><div class="pvn">${it.name}</div>${chipR(it.rar)}</div><div class="pvd">Your ship, ready for upgrades. Hover an upgrade to see it in action, click it to buy. On a phone, tap once to preview and again to buy.</div></div>`;
   } else if (s.type === 'upg') {
-    const u = it, t = tier(u.k), mx = t >= u.max, cost = mx ? 0 : u.cost[t], ok = save.dust >= cost, unlock = u.cat === 'UNLOCK';
+    const u = it, t = tier(u.k), mx = t >= u.max, cost = mx ? 0 : u.cost[t], lk = abLocked(u), ok = !lk && save.dust >= cost, unlock = false;
     col = upCol(u);
-    const catName = unlock ? (mx ? 'Power-ups' : 'Locked power-up') : (CATS.find(c => c[0] === u.cat) || [0, ''])[1];
-    const stat = unlock ? '' : `<div class="cs"><span>${u.stat}</span><b>${u.val(t)}${mx ? '' : `<em>→ ${u.val(t + 1)}</em>`}</b></div>`;
-    const btn = mx ? `<button class="buy done" disabled>${unlock ? 'Unlocked' : 'Max level'}</button>`
+    const catName = lk ? 'Locked' : (CATS.find(c => c[0] === u.cat) || [0, ''])[1];
+    const bi = lk ? BOSSES.findIndex(B => B.ab === UPAB[u.k]) : -1, bName = bi >= 0 && save.seen && save.seen.b && save.seen.b[bi + 1] ? BOSSES[bi].name : 'the sector ' + (bi + 1) + ' boss';
+    const stat = lk ? `<div class="cs"><span>How to get it</span><b>Beat ${bName} · 50% per win</b></div>` : `<div class="cs"><span>${u.stat}</span><b>${u.val(t)}${mx ? '' : `<em>→ ${u.val(t + 1)}</em>`}</b></div>`;
+    const btn = lk ? `<button class="buy done" disabled>Beat ${bName} to unlock</button>` : mx ? `<button class="buy done" disabled>Max level</button>`
       : `<button class="buy" data-k="${u.k}" ${ok ? '' : 'disabled'}><span>${ok ? (gPT === 'mouse' ? 'Click to ' : 'Tap again to ') + (unlock ? 'unlock' : t ? 'upgrade' : 'install') : 'Need more ◆'}</span><span>◆ ${fmt(cost)}</span></button>`;
     const btnFix = 0;
     h = `<div class="gdt"><div class="pvh"><div class="pvn">${u.name}</div><span class="chip" style="background:rgba(${col},.14);color:rgb(${col})">${catName}</span></div><div class="pvd">${u.info}</div></div><div class="gda">${stat}${btn}</div>`;
@@ -1752,6 +1786,7 @@ let gPT = 'mouse';
 $('garage').addEventListener('pointerdown', e => { gPT = e.pointerType || 'mouse'; }, true);
 function nodeBuy(k) {
   const u = UPG.find(x => x.k === k); if (!u) return;
+  if (abLocked(u)) { const p = $('pvI'); p.classList.remove('nope'); void p.offsetWidth; p.classList.add('nope'); tone(160, 0.15, 'square', 0.04, 110); return; }
   const t = tier(k);
   if (t >= u.max) { sfx.ui(); return; }
   if (save.dust < u.cost[t]) { const p = $('pvI'); p.classList.remove('nope'); void p.offsetWidth; p.classList.add('nope'); tone(160, 0.15, 'square', 0.04, 110); return; }
@@ -1860,6 +1895,10 @@ function pvSetup(w, h) {
     case 'luck': two({ drop: 0.2 * A.luck }, { drop: 0.2 * B.luck });  break;
     case 'multi': two({ spread: SPREADS[1 + A.multi] }, { spread: SPREADS[1 + B.multi] }); pv.cap = 'While the spread shot drop is active'; break;
     case 'rapid': two({ iv: 0.055 * A.rapidRate * A.rate }, { iv: 0.055 * B.rapidRate * B.rate }); pv.cap = 'While the rapid fire drop is active'; break;
+    case 'seekpk': two({ layout: 'offset', aim: false, hom: 1.6 }, { layout: 'offset', aim: false, hom: 1.6 }); pv.cap = 'Bullets curve toward targets'; break;
+    case 'barrpk': two({ mis: 2, misT: 0.45 }, { mis: 2, misT: 0.45 }); pv.cap = 'A stream of homing missiles'; break;
+    case 'deflpk': pv.kind = 'shieldpk'; pvCustomInit('shieldpk', A, B, true); pv.hitsMax = 9; pv.hits = 9; pv.cap = 'Rotating arcs destroy enemy shots'; break;
+    case 'wellpk': pv.kind = 'magnet'; pvCustomInit('magnet', A, A, true); pv.rB = 70; pv.cap = 'A small black hole pulls everything in'; break;
     case 'u_drones': pv.lanes = [mkLane('', laneSt(S, { sats: true }))]; pv.cap = 'Drop: two drones orbit you and shoot'; break;
     case 'u_beam': pv.lanes = [mkLane('', laneSt(S, { beam: true }))]; pv.cap = 'Drop: a piercing laser for 7 seconds'; break;
     case 'hull': case 'engine': case 'dash': case 'shieldgen': case 'shieldpk': case 'bombbay': case 'magnet': case 'u_time': case 'u_nova':
@@ -2262,7 +2301,7 @@ function buySkin(id) {
 }
 function buy(k) {
   const u = UPG.find(x => x.k === k), t = tier(k);
-  if (!u || t >= u.max) return;
+  if (!u || t >= u.max || abLocked(u)) return;
   const c = u.cost[t]; if (save.dust < c) return;
   save.dust -= c; save.up[k] = t + 1;
   const old = S; calcStats();
@@ -2285,7 +2324,7 @@ function renderMap() {
     if (!un) chip = '<span class="chip">Locked</span>';
     else if (n <= NS && n < save.unlocked) chip = '<span class="chip ok">Cleared</span>';
     else chip = `<span class="chip new">${n === NS + 1 ? 'Endless' : 'New'}</span>`;
-    const tags = T ? `<span>${T.twist}</span><span class="b">Boss: ${(save.seen && save.seen.b && save.seen.b[n]) ? bossDef(n).name : '???'}</span><span>New enemy: ${(save.seen && save.seen.k && save.seen.k[KINDS[n - 1]]) ? DK[KINDS[n - 1]].name : '???'}</span>${AVAR[n - 1] ? `<span>${AVN[AVAR[n - 1]]}s</span>` : ''}` : '<span>Every sector again, harder each loop</span><span>All enemies</span>';
+    const tags = T ? `<span>${T.twist}</span><span class="b">Boss: ${(save.seen && save.seen.b && save.seen.b[n]) ? bossDef(n).name : '???'}</span><span>New enemy: ${(save.seen && save.seen.k && save.seen.k[KINDS[n - 1]]) ? DK[KINDS[n - 1]].name : '???'}</span><span>Ability: ${hasAb(bossDef(n).ab) ? ABN[bossDef(n).ab] : '???'}</span>${AVAR[n - 1] ? `<span>${AVN[AVAR[n - 1]]}s</span>` : ''}` : '<span>Every sector again, harder each loop</span><span>All enemies</span>';
     const best = T ? (save.sbest[n] ? 'Best score ' + fmt(save.sbest[n]) : !un ? 'Beat sector ' + (n - 1) + ' to unlock' : n < save.unlocked ? '' : 'Not played yet') : (save.deep ? 'Deepest: Deep Void ' + save.deep : 'Unlocks after The Singularity');
     h += `<div class="mstop${un ? '' : ' locked'}${sel ? ' sel' : ''}${n % 2 ? '' : ' rt'}" data-n="${n}" style="--c:${c2};height:${stopH}px"><div class="mrow" style="transform:translateX(${innerWidth < 640 ? 0 : Math.round(Math.sin(n * 1.15) * Math.min(120, innerWidth * 0.08))}px)"><div class="mplan" style="background:${bg}">${T ? n : '∞'}</div><div class="mcard"><div class="mk">${T ? 'SECTOR ' + n : 'ENDLESS'}</div><div class="mn">${T ? T.name : 'Deep Void'} ${chip}</div><div class="mt">${tags}</div><div class="mb">${best}</div></div></div></div>`;
   }
@@ -2349,7 +2388,7 @@ $('mDn').onclick = () => { sfx.ui(); mapGo(Math.min(NS + 1, mapFocus + 1), true)
 // ================= SAVE CODES / PROFILE =================
 function hashStr(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36); }
 function packSave() {
-  return { v: 1, n: save.name || '', d: save.dust, u: save.up, k: save.unlocked, s: save.sel, b: save.best, sb: save.sbest, dp: save.deep || 0, sk: save.skins || ['scrap'], ss: save.skin || 'scrap', bk: save.bskins || ['pellet'], bs: save.bskin || 'pellet', ob: save.orbs || {}, uv: 2, sn: save.seen || {} };
+  return { v: 1, n: save.name || '', d: save.dust, u: save.up, k: save.unlocked, s: save.sel, b: save.best, sb: save.sbest, dp: save.deep || 0, sk: save.skins || ['scrap'], ss: save.skin || 'scrap', bk: save.bskins || ['pellet'], bs: save.bskin || 'pellet', ob: save.orbs || {}, uv: 3, sn: save.seen || {}, ab: save.abil || {} };
 }
 function encodeSave() {
   const b64 = btoa(unescape(encodeURIComponent(JSON.stringify(packSave())))).replace(/=+$/, '');
@@ -2366,13 +2405,16 @@ function decodeSave(code) {
 function unpackSave(o) {
   const num = (v, lo, hi) => clamp(Math.floor(+v || 0), lo, hi);
   const up = {}, homRef = o.u && o.u.homing ? [0, 220, 640][Math.min(2, Math.floor(+o.u.homing || 0))] : 0;
-  for (const u of UPG) if (o.u && o.u[u.k]) up[u.k] = num(o.uv === 2 ? o.u[u.k] : migTier(u.k, Math.floor(+o.u[u.k] || 0)), 0, u.max);
+  const ou = {}; if (o.u && typeof o.u === 'object') for (const k in o.u) ou[k] = (o.uv || 0) >= 2 ? Math.floor(+o.u[k] || 0) : migTier(k, Math.floor(+o.u[k] || 0));
+  const abil = {}; if (o.ab && typeof o.ab === 'object') for (const k in ABN) if (o.ab[k]) abil[k] = 1;
+  if ((o.uv || 0) < 3) { const tmp = { up: ou, abil }; migAbil(tmp, Math.floor(+o.k || 1)); }
+  for (const u of UPG) if (ou[u.k]) up[u.k] = num(ou[u.k], 0, u.max);
   const sb = {};
   if (o.sb && typeof o.sb === 'object') for (const k in o.sb) if (/^\d+$/.test(k)) sb[k] = num(o.sb[k], 0, 1e12);
   const unlocked = num(o.k, 1, NS + 1);
   const bsk_ = ['pellet'].concat(Array.isArray(o.bk) ? o.bk.filter(id => id !== 'pellet' && BSKINS.some(x => x.id === id)) : []);
   const skins = ['scrap'].concat(Array.isArray(o.sk) ? o.sk.filter(id => id !== 'scrap' && SKINS.some(x => x.id === id)) : []);
-  return { name: String(o.n || '').slice(0, 16), dust: num(o.d, 0, 1e9) + homRef, up, unlocked, sel: num(o.s, 1, unlocked), best: Math.max(num(o.b, 0, 1e12), ...Object.values(sb), 0), sbest: sb, deep: num(o.dp, 0, 1e6), skins, skin: skins.includes(o.ss) ? o.ss : 'scrap', bskins: bsk_, bskin: bsk_.includes(o.bs) ? o.bs : 'pellet', seen: (() => { const sn = o.sn && typeof o.sn === 'object' ? o.sn : {}, r = { k: {}, b: {} }; for (const k of KINDS) if (sn.k && sn.k[k]) r.k[k] = 1; for (let i = 1; i <= NS; i++) if (sn.b && sn.b[i]) r.b[i] = 1; return r; })(), orbs: { void: num((o.ob || {}).void, 0, 999), stellar: num((o.ob || {}).stellar, 0, 999), quasar: num((o.ob || {}).quasar, 0, 999) } };
+  return { name: String(o.n || '').slice(0, 16), dust: num(o.d, 0, 1e9) + homRef, up, unlocked, sel: num(o.s, 1, unlocked), best: Math.max(num(o.b, 0, 1e12), ...Object.values(sb), 0), sbest: sb, deep: num(o.dp, 0, 1e6), skins, skin: skins.includes(o.ss) ? o.ss : 'scrap', bskins: bsk_, bskin: bsk_.includes(o.bs) ? o.bs : 'pellet', abil, seen: (() => { const sn = o.sn && typeof o.sn === 'object' ? o.sn : {}, r = { k: {}, b: {} }; for (const k of KINDS) if (sn.k && sn.k[k]) r.k[k] = 1; for (let i = 1; i <= NS; i++) if (sn.b && sn.b[i]) r.b[i] = 1; return r; })(), orbs: { void: num((o.ob || {}).void, 0, 999), stellar: num((o.ob || {}).stellar, 0, 999), quasar: num((o.ob || {}).quasar, 0, 999) } };
 }
 let loadArmed = null;
 function openProfile() {
@@ -2690,6 +2732,17 @@ function tutFinish() {
   announce('Tutorial complete', { big: true, sub: tut.reward ? '+◆ 100 stardust' : 'Good luck out there', col: '143,255,214', dur: 3 });
   asts.forEach(a => burst(a.x, a.y, 10, '200,150,255', 120, 0.6, 2)); asts = []; drones = [];
 }
+function drawWell() {
+  const x = pw.wx, y = pw.wy, k = U, f = Math.min(1, pw.well / 0.6, (S.wellDur - pw.well + 0.4) / 0.4);
+  ctx.save(); ctx.globalAlpha *= Math.max(0, f);
+  const g = ctx.createRadialGradient(x, y, 0, x, y, 240 * k); g.addColorStop(0, 'rgba(200,120,255,0.22)'); g.addColorStop(1, 'rgba(200,120,255,0)');
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, 240 * k, 0, TAU); ctx.fill();
+  ctx.translate(x, y); ctx.rotate(-time * 3);
+  for (let i = 0; i < 4; i++) { ctx.rotate(TAU / 4); ctx.strokeStyle = 'rgba(220,170,255,0.6)'; ctx.lineWidth = 2; ctx.beginPath(); for (let j = 0; j <= 20; j++) { const r = 18 * k + j * 5 * k, a = j * 0.18; j ? ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r) : ctx.moveTo(Math.cos(a) * r, Math.sin(a) * r); } ctx.stroke(); }
+  ctx.fillStyle = '#05000a'; ctx.beginPath(); ctx.arc(0, 0, 16 * k, 0, TAU); ctx.fill();
+  ctx.strokeStyle = 'rgba(230,190,255,0.95)'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(0, 0, 17 * k, 0, TAU); ctx.stroke();
+  ctx.restore();
+}
 function drawBeacon(b) {
   const k = U, p = 0.5 + 0.5 * Math.sin(time * 5);
   ctx.save(); ctx.translate(b.x, b.y);
@@ -2718,7 +2771,7 @@ function renderBeast() {
   });
   else BOSSES.forEach((B, i) => {
     const got = sn.b && sn.b[i + 1], T = SECTORS[i];
-    h += `<div class="card bx${got ? '' : ' unk'}" style="--c:${T.boss}" data-pb="${got ? i + 1 : ''}"><canvas class="bxc" data-b="${i + 1}"></canvas><div class="ch2"><span class="cn">${got ? B.name : '???'}</span><span class="chip">${T.name}</span></div><div class="cd">${got ? B.tag : 'Guards sector ' + (i + 1) + '. Reach it to find out more.'}</div>${got ? `<div class="bxs"><span>Health <b>${B.hp}</b></span><span>Sector <b>${i + 1}</b></span></div><div class="bxw">▶ Watch its attacks</div>` : ''}</div>`;
+    h += `<div class="card bx${got ? '' : ' unk'}" style="--c:${T.boss}" data-pb="${got ? i + 1 : ''}"><canvas class="bxc" data-b="${i + 1}"></canvas><div class="ch2"><span class="cn">${got ? B.name : '???'}</span><span class="chip">${T.name}</span></div><div class="cd">${got ? B.tag : 'Guards sector ' + (i + 1) + '. Reach it to find out more.'}</div>${got ? `<div class="bxs"><span>Health <b>${B.hp}</b></span><span>Sector <b>${i + 1}</b></span><span>Ability <b>${hasAb(B.ab) ? ABN[B.ab] : '???'}</b></span></div><div class="bxw">▶ Watch its attacks</div>` : ''}</div>`;
   });
   $('bxList').innerHTML = h;
 }
@@ -3128,7 +3181,16 @@ function update(dt, rdt) {
   wantDash = false;
   if (!ship && AC) { droneF.frequency.setTargetAtTime(90, AC.currentTime, 0.3); droneG.gain.setTargetAtTime(0.05, AC.currentTime, 0.3); }
 
-  for (const k of ['multi', 'rapid', 'sats', 'beam', 'slow', 'seek']) if (pw[k] > 0) pw[k] -= dt;
+  for (const k of ['multi', 'rapid', 'sats', 'beam', 'slow', 'seek', 'defl', 'barr', 'well']) if (pw[k] > 0) pw[k] -= dt;
+  // missile barrage
+  if (pw.barr > 0 && ship && mode === 'play') { barrCD -= dt; if (barrCD <= 0) { barrCD = 0.42; for (const s2 of [-1, 1]) { const a = ship.ang + s2 * 1.2; missiles.push({ x: ship.x, y: ship.y, vx: ship.vx * 0.5 + Math.cos(a) * 200 * U, vy: ship.vy * 0.5 + Math.sin(a) * 200 * U, life: 4.5, tgt: null }); } } }
+  // gravity well: pulls enemies in and grinds them down
+  if (pw.well > 0 && mode === 'play') {
+    const WRr = 240 * U, wx = pw.wx, wy = pw.wy;
+    for (const o of drones.concat(asts)) { const dx = wx - o.x, dy = wy - o.y, d = Math.hypot(dx, dy) || 1; if (d < WRr) { const f = (1 - d / WRr) * 900 * U; o.vx += dx / d * f * dt; o.vy += dy / d * f * dt; if (d < 55 * U) { o.vx *= 0.9; o.vy *= 0.9; hitObj(o, 3.5 * S.dmg * dt); } } }
+    for (let i = ebullets.length - 1; i >= 0; i--) { const b = ebullets[i]; if (Math.hypot(b.x - wx, b.y - wy) < 70 * U) ebullets.splice(i, 1); }
+    if (Math.random() < 0.6) { const a = rand(0, TAU), r = rand(80, 220) * U; part(wx + Math.cos(a) * r, wy + Math.sin(a) * r, -Math.cos(a + 0.6) * 160 * U, -Math.sin(a + 0.6) * 160 * U, 0.6, PICK.well.c, 2 * Math.max(1, U), 0, 0.97); }
+  }
   if (S.shieldRe && ship && pw.shield === 0) {
     shieldReT += dt;
     if (shieldReT >= S.shieldRe) { pw.shield = 1; shieldReT = 0; ring(ship.x, ship.y, 60, '100,255,160', 0.5, 3); sfx.shield(); }
@@ -3236,6 +3298,7 @@ function update(dt, rdt) {
     const r = gravity(b, b.k, edt);
     b.x += b.vx * edt; b.y += b.vy * edt; b.life -= edt;
     if (r < rh || b.life <= 0 || outOfWorld(b, 60)) { ebullets.splice(i, 1); continue; }
+    if (ship && pw.defl > 0) { const dd = Math.hypot(b.x - ship.x, b.y - ship.y); if (dd < 44 * U + b.R && dd > 20 * U) { const ba = Math.atan2(b.y - ship.y, b.x - ship.x); for (let k = 0; k < 3; k++) { let da = ba - (defA + k * TAU / 3); da = Math.atan2(Math.sin(da), Math.cos(da)); if (Math.abs(da) < 0.65) { burst(b.x, b.y, 6, PICK.defl.c, 120, 0.3, 1.8); ebullets.splice(i, 1); b.gone = true; break; } } if (b.gone) continue; } }
     if (ship && ship.inv <= 0 && dist2(b, ship) < (8 * U + b.R) ** 2) { ebullets.splice(i, 1); hurt(); }
   }
 
@@ -3444,16 +3507,19 @@ function update(dt, rdt) {
       const P = PICK[p.type];
       switch (p.type) {
         case 'multi': pw.multi = S.multiDur; break;
-        case 'seek': pw.seek = 10; break;
+        case 'seek': pw.seek = S.seekDur; break;
+        case 'defl': pw.defl = S.deflDur; break;
+        case 'barr': pw.barr = S.barrDur; break;
+        case 'well': pw.well = S.wellDur; pw.wx = ship.x; pw.wy = ship.y; ring(ship.x, ship.y, 160, PICK.well.c, 0.6, 4); tone(70, 1.2, 'sine', 0.15, 30); break;
         case 'rapid': pw.rapid = S.rapidDur; break;
         case 'shield': pw.shield = Math.max(pw.shield, S.shieldHits); shieldReT = 0; break;
         case 'bomb': bombs = Math.min(S.maxBombs, bombs + 1); break;
         case 'life': lives = Math.min(S.maxLives, lives + 1); break;
-        case 'sats': pw.sats = 15; break;
-        case 'beam': pw.beam = 7; break;
-        case 'slow': pw.slow = 7; tone(300, 1, 'sine', 0.12, 80); break;
+        case 'sats': pw.sats = S.satsDur; break;
+        case 'beam': pw.beam = S.beamDur; break;
+        case 'slow': pw.slow = S.slowDur; tone(300, 1, 'sine', 0.12, 80); break;
         case 'nova': doBomb(true);
-          for (let k = 0; k < 20; k++) { const a = k / 20 * TAU, s = 600 * U; bullets.push({ x: ship.x, y: ship.y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: 1.6, dmg: 2 * S.dmg, pierce: 1, hits: null, hom: 6 }); }
+          for (let k = 0; k < S.novaN; k++) { const a = k / S.novaN * TAU, s = 600 * U; bullets.push({ x: ship.x, y: ship.y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: 1.6, dmg: 2 * S.dmg, pierce: 1, hits: null, hom: 6 }); }
           break;
       }
       popText(p.x, p.y - 22 * U, P.name(), `rgb(${P.c})`, 14); tutEv('pick');
@@ -3837,6 +3903,7 @@ function astFx(a, c, s) {
 }
 function drawShip() {
   const s = ship, k = U;
+  if (pw.defl > 0) { defA += 0.05; ctx.save(); ctx.lineCap = 'round'; const fl = pw.defl < 2 && Math.floor(rtime * 8) % 2; for (let i = 0; i < 3; i++) { const a = defA + i * TAU / 3; ctx.strokeStyle = `rgba(${PICK.defl.c},${fl ? 0.15 : 0.35})`; ctx.lineWidth = 8 * k; ctx.beginPath(); ctx.arc(s.x, s.y, 36 * k, a - 0.65, a + 0.65); ctx.stroke(); ctx.strokeStyle = `rgba(230,250,255,${fl ? 0.3 : 0.9})`; ctx.lineWidth = 2 * k; ctx.beginPath(); ctx.arc(s.x, s.y, 36 * k, a - 0.65, a + 0.65); ctx.stroke(); } ctx.restore(); }
   ctx.save();
   if (s.inv > 0.45 && Math.floor(rtime * 16) % 2) ctx.globalAlpha = 0.35;
   drawShipModel(ctx, SK(), s.x, s.y, s.ang, k, rtime, S.missiles > 0);
@@ -4099,7 +4166,7 @@ function drawHUDi(W, H) {
   let bx = 34;
   if (pw.shield > 0) { badge(bx, by, 14, 'shieldpk', PICK.shield.c, 1, pw.shield > 1 ? '×' + pw.shield : '', false); bx += 38; }
   else if (S.shieldRe && ship) { ctx.save(); ctx.globalAlpha *= 0.55; badge(bx, by, 14, 'shieldpk', PICK.shield.c, shieldReT / S.shieldRe, '', false); ctx.restore(); bx += 38; }
-  const timers = [['multi', PICK.multi.c, pw.multi, S.multiDur], ['rapid', PICK.rapid.c, pw.rapid, S.rapidDur], ['homing', PICK.seek.c, pw.seek, 10], ['u_drones', PICK.sats.c, pw.sats, 15], ['u_beam', PICK.beam.c, pw.beam, 7], ['u_time', PICK.slow.c, pw.slow, 7]];
+  const timers = [['multi', PICK.multi.c, pw.multi, S.multiDur], ['rapid', PICK.rapid.c, pw.rapid, S.rapidDur], ['seekpk', PICK.seek.c, pw.seek, S.seekDur], ['u_drones', PICK.sats.c, pw.sats, S.satsDur], ['u_beam', PICK.beam.c, pw.beam, S.beamDur], ['u_time', PICK.slow.c, pw.slow, S.slowDur], ['deflpk', PICK.defl.c, pw.defl, S.deflDur], ['barrpk', PICK.barr.c, pw.barr, S.barrDur], ['wellpk', PICK.well.c, pw.well, S.wellDur]];
   for (const [ic, c, t, mxT] of timers) if (t > 0) { badge(bx, by, 14, ic, c, t / mxT, '', t < 2.5); bx += 38; }
   // desktop: dash + bomb
   if (!touch && ship) {
@@ -4219,6 +4286,7 @@ function draw() {
   }
   for (const p of pickups) drawPickup(p);
   if (tut && tut.bc) drawBeacon(tut.bc);
+  if (pw.well > 0) drawWell();
   for (const a of asts) drawAst(a);
   for (const d of drones) drawDrone(d);
   if (boss) drawBoss(boss);
