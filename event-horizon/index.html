@@ -472,6 +472,8 @@ body.paused .tbtn{display:none!important}
       <div class="opts" data-set="snd"><button data-v="on">On</button><button data-v="off">Off</button></div></div>
     <div class="card" style="--c:255,176,112"><div class="ct"><div class="ico"><i data-ic="shake"></i></div><div class="cn">Screen shake<div class="cd">Camera shake on explosions and hits.</div></div></div>
       <div class="opts" data-set="shake"><button data-v="on">On</button><button data-v="off">Off</button></div></div>
+    <div class="card" style="--c:200,150,255"><div class="ct"><div class="ico"><i data-ic="map"></i></div><div class="cn">Minimap<div class="cd">Where the round map sits in Multiplayer.</div></div></div>
+      <div class="opts" data-set="mm"><button data-v="bc">Bottom center</button><button data-v="bl">Bottom left</button><button data-v="br">Bottom right</button><button data-v="tr">Top right</button></div></div>
     <div class="card" style="--c:200,150,255"><div class="ct"><div class="ico"><i data-ic="map"></i></div><div class="cn">Tutorial<div class="cd">Learn the controls step by step.</div></div></div>
       <button class="buy ctr" id="sTut">Play tutorial</button></div>
   </div></div>
@@ -583,7 +585,7 @@ body.paused .tbtn{display:none!important}
 <script>
 'use strict';
 // Versioning: next version -> next whole number (4.00), sub version -> +0.01 (3.01)
-const VERSION = '4.00';
+const VERSION = '4.01';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -1284,10 +1286,11 @@ function outOfWorld(o, m) { if (gmode === 'world') return Math.abs(o.x - camX) >
 function bound(o, m, bounce) {
   if (gmode === 'world') {
     if (!ow) return false;
-    const L = ow.half - m; let hit = false;
-    if (o.x < -L) { o.x = -L; if (o.vx < 0) o.vx *= -bounce; hit = true; } else if (o.x > L) { o.x = L; if (o.vx > 0) o.vx *= -bounce; hit = true; }
-    if (o.y < -L) { o.y = -L; if (o.vy < 0) o.vy *= -bounce; hit = true; } else if (o.y > L) { o.y = L; if (o.vy > 0) o.vy *= -bounce; hit = true; }
-    return hit;
+    const L = ow.R - m, r = Math.hypot(o.x, o.y);
+    if (r <= L) return false;
+    const nx = o.x / r, ny = o.y / r; o.x = nx * L; o.y = ny * L;
+    const vn = o.vx * nx + o.vy * ny; if (vn > 0) { o.vx -= (1 + bounce) * vn * nx; o.vy -= (1 + bounce) * vn * ny; }
+    return true;
   }
   if (!follow) { wrap(o, m); return false; }
   const dx = o.x - CX, dy = o.y - CY, r = Math.hypot(dx, dy);
@@ -2544,7 +2547,7 @@ function openProfile() {
 function profSum() { $('pSum').innerHTML = `◆ ${fmt(save.dust)} <small>${Math.min(NS, save.unlocked - 1)}/${NS} SECTORS</small>`; }
 $('pilotBtn').onclick = () => { audio(); sfx.ui(); openProfile(); };
 function renderSettings() {
-  const cur = { cam: save.cam === 'fixed' ? 'fixed' : 'follow', snd: muted ? 'off' : 'on', shake: save.shake === false ? 'off' : 'on' };
+  const cur = { cam: save.cam === 'fixed' ? 'fixed' : 'follow', snd: muted ? 'off' : 'on', shake: save.shake === false ? 'off' : 'on', mm: mmPos() };
   document.querySelectorAll('#settings .opts').forEach(g => g.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === cur[g.dataset.set])));
 }
 $('setBtn').onclick = () => { audio(); sfx.ui(); hideAll(); show('settings'); renderSettings(); };
@@ -2554,6 +2557,7 @@ $('settings').addEventListener('click', e => {
   const k = b.parentElement.dataset.set, v = b.dataset.v;
   if (k === 'cam') save.cam = v;
   if (k === 'shake') save.shake = v === 'on';
+  if (k === 'mm') save.mm = v;
   if (k === 'snd') { save.muted = v === 'off'; setMute(save.muted); }
   persist(); sfx.ui(); renderSettings();
 });
@@ -3104,27 +3108,30 @@ let ow = null, owChoosing = false, owGen = false;
 const owHoles = [], owOrbs = [];
 function hash2(x, y, s) { let h = (Math.imul(x | 0, 374761393) + Math.imul(y | 0, 668265263) + Math.imul(s | 0, 1442695041)) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; }
 function rng(seed) { let a = (seed * 4294967296) >>> 0; return () => { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
-const owCH = () => 1500 * U;
-// Map: a finite square of chunks (-OWM..OWM on each axis), centred on the origin. Chunk c covers [(c-0.5)CH, (c+0.5)CH].
-const OWM = 7;
+const owCH = () => 1000 * U;
+// Map: a round galaxy of radius OWM chunks around a giant central black hole. Chunk c covers [(c-0.5)CH, (c+0.5)CH].
+const OWM = 6;
+// biomes: calm core, an inner ring of four easier biomes, an outer ring of four harder ones (layout turns with the room seed)
 function owBiomeAt(cx, cy) {
-  const rx = Math.round(cx / 3), ry = Math.round(cy / 3), ring = Math.max(Math.abs(rx), Math.abs(ry));
-  if (!ring) return 0;
-  const pool = ring === 1 ? [1, 2, 3, 5] : [4, 6, 7, 8];
-  return pool[Math.floor(hash2(rx, ry, 7 + (ow ? ow.seed : 0)) * pool.length)];
+  const r = Math.hypot(cx, cy) / OWM; if (r < 0.3) return 0;
+  const sd = ow ? ow.seed : 0, outer = r >= 0.65, a = (Math.atan2(cy, cx) / TAU + 1 + (sd % 997) / 997 + (outer ? 0.125 : 0)) % 1;
+  return (outer ? [4, 6, 7, 8] : [1, 2, 3, 5])[(Math.floor(a * 4) + (sd >>> 4)) % 4];
 }
-const owDanger = (cx, cy) => Math.max(Math.abs(Math.round(cx / 3)), Math.abs(Math.round(cy / 3))) ? Math.min(9, Math.max(1, Math.round(Math.hypot(cx, cy) * 0.9))) : 0;
+const owDanger = (cx, cy) => { const r = Math.hypot(cx, cy) / OWM; return r < 0.3 ? 0 : clamp(Math.round(1 + 8 * (r - 0.3) / 0.7), 1, 9); };
+const owIn = (cx, cy) => Math.hypot(cx, cy) <= OWM + 0.75;
 // holes and ability orbs for the whole map, identical for everyone sharing the room seed
 function owPre() {
   const CH = ow.CH; ow.all = new Map();
-  for (let cx = -OWM; cx <= OWM; cx++) for (let cy = -OWM; cy <= OWM; cy++) {
-    const key = cx + ',' + cy, B = BIOMES[owBiomeAt(cx, cy)], R = rng(hash2(cx, cy, 99 + ow.seed)), holes = [];
-    if (cx || cy) {
-      if (R() < B.bh) { const m = 0.7 + R() * 0.9; holes.push({ x: (cx - 0.3 + R() * 0.6) * CH, y: (cy - 0.3 + R() * 0.6) * CH, m, rh: 26 * U * Math.pow(m, 0.7), white: false, ck: key, ph: R() * 6 }); }
-      if (R() < B.wh) { const m = 0.7 + R() * 0.7; holes.push({ x: (cx - 0.3 + R() * 0.6) * CH, y: (cy - 0.3 + R() * 0.6) * CH, m, rh: 26 * U * Math.pow(m, 0.7), white: true, ck: key, ph: R() * 6 }); }
+  for (let cx = -OWM - 1; cx <= OWM + 1; cx++) for (let cy = -OWM - 1; cy <= OWM + 1; cy++) {
+    if (!owIn(cx, cy)) continue;
+    const key = cx + ',' + cy, B = BIOMES[owBiomeAt(cx, cy)], R = rng(hash2(cx, cy, 99 + ow.seed)), holes = [], dc = Math.hypot(cx, cy);
+    if (dc >= 2 && dc <= OWM - 0.4) {
+      if (R() < B.bh * 0.6) { const m = 0.7 + R() * 0.9; holes.push({ x: (cx - 0.3 + R() * 0.6) * CH, y: (cy - 0.3 + R() * 0.6) * CH, m, rh: 26 * U * Math.pow(m, 0.7), white: false, ck: key, ph: R() * 6 }); }
+      if (R() < B.wh * 0.6) { const m = 0.7 + R() * 0.7; holes.push({ x: (cx - 0.3 + R() * 0.6) * CH, y: (cy - 0.3 + R() * 0.6) * CH, m, rh: 26 * U * Math.pow(m, 0.7), white: true, ck: key, ph: R() * 6 }); }
     }
+    if (!cx && !cy) holes.push({ x: 0, y: 0, m: 4.5, rh: 34 * U * Math.pow(4.5, 0.7), white: false, big: true, ck: key, ph: 0 });
     const Ro = rng(hash2(cx, cy, 55 + ow.seed)); let orb = null;
-    if ((cx || cy) && Ro() < B.orb) { orb = { x: (cx - 0.35 + Ro() * 0.7) * CH, y: (cy - 0.35 + Ro() * 0.7) * CH, ck: key, ph: Ro() * 6 }; if (holes.some(h => Math.hypot(h.x - orb.x, h.y - orb.y) < h.rh * 6)) orb = null; }
+    if (dc >= 1.5 && dc <= OWM && Ro() < B.orb * 1.2) { orb = { x: (cx - 0.35 + Ro() * 0.7) * CH, y: (cy - 0.35 + Ro() * 0.7) * CH, ck: key, ph: Ro() * 6 }; if (holes.some(h => Math.hypot(h.x - orb.x, h.y - orb.y) < h.rh * 6)) orb = null; }
     ow.all.set(key, { holes, orb });
   }
 }
@@ -3133,7 +3140,7 @@ function startWorld(seed, sx, sy) {
   closeLobby();
   gmode = 'world'; tut = null; $('tutBox').classList.add('hidden');
   ow = { ab: {}, chunks: new Map(), taken: {}, cx: 9999, cy: 9999, biome: -1, spawnT: 3, timers: {}, dist: 0, orbs: 0, kills0: 0, dx: 0, dy: 0, seed: seed | 0, CH: owCH(), safe: 0, pickT: 0, sig: '' };
-  ow.half = (OWM + 0.5) * ow.CH;
+  ow.R = OWM * ow.CH;
   owPre();
   owHoles.length = 0; owOrbs.length = 0;
   score = 0; dispScore = 0; maxMult = 1; swallowed = 0; kills = 0; runDust = 0; sectorsCleared = 0; bhMass = 1;
@@ -3143,7 +3150,7 @@ function startWorld(seed, sx, sy) {
   asts = []; drones = []; boss = null; bullets = []; ebullets = []; pickups = []; queue = []; missiles = []; dust = []; bw = null; rbul = [];
   wave = 0; clearing = false; waveTimer = 1e9; surge = 0; surgeWarn = 0; surgeK = 1;
   sector = 1; TH = SECTORS[0]; buildNebula(); buildStars();
-  ship = mkShip(); ship.x = (sx || 0) * U; ship.y = (sy || 0) * U; ship.vx = 0; ship.vy = 0; ship.inv = 2.5;
+  ship = mkShip(); { const a0 = rand(0, TAU); ship.x = (sx != null ? sx : Math.cos(a0) * 1300) * U; ship.y = (sy != null ? sy : Math.sin(a0) * 1300) * U; } ship.vx = 0; ship.vy = 0; ship.inv = 2.5;
   camX = ship.x; camY = ship.y;
   mode = 'play'; timeScale = 1; paused = false; ann = null; annQ = [];
   owUpdateChunks(true);
@@ -3164,12 +3171,12 @@ function owApply() {
 }
 function owChunkGen(cx, cy) {
   const key = cx + ',' + cy, CH = ow.CH, bi = owBiomeAt(cx, cy), B = BIOMES[bi], dg = owDanger(cx, cy), R = rng(hash2(cx, cy, 31 + ow.seed)), P = ow.all.get(key);
-  const ch = { key, cx, cy, holes: P.holes, orbs: P.orb && !ow.taken[key] ? [P.orb] : [] };
-  const nr = B.rocks[0] + Math.floor(R() * (B.rocks[1] - B.rocks[0] + 1));
+  const ch = { key, cx, cy, holes: P.holes, orbs: P.orb ? [P.orb] : [] };
+  const nr = Math.round((B.rocks[0] + Math.floor(R() * (B.rocks[1] - B.rocks[0] + 1))) * 0.5);
   sector = Math.min(NS, 1 + dg);
   for (let i = 0; i < nr; i++) {
     const x = (cx - 0.5 + R()) * CH, y = (cy - 0.5 + R()) * CH, sz = 1 + Math.floor(R() * 3), vx = (R() - 0.5) * 60 * U, vy = (R() - 0.5) * 60 * U, vr = R();
-    if (ship && Math.hypot(x - ship.x, y - ship.y) < 300 * U) continue;
+    if ((ship && Math.hypot(x - ship.x, y - ship.y) < 300 * U) || Math.hypot(x, y) > ow.R - 80 * U) continue;
     if (ch.holes.some(h => Math.hypot(h.x - x, h.y - y) < h.rh * 6)) continue;
     const a = mkAst(x, y, vx, vy, sz);
     a.v = ''; if (B.v && vr < 0.55) { setVar(a, B.v); a.max = a.hp; } a.ck = key; asts.push(a);
@@ -3188,14 +3195,14 @@ function owUpdateChunks(force) {
   ow.sig = sig; ow.cx = cx; ow.cy = cy;
   owGen = true;
   for (const [ax, ay] of cs) for (let x = ax - 2; x <= ax + 2; x++) for (let y = ay - 2; y <= ay + 2; y++) {
-    if (Math.abs(x) > OWM || Math.abs(y) > OWM) continue;
-    const k = x + ',' + y; if (!ow.chunks.has(k)) ow.chunks.set(k, owChunkGen(x, y));
+    const k = x + ',' + y; if (!ow.all.has(k)) continue;
+    if (!ow.chunks.has(k)) ow.chunks.set(k, owChunkGen(x, y));
   }
   owGen = false;
   for (const [k, ch] of ow.chunks) if (!cs.some(([ax, ay]) => Math.abs(ch.cx - ax) <= 3 && Math.abs(ch.cy - ay) <= 3)) { ow.chunks.delete(k); asts = asts.filter(a => a.ck !== k); }
   owHoles.length = 0; owOrbs.length = 0;
   for (const ch of ow.chunks.values()) { for (const h of ch.holes) owHoles.push(h); for (const o of ch.orbs) owOrbs.push(o); }
-  const bi = owBiomeAt(clamp(cx, -OWM, OWM), clamp(cy, -OWM, OWM));
+  const bi = owBiomeAt(cx, cy);
   if (bi !== ow.biome) {
     const first = ow.biome < 0; ow.biome = bi; TH = SECTORS[BIOMES[bi].th]; buildNebula(); buildStars(); ow.mm = null;
     if (!first) { const dg = owDanger(cx, cy); announce(BIOMES[bi].n, { kick: 'Entering', sub: dg ? 'Danger level ' + dg : 'Safe zone', col: TH.danger, dur: 2.2 }); }
@@ -3206,7 +3213,7 @@ function worldGravity(o, k, dt) {
   let best = 1e9; gHole = null;
   for (const h of owHoles) {
     const dx = h.x - o.x, dy = h.y - o.y, r2 = dx * dx + dy * dy;
-    if (r2 > (1300 * U) ** 2) continue;
+    if (r2 > ((h.big ? 2600 : 1300) * U) ** 2) continue;
     const r = Math.sqrt(r2) + 1e-6, a = GMv * h.m * k / (r2 + 36 * U * U);
     if (h.white) { o.vx -= dx / r * a * 1.3 * dt; o.vy -= dy / r * a * 1.3 * dt; continue; }
     o.vx += dx / r * a * dt; o.vy += dy / r * a * dt;
@@ -3268,6 +3275,7 @@ function owTick(dt) {
   if (owChoosing || paused) ow.safe = 2; else ow.safe = Math.max(0, ow.safe - dt);
   if (ship && ow.safe > 0) ship.inv = Math.max(ship.inv, 0.3);
   if (mp) mpWorld(dt);
+  if (Math.random() < 0.02) { const now = performance.now(); for (const k in ow.taken) if (now - ow.taken[k] > 150000) delete ow.taken[k]; }
   if (!ship) return;
   ow.dist = Math.max(ow.dist, Math.hypot(ship.x, ship.y) / U);
   const L = ow.ab, T = ow.timers;
@@ -3280,21 +3288,22 @@ function owTick(dt) {
   // ability orbs
   if (!owChoosing) for (const o of owOrbs) {
     if (ow.taken[o.ck]) continue;
-    if (Math.hypot(o.x - ship.x, o.y - ship.y) < 36 * U) { ow.taken[o.ck] = 1; if (mp) mp.ev.push(['o', o.ck]); burst(o.x, o.y, 40, '200,150,255', 220, 0.8, 2.4); owUpdateChunks(true); owOpenPick(); return; }
+    if (Math.hypot(o.x - ship.x, o.y - ship.y) < 36 * U) { ow.taken[o.ck] = performance.now(); if (mp) mp.ev.push(['o', o.ck]); burst(o.x, o.y, 40, '200,150,255', 220, 0.8, 2.4); owUpdateChunks(true); owOpenPick(); return; }
   }
   // enemies drift in from the dark around every pilot - only the host spawns them
   if (!mp || mp.host) {
     const pl = mp ? mpPl : [ship];
     ow.spawnT -= dt;
     if (ow.spawnT <= 0 && pl.length) {
-      const P = pl[Math.random() * pl.length | 0], pcx = clamp(Math.round(P.x / ow.CH), -OWM, OWM), pcy = clamp(Math.round(P.y / ow.CH), -OWM, OWM);
+      const P = pl[Math.random() * pl.length | 0], pcx = Math.round(P.x / ow.CH), pcy = Math.round(P.y / ow.CH);
       const bi = owBiomeAt(pcx, pcy), B = BIOMES[bi], dg = owDanger(pcx, pcy);
       ow.spawnT = rand(2.6, 4.6) / B.en / Math.sqrt(pl.length);
       const near = drones.filter(d => Math.abs(d.x - P.x) < 1600 * U && Math.abs(d.y - P.y) < 1600 * U).length;
       if (drones.length < 40 && near < Math.min(14, 3 + dg * 2) && (dg > 0 || Math.random() < 0.5)) {
-        const pool = KINDS.slice(0, Math.min(KINDS.length, 1 + dg)), k = pool[Math.random() * pool.length | 0], a = rand(0, TAU), r = 1000 * U, lim = ow.half - 60 * U;
+        const pool = KINDS.slice(0, Math.min(KINDS.length, 1 + dg)), k = pool[Math.random() * pool.length | 0], a = rand(0, TAU), r = 1000 * U;
         sector = Math.min(NS, 1 + dg);
-        const d = droneObj(clamp(P.x + Math.cos(a) * r, -lim, lim), clamp(P.y + Math.sin(a) * r, -lim, lim), k); d.extra = true;
+        let ex = P.x + Math.cos(a) * r, ey = P.y + Math.sin(a) * r; const el = Math.hypot(ex, ey), lim = ow.R - 60 * U; if (el > lim) { ex *= lim / el; ey *= lim / el; }
+        const d = droneObj(ex, ey, k); d.extra = true;
         if (k === 'seeker') { drones.push(d); for (let j = 0; j < 2; j++) { const d2 = droneObj(d.x + rand(-30, 30) * U, d.y + rand(-30, 30) * U, 'seeker'); d2.extra = true; drones.push(d2); } } else drones.push(d);
       }
     }
@@ -3305,13 +3314,13 @@ function owTick(dt) {
   if (Math.random() < 0.1) { asts = asts.filter(a => a.ck || !far(a, 3000 * U)); dust = dust.filter(d => !far(d, 3000 * U)); }
 }
 function drawWorldEdge() {
-  const L = ow.half;
-  if (Math.abs(camX) + W < L && Math.abs(camY) + H < L) return;
+  const R = ow.R;
+  if (Math.hypot(camX, camY) + Math.hypot(W, H) / 2 < R) return;
   ctx.save();
-  ctx.fillStyle = 'rgba(0,0,0,0.5)'; const B = 1e6;
-  ctx.fillRect(-B, -B, 2 * B, B - L); ctx.fillRect(-B, L, 2 * B, B); ctx.fillRect(-B, -L, B - L, 2 * L); ctx.fillRect(L, -L, B, 2 * L);
+  ctx.beginPath(); ctx.rect(camX - W, camY - H, W * 2, H * 2); ctx.arc(0, 0, R, 0, TAU);
+  ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fill('evenodd');
   ctx.strokeStyle = `rgba(${TH.danger},${0.55 + 0.25 * Math.sin(time * 3)})`; ctx.lineWidth = 3 * Math.max(1, U);
-  ctx.setLineDash([22 * U, 14 * U]); ctx.lineDashOffset = -time * 40 * U; ctx.strokeRect(-L, -L, 2 * L, 2 * L); ctx.setLineDash([]);
+  ctx.setLineDash([22 * U, 14 * U]); ctx.lineDashOffset = -time * 40 * U; ctx.beginPath(); ctx.arc(0, 0, R, 0, TAU); ctx.stroke(); ctx.setLineDash([]);
   ctx.restore();
 }
 function drawHoles() {
@@ -3354,43 +3363,56 @@ function drawAura(x, y, a, col) {
   ctx.beginPath(); ctx.arc(x, y, R, 0, TAU); ctx.stroke(); ctx.setLineDash([]);
   ctx.restore();
 }
+const mmPos = () => ['bc', 'bl', 'br', 'tr'].includes(save.mm) ? save.mm : 'bc';
+const mmSize = touch => touch ? 68 : 84;
 function owMiniBuild(Sz) {
   const c = document.createElement('canvas'), d = DPR || 1; c.width = c.height = Math.round(Sz * d);
   const g = c.getContext('2d'); g.scale(d, d);
-  const n = OWM * 2 + 1, cs = Sz / n;
-  for (let x = -OWM; x <= OWM; x++) for (let y = -OWM; y <= OWM; y++) {
-    const T = SECTORS[BIOMES[owBiomeAt(x, y)].th];
-    g.fillStyle = `rgba(${T.glow[0]},${0.2 + 0.18 * owDanger(x, y) / 9})`; g.fillRect((x + OWM) * cs, (y + OWM) * cs, cs + 0.5, cs + 0.5);
+  const h = Sz / 2, k = Sz / (ow.R * 2), st = 2;
+  g.save(); g.beginPath(); g.arc(h, h, h, 0, TAU); g.clip();
+  for (let px = 0; px < Sz; px += st) for (let py = 0; py < Sz; py += st) {
+    const cx = (px + st / 2 - h) / k / ow.CH, cy = (py + st / 2 - h) / k / ow.CH;
+    const T = SECTORS[BIOMES[owBiomeAt(cx, cy)].th];
+    g.fillStyle = `rgba(${T.glow[0]},${0.1 + 0.12 * owDanger(cx, cy) / 9})`; g.fillRect(px, py, st, st);
   }
-  g.strokeStyle = 'rgba(255,255,255,0.07)'; g.lineWidth = 1;
-  for (let i = 0; i <= 5; i++) { const p = (i * 3 - 0.5 + 0.5) * cs + (i ? 0 : 0); g.beginPath(); g.moveTo(p, 0); g.lineTo(p, Sz); g.stroke(); g.beginPath(); g.moveTo(0, p); g.lineTo(Sz, p); g.stroke(); }
-  const k = Sz / (ow.half * 2);
-  for (const P of ow.all.values()) for (const h of P.holes) {
-    const x = (h.x + ow.half) * k, y = (h.y + ow.half) * k;
-    if (h.white) { g.fillStyle = 'rgba(235,245,255,0.85)'; g.beginPath(); g.arc(x, y, 1.4, 0, TAU); g.fill(); }
-    else { g.fillStyle = '#000'; g.beginPath(); g.arc(x, y, 2, 0, TAU); g.fill(); g.strokeStyle = 'rgba(255,160,80,0.75)'; g.lineWidth = 0.8; g.beginPath(); g.arc(x, y, 2.3, 0, TAU); g.stroke(); }
+  g.strokeStyle = 'rgba(255,255,255,0.08)'; g.lineWidth = 1;
+  for (const f of [0.3, 0.65]) { g.beginPath(); g.arc(h, h, h * f, 0, TAU); g.stroke(); }
+  for (const P of ow.all.values()) for (const o of P.holes) {
+    const x = h + o.x * k, y = h + o.y * k;
+    if (o.big) { g.fillStyle = '#000'; g.beginPath(); g.arc(x, y, 3.6, 0, TAU); g.fill(); g.strokeStyle = 'rgba(255,170,90,0.9)'; g.lineWidth = 1.2; g.beginPath(); g.arc(x, y, 4.4, 0, TAU); g.stroke(); }
+    else if (o.white) { g.fillStyle = 'rgba(235,245,255,0.7)'; g.beginPath(); g.arc(x, y, 1.1, 0, TAU); g.fill(); }
+    else { g.fillStyle = 'rgba(0,0,0,0.9)'; g.beginPath(); g.arc(x, y, 1.5, 0, TAU); g.fill(); g.strokeStyle = 'rgba(255,160,80,0.6)'; g.lineWidth = 0.7; g.beginPath(); g.arc(x, y, 1.8, 0, TAU); g.stroke(); }
   }
+  g.restore();
   return c;
+}
+function mmBox(W, H, touch) {
+  const Sz = mmSize(touch), pos = mmPos(), m = touch ? 14 : 18;
+  if (pos === 'bl') return [m, H - Sz - m, Sz];
+  if (pos === 'br') return [W - Sz - m, H - Sz - (touch ? m : 84), Sz];
+  if (pos === 'tr') return [W - Sz - m, touch ? 92 : 100, Sz];
+  return [Math.round(W / 2 - Sz / 2), H - Sz - m, Sz];
 }
 function drawMinimap(W, H) {
   if (!ow || !ow.all) return;
-  const touch = isTouch(), Sz = Math.round(Math.min(touch ? 112 : 150, W * 0.3)), x0 = Math.round(W / 2 - Sz / 2), y0 = Math.round(H - Sz - (touch ? 10 : 14));
+  const touch = isTouch(), [x0, y0, Sz] = mmBox(W, H, touch), h = Sz / 2, ox = x0 + h, oy = y0 + h;
   if (!ow.mm || ow.mmS !== Sz) { ow.mm = owMiniBuild(Sz); ow.mmS = Sz; }
-  const k = Sz / (ow.half * 2), X = v => x0 + (v + ow.half) * k, Y = v => y0 + (v + ow.half) * k;
-  ctx.save();
-  rr(x0 - 1, y0 - 1, Sz + 2, Sz + 2, 10); ctx.fillStyle = 'rgba(4,6,14,0.75)'; ctx.fill(); ctx.strokeStyle = 'rgba(255,255,255,0.18)'; ctx.lineWidth = 1; ctx.stroke();
-  ctx.save(); rr(x0, y0, Sz, Sz, 9); ctx.clip();
+  const k = Sz / (ow.R * 2), X = v => ox + v * k, Y = v => oy + v * k;
+  ctx.save(); ctx.globalAlpha *= 0.82;
+  ctx.beginPath(); ctx.arc(ox, oy, h + 1, 0, TAU); ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fill(); ctx.strokeStyle = 'rgba(255,255,255,0.14)'; ctx.lineWidth = 1; ctx.stroke();
+  ctx.save(); ctx.beginPath(); ctx.arc(ox, oy, h, 0, TAU); ctx.clip();
   ctx.drawImage(ow.mm, x0, y0, Sz, Sz);
-  for (const [key, P] of ow.all) if (P.orb && !ow.taken[key]) { ctx.fillStyle = `rgba(210,160,255,${0.65 + 0.35 * Math.sin(rtime * 4 + P.orb.ph)})`; ctx.beginPath(); ctx.arc(X(P.orb.x), Y(P.orb.y), 2, 0, TAU); ctx.fill(); }
+  const now = performance.now();
+  for (const [key, P] of ow.all) if (P.orb && !ow.taken[key]) { ctx.fillStyle = `rgba(210,160,255,${0.6 + 0.35 * Math.sin(rtime * 4 + P.orb.ph)})`; ctx.beginPath(); ctx.arc(X(P.orb.x), Y(P.orb.y), 1.5, 0, TAU); ctx.fill(); }
   const vw = cv.width / (DPR || 1), vh = cv.height / (DPR || 1);
-  ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.lineWidth = 1; ctx.strokeRect(X(camX - vw / 2), Y(camY - vh / 2), vw * k, vh * k);
-  if (mp) for (const id in mp.peers) { const P = mp.peers[id]; if (!P.alive) continue; ctx.fillStyle = `rgb(${P.col})`; ctx.beginPath(); ctx.arc(X(P.x), Y(P.y), 3.2, 0, TAU); ctx.fill(); ctx.strokeStyle = 'rgba(0,0,0,0.6)'; ctx.stroke(); }
-  if (ship) { ctx.save(); ctx.translate(X(ship.x), Y(ship.y)); ctx.rotate(ship.ang); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.moveTo(5.5, 0); ctx.lineTo(-3.5, 3.4); ctx.lineTo(-1.8, 0); ctx.lineTo(-3.5, -3.4); ctx.closePath(); ctx.fill(); ctx.restore(); }
-  else { ctx.strokeStyle = 'rgba(255,120,120,0.9)'; ctx.lineWidth = 1.5; const px = X(ow.dx), py = Y(ow.dy); ctx.beginPath(); ctx.moveTo(px - 3, py - 3); ctx.lineTo(px + 3, py + 3); ctx.moveTo(px + 3, py - 3); ctx.lineTo(px - 3, py + 3); ctx.stroke(); }
+  ctx.strokeStyle = 'rgba(255,255,255,0.3)'; ctx.lineWidth = 1; ctx.strokeRect(X(camX - vw / 2), Y(camY - vh / 2), vw * k, vh * k);
+  if (mp) for (const id in mp.peers) { const P = mp.peers[id]; if (!P.alive) continue; ctx.fillStyle = `rgb(${P.col})`; ctx.beginPath(); ctx.arc(X(P.x), Y(P.y), 2.4, 0, TAU); ctx.fill(); }
+  if (ship) { ctx.save(); ctx.translate(X(ship.x), Y(ship.y)); ctx.rotate(ship.ang); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.moveTo(4.5, 0); ctx.lineTo(-3, 2.8); ctx.lineTo(-1.5, 0); ctx.lineTo(-3, -2.8); ctx.closePath(); ctx.fill(); ctx.restore(); }
+  else { ctx.strokeStyle = 'rgba(255,120,120,0.9)'; ctx.lineWidth = 1.3; const px = X(ow.dx), py = Y(ow.dy); ctx.beginPath(); ctx.moveTo(px - 2.5, py - 2.5); ctx.lineTo(px + 2.5, py + 2.5); ctx.moveTo(px + 2.5, py - 2.5); ctx.lineTo(px - 2.5, py + 2.5); ctx.stroke(); }
   ctx.restore();
-  const dg = owDanger(ow.cx, ow.cy);
-  ctx.font = `600 10px ${FONT}`; ctx.textBaseline = 'middle'; ctx.fillStyle = dg ? `rgba(${TH.danger},0.9)` : 'rgba(143,255,214,0.85)';
-  spaced(dg ? 'DANGER ' + dg : 'SAFE ZONE', W / 2, y0 - 10, 1.6, 'center');
+  const dg = owDanger(ow.cx, ow.cy), pos = mmPos();
+  ctx.font = `600 9px ${FONT}`; ctx.textBaseline = 'middle'; ctx.fillStyle = dg ? `rgba(${TH.danger},0.85)` : 'rgba(143,255,214,0.8)';
+  spaced(dg ? 'DANGER ' + dg : 'SAFE ZONE', ox, pos === 'tr' ? y0 + Sz + 11 : y0 - 9, 1.4, 'center');
   ctx.restore();
 }
 
@@ -3458,7 +3480,7 @@ function mpStart(code, join) {
   mp = { code, id: mpRid(), j: join ? 0 : Date.now(), pub: join ? false : mpPub, seed: join ? null : (Math.random() * 1e9 | 0), peers: {}, host: !join, hostId: null, state: join ? 'join' : 'play', sendT: 0, ev: [], hits: {}, shots: [], dead: {}, nid: (Math.random() * 2e6 | 0) * 1000, t0: performance.now(), firstT: 0, adT: 0, ok: false, warned: false, tkT: 0 };
   const me = mp;
   mp.ch = rtChannel('eh-room-' + code, (ev, p) => { if (mp === me) mpOn(ev, p); }, st => { if (mp !== me) return; if (st === 'ok') mp.ok = true; else if (st === 'err' && mp.state === 'join') mpFail("Can't reach the multiplayer server"); });
-  if (!join) startWorld(mp.seed, 0, 0);
+  if (!join) startWorld(mp.seed);
   else mpMsg('Joining room ' + code + '…');
 }
 function mpLeave() {
@@ -3494,7 +3516,7 @@ function mpOn(ev, p) {
   if (s) { if (!P.alive) { P.x = P.sx; P.y = P.sy; P.ang = P.sa; if (P.seen) ring(P.x, P.y, 80, P.col, 0.6, 3); } P.alive = true; P.seen = true; }
   else if (P.alive) { P.alive = false; burst(P.x, P.y, 60, P.col, 260, 1.2, 2.4); ring(P.x, P.y, 160, P.col, 0.8, 4); if (onScreen(P)) sfx.boom(0.6); }
   if (Array.isArray(p.b)) for (const b of p.b) if (rbul.length < 240) rbul.push({ x: b[0] * U, y: b[1] * U, vx: b[2] * U, vy: b[3] * U, life: 1.4, bs: P.bs });
-  if (Array.isArray(p.tk) && ow) for (const k of p.tk) if (!ow.taken[k]) { ow.taken[k] = 1; }
+  if (Array.isArray(p.tk) && ow) for (const k of p.tk) if (!ow.taken[k]) ow.taken[k] = now;
   if (Array.isArray(p.ev)) for (const e of p.ev) if (Array.isArray(e)) mpEvent(P, e);
   mpElect();
   if (Array.isArray(p.e) && !mp.host && p.i === mp.hostId) mpSnap(p.e);
@@ -3507,7 +3529,7 @@ function mpEvent(P, e) {
     const i = drones.findIndex(x => x.nid === e[1]);
     if (i >= 0) { mpKill = { by: e[2] || '' }; killDrone(i, false); mpKill = null; }
   }
-  else if (e[0] === 'o' && ow) ow.taken[e[1]] = 1;
+  else if (e[0] === 'o' && ow) ow.taken[e[1]] = now;
 }
 function mpDrop(id, said) {
   const P = mp.peers[id]; if (!P) return; delete mp.peers[id];
@@ -4891,7 +4913,7 @@ function drawHUDi(W, H) {
   if (pw.shield > 0) { badge(bx, by, 14, 'shieldpk', PICK.shield.c, 1, pw.shield > 1 ? '×' + pw.shield : '', false); bx += 38; }
   else if (S.shieldRe && ship) { ctx.save(); ctx.globalAlpha *= 0.55; badge(bx, by, 14, 'shieldpk', PICK.shield.c, shieldReT / S.shieldRe, '', false); ctx.restore(); bx += 38; }
   const timers = [['multi', PICK.multi.c, pw.multi, S.multiDur], ['rapid', PICK.rapid.c, pw.rapid, S.rapidDur], ['seekpk', PICK.seek.c, pw.seek, S.seekDur], ['u_drones', PICK.sats.c, pw.sats, S.satsDur], ['u_beam', PICK.beam.c, pw.beam, S.beamDur], ['u_time', PICK.slow.c, pw.slow, S.slowDur], ['deflpk', PICK.defl.c, pw.defl, S.deflDur], ['barrpk', PICK.barr.c, pw.barr, S.barrDur], ['wellpk', PICK.well.c, pw.well, S.wellDur]];
-  if (gmode === 'world' && ow) { let ry = by; const lim = touch ? W - 40 : cx - 110; for (const k in ow.ab) { if (bx > lim) { bx = 34; ry += touch ? 38 : -38; } badge(bx, ry, 14, OWA[k].ic, '200,150,255', 1, ow.ab[k] > 1 ? String(ow.ab[k]) : '', false); bx += 38; } }
+  if (gmode === 'world' && ow) { let ry = by; const mpos = mmPos(), msz = mmSize(touch); if (!touch && mpos === 'bl') bx = Math.max(bx, 18 + msz + 34); const lim = touch ? W - 40 : mpos === 'bc' ? cx - msz / 2 - 40 : W * 0.5; for (const k in ow.ab) { if (bx > lim) { bx = 34; ry += touch ? 38 : -38; } badge(bx, ry, 14, OWA[k].ic, '200,150,255', 1, ow.ab[k] > 1 ? String(ow.ab[k]) : '', false); bx += 38; } }
   else for (const [ic, c, t, mxT] of timers) if (t > 0) { badge(bx, by, 14, ic, c, t / mxT, '', t < 2.5); bx += 38; }
   // desktop: dash + bomb
   if (!touch && ship) {
@@ -4932,7 +4954,7 @@ function drawTip(W, H, touch) {
   const a = clamp(Math.min(tip.t / 0.6, (tip.dur - tip.t) / 0.5), 0, 1);
   if (a <= 0) return;
   ctx.save(); ctx.globalAlpha *= a;
-  const y = touch ? H * 0.62 : H - 108 - (gmode === 'world' ? 150 : 0), cx = W / 2;
+  const y = touch ? H * 0.62 : H - 108 - (gmode === 'world' && mmPos() === 'bc' ? 90 : 0), cx = W / 2;
   if (tip.k === 'controls') {
     const items = [[['W', 'A', 'S', 'D'], 'Move'], [['Mouse'], 'Aim'], [['Click'], 'Fire'], [['Shift'], 'Dash'], [['E'], 'Bomb']];
     const gK = 4, gL = 7, gI = 20;
