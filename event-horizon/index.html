@@ -131,6 +131,13 @@ svg{stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-l
 .odds div{display:flex;align-items:center;gap:8px}.odds i{width:8px;height:8px;border-radius:50%}.odds span{flex:1;color:var(--dim)}.odds b{color:#fff;font-weight:600}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 #hangar .hd,#hangar .seg,#hangar .ft{max-width:1060px}
+*{scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.18) transparent}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.16);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.3)}
+::-webkit-scrollbar-button{display:none;width:0;height:0}
+::-webkit-scrollbar-corner{background:transparent}
 #hangar .seg .tab{flex:1}
 .shopb{flex:1;min-height:0;width:100%;max-width:1060px;display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,420px);grid-template-areas:"list prev";gap:14px}
 .slist{grid-area:list;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;touch-action:pan-y;overscroll-behavior:contain;padding:0 4px 12px 2px}
@@ -318,7 +325,7 @@ body.paused .tbtn{display:none!important}
 <script>
 'use strict';
 // Versioning (renumbered by request): next version -> next whole number (3.00), sub version -> +0.01 (2.01)
-const VERSION = '2.04';
+const VERSION = '2.05';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -452,7 +459,7 @@ const UPG = [
   { k: 'velocity', cat: 'WEAPON', name: 'Rail accelerator', info: 'Faster bullets that bend less near the black hole.', stat: 'Bullet speed', val: t => t ? '+' + t * 15 + '%' : 'Base', max: 3, cost: [60, 130, 260] },
   { k: 'rate', cat: 'WEAPON', name: 'Autoloader', info: 'Shoot faster.', stat: 'Fire rate', val: t => t ? '+' + [0, 11, 25, 43][t] + '%' : 'Base', max: 3, cost: [90, 200, 400] },
   { k: 'damage', cat: 'WEAPON', name: 'Plasma rounds', info: 'Every shot hits harder.', stat: 'Damage', val: t => '×' + [1, 1.35, 1.7, 2.1][t], max: 3, cost: [100, 220, 450] },
-  { k: 'homing', cat: 'WEAPON', name: 'Seeker rounds', info: 'Bullets curve toward nearby enemies.', stat: 'Homing', val: t => ['Off', 'Light', 'Strong'][t], max: 2, cost: [220, 420] },
+  { k: 'homing', cat: 'WEAPON', name: 'Seeker rounds', info: 'Bullets gently curve toward enemies just ahead of them.', stat: 'Homing', val: t => ['Off', 'Slight', 'Light'][t], max: 2, cost: [220, 420] },
   { k: 'pierce', cat: 'WEAPON', name: 'Neutron core', info: 'Bullets punch through enemies.', stat: 'Pierce', val: t => t ? '+' + t + ' target' + (t > 1 ? 's' : '') : 'Off', max: 2, cost: [180, 380] },
   { k: 'missile', cat: 'WEAPON', name: 'Missile pods', info: 'Homing missiles fire on their own.', stat: 'Missiles', val: t => ['None', '1 every 3s', '2 every 2.6s', '3 every 2.2s'][t], max: 3, cost: [250, 420, 680] },
   { k: 'multi', cat: 'POWER', name: 'Multishot', info: 'Upgrades the spread shot drop.', stat: 'Spread shot', val: t => ['Triple', 'Quad', 'Penta'][t], max: 2, cost: [150, 350] },
@@ -742,7 +749,7 @@ function calcStats() {
     shieldGen: t('shieldgen'), shieldRe: [0, 0, 40, 22][t('shieldgen')],
     bombs: 2 + t('bombbay'), maxBombs: 5 + t('bombbay'), magnet: 1 + 0.5 * t('magnet'),
     bspeed: 1 + 0.15 * t('velocity'), rate: 1 / (1 + [0, 0.11, 0.25, 0.43][t('rate')]),
-    dmg: [1, 1.35, 1.7, 2.1][t('damage')], homing: [0, 2.4, 5.5][t('homing')], pierce: t('pierce'),
+    dmg: [1, 1.35, 1.7, 2.1][t('damage')], homing: [0, 0.75, 1.5][t('homing')], pierce: t('pierce'),
     missiles: [0, 1, 2, 3][t('missile')], missileT: [0, 3, 2.6, 2.2][t('missile')],
     multi: t('multi'), rapidDur: 12 + 5 * t('rapid'), rapidRate: 1 - 0.12 * t('rapid'),
     shieldHits: 1 + t('shieldpk'), luck: 1 + 0.35 * t('luck'),
@@ -1474,21 +1481,21 @@ function pvSetup(w, h) {
   if (s.type === 'ship') { pv.kind = 'skin'; pv.sk = it; pv.trail = []; pv.shots = []; pv.cd = 0; return; }
   if (s.type === 'bullet') { pv.bs = it; pv.lanes = [mkLane('', laneSt(S))]; return; }
   const u = it, t = tier(u.k), mx = t >= u.max, nt = mx ? t : t + 1;
-  const A = statsWith(u.k, t), B = statsWith(u.k, nt), la = 'NOW', lb = mx ? 'MAX LEVEL' : 'LEVEL ' + nt;
-  const two = (oa, ob) => { pv.lanes = mx ? [mkLane(lb, laneSt(B, ob))] : [mkLane(la, laneSt(A, oa)), mkLane(lb, laneSt(B, ob))]; };
-  pv.a = A; pv.b = B; pv.la = la; pv.lb = lb; pv.mx = mx;
+  const A = statsWith(u.k, t), B = statsWith(u.k, nt), la = '', lb = '';
+  const two = (oa, ob) => { pv.lanes = [mkLane('', laneSt(B, ob))]; };
+  pv.a = A; pv.b = B; pv.la = la; pv.lb = lb; pv.mx = true;
   switch (u.k) {
     case 'velocity': case 'rate': case 'damage': two(); break;
     case 'homing': two({ layout: 'offset', aim: false }, { layout: 'offset', aim: false }); break;
     case 'pierce': two({ layout: 'row', aim: false }, { layout: 'row', aim: false }); break;
     case 'missile': two({ mis: A.missiles }, { mis: B.missiles }); break;
-    case 'luck': two({ drop: 0.2 * A.luck }, { drop: 0.2 * B.luck }); pv.cap = 'Drop chance shown faster than in battle'; break;
+    case 'luck': two({ drop: 0.2 * A.luck }, { drop: 0.2 * B.luck });  break;
     case 'multi': two({ spread: SPREADS[1 + A.multi] }, { spread: SPREADS[1 + B.multi] }); pv.cap = 'While the spread shot drop is active'; break;
-    case 'rapid': two({ iv: 0.055 * A.rapidRate * A.rate, tag: A.rapidDur + 's' }, { iv: 0.055 * B.rapidRate * B.rate, tag: B.rapidDur + 's' }); pv.cap = 'While the rapid fire drop is active'; break;
+    case 'rapid': two({ iv: 0.055 * A.rapidRate * A.rate }, { iv: 0.055 * B.rapidRate * B.rate }); pv.cap = 'While the rapid fire drop is active'; break;
     case 'u_drones': pv.lanes = [mkLane('', laneSt(S, { sats: true }))]; pv.cap = 'Drop: two drones orbit you and shoot'; break;
     case 'u_beam': pv.lanes = [mkLane('', laneSt(S, { beam: true }))]; pv.cap = 'Drop: a piercing laser for 7 seconds'; break;
     case 'hull': case 'engine': case 'dash': case 'shieldgen': case 'shieldpk': case 'bombbay': case 'magnet': case 'u_time': case 'u_nova':
-      pv.kind = u.k; pvCustomInit(u.k, A, B, mx); break;
+      pv.kind = u.k; pvCustomInit(u.k, A, B, true); break;
     default: two();
   }
   if (pv.kind === 'lanes') pv.lanes.forEach((L, i) => { L.y0 = h * i / pv.lanes.length; L.y1 = h * (i + 1) / pv.lanes.length; for (let j = 0; j < 3; j++) spawnRock(L, j); });
@@ -1612,9 +1619,9 @@ function pvCustomInit(k, A, B, mx) {
     if (k === 'shieldgen' && B.shieldGen === 1) pv.noRe = true;
   }
   if (k === 'bombbay' || k === 'u_nova') { for (let i = 0; i < 6; i++) pv.rocks.push({ th: i / 6 * TAU, rr: rand(0.28, 0.42) * Math.min(w, h * 1.6), R: rand(8, 12), pts: null, dead: 0, ph: rand(0, TAU) }); pv.rocks.forEach(r => r.pts = mkRockPts(r.R)); pv.wcd = 1.2; pv.wave = null; pv.bolts = []; }
-  if (k === 'bombbay') pv.cap = mx ? `${B.bombs} bombs at start` : `Start with ${B.bombs} bombs (was ${A.bombs}) · carry up to ${B.maxBombs}`;
+  if (k === 'bombbay') pv.cap = `Start with ${B.bombs} bombs · carry up to ${B.maxBombs}`;
   if (k === 'u_nova') pv.cap = 'Drop: free gravity bomb plus homing bolts';
-  if (k === 'magnet') { pv.rA = 46 * A.magnet; pv.rB = 46 * B.magnet; pv.cap = mx ? 'Max pull range' : 'Dashed ring: now · Solid ring: ' + pv.lb.toLowerCase(); }
+  if (k === 'magnet') { pv.rA = 46 * A.magnet; pv.rB = 46 * B.magnet; pv.cap = ''; }
   if (k === 'u_time') { pv.cap = 'Drop: slows enemies and their bullets for 7s'; pv.ecd = 0; pv.slow = 0; pv.cyc = 0; }
 }
 function pvShip(c, x, y, ang, k, a) { c.save(); if (a != null) c.globalAlpha = a; drawShipModel(c, pv.sk, x, y, ang, k, pv.t, false); c.restore(); }
@@ -1624,8 +1631,7 @@ function pvCustom(c, dt) {
     const rowsN = pv.mx ? [[pv.lb, pv.b.lives]] : [['NOW', pv.a.lives], [pv.lb, pv.b.lives]];
     rowsN.forEach(([lbl, n], ri) => {
       const y = h * (rowsN.length === 1 ? 0.5 : 0.33 + ri * 0.36);
-      pvLabel(c, lbl, 14, y - 5, ri ? `rgb(${CATCOL.SHIP})` : 'rgba(233,238,247,.55)');
-      for (let i = 0; i < n; i++) { const isNew = ri === 1 && i === n - 1, x = 120 + i * 44, s = isNew ? 1 + 0.12 * Math.sin(pv.t * 5) : 1; if (isNew) { c.fillStyle = `rgba(${CATCOL.SHIP},.18)`; c.beginPath(); c.arc(x, y, 18, 0, TAU); c.fill(); } pvShip(c, x, y, -Math.PI / 2, 1.05 * s, ri || rowsN.length === 1 ? 1 : 0.6); }
+      for (let i = 0; i < n; i++) { const isNew = i === n - 1 && tier('hull') < 3, x = w / 2 + (i - (n - 1) / 2) * 44, s = isNew ? 1 + 0.12 * Math.sin(pv.t * 5) : 1; if (isNew) { c.fillStyle = `rgba(${CATCOL.SHIP},.18)`; c.beginPath(); c.arc(x, y, 18, 0, TAU); c.fill(); } pvShip(c, x, y, -Math.PI / 2, 1.05 * s, ri || rowsN.length === 1 ? 1 : 0.6); }
     });
     pv.cap = 'Ships at the start of every run';
   } else if (k === 'engine') {
@@ -1637,7 +1643,6 @@ function pvCustom(c, dt) {
       c.strokeStyle = `rgba(${rgbOf(pv.sk.trail, 0, pv.t)},${0.5 * s.a})`; c.lineWidth = 3; c.lineCap = 'round'; c.beginPath(); s.trail.forEach((p, j) => j ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1])); c.stroke();
       pvShip(c, x, y, ang, 1.1, s.a);
     });
-    pv.cap = pv.mx ? 'Max engine power' : 'Faded ship: now · Bright ship: ' + pv.lb.toLowerCase();
   } else if (k === 'dash') {
     for (const L of pv.lanes) {
       const y = (L.y0 + L.y1) / 2; L.t -= dt;
@@ -1651,7 +1656,6 @@ function pvCustom(c, dt) {
       c.strokeStyle = f >= 0.999 ? 'rgb(120,235,255)' : 'rgba(120,235,255,.8)'; c.beginPath(); c.arc(L.x, y, 17, -Math.PI / 2, -Math.PI / 2 + TAU * f); c.stroke();
       pvShip(c, L.x, y, 0, 1.05);
       pvLabel(c, L.lbl, 10, L.y0 + 9, L.lbl === 'NOW' ? 'rgba(233,238,247,.55)' : `rgb(${CATCOL.SHIP})`);
-      pvLabel(c, 'every ' + L.cd.toFixed(1) + 's', w - 10, L.y0 + 9, 'rgba(233,238,247,.6)', 'right');
       if (L.y0 > 0) { c.fillStyle = 'rgba(255,255,255,.08)'; c.fillRect(0, L.y0, w, 1); }
     }
   } else if (k === 'shieldgen' || k === 'shieldpk') {
@@ -1699,13 +1703,12 @@ function pvCustom(c, dt) {
     pvShip(c, sx, sy, -Math.PI / 2, 1.15);
     if (k === 'bombbay') {
       const rows = pv.mx ? [[pv.lb, pv.b.bombs]] : [['NOW', pv.a.bombs], [pv.lb, pv.b.bombs]];
-      rows.forEach(([lbl, n], ri) => { const y = 12 + ri * 18; pvLabel(c, lbl, 10, y - 4, ri ? `rgb(${CATCOL.SHIP})` : 'rgba(233,238,247,.55)'); for (let i = 0; i < n; i++) { c.fillStyle = 'rgba(200,150,255,.9)'; c.beginPath(); c.arc(92 + i * 14, y + 2, 4.5, 0, TAU); c.fill(); } });
+      rows.forEach(([lbl, n]) => { for (let i = 0; i < n; i++) { c.fillStyle = 'rgba(200,150,255,.9)'; c.beginPath(); c.arc(w / 2 + (i - (n - 1) / 2) * 14, 16, 4.5, 0, TAU); c.fill(); } });
     }
   } else if (k === 'magnet') {
     const sx = cx + Math.sin(pv.t * 0.7) * 20, sy = cy;
     if (pv.dust.length < 26 && Math.random() < 0.4) pv.dust.push({ x: rand(10, w - 10), y: rand(10, h - 10), vx: 0, vy: 0, rot: rand(0, TAU) });
-    c.setLineDash([5, 6]); c.strokeStyle = 'rgba(143,255,214,.35)'; c.lineWidth = 1.5; c.beginPath(); c.arc(sx, sy, pv.rA, 0, TAU); c.stroke(); c.setLineDash([]);
-    if (!pv.mx) { c.strokeStyle = 'rgba(143,255,214,.8)'; c.beginPath(); c.arc(sx, sy, pv.rB, 0, TAU); c.stroke(); }
+    c.setLineDash([5, 6]); c.strokeStyle = 'rgba(143,255,214,.55)'; c.lineWidth = 1.5; c.beginPath(); c.arc(sx, sy, pv.rB, 0, TAU); c.stroke(); c.setLineDash([]);
     for (let i = pv.dust.length - 1; i >= 0; i--) {
       const d = pv.dust[i], dx = sx - d.x, dy = sy - d.y, dd = Math.hypot(dx, dy) || 1;
       if (dd < pv.rB) { d.vx += dx / dd * 700 * dt; d.vy += dy / dd * 700 * dt; }
@@ -2405,11 +2408,11 @@ function update(dt, rdt) {
     const b = bullets[i];
     const r = gravity(b, 0.55, dt);
     if (b.hom) {
-      const tg = nearestTo(b, TG, 320 * U);
+      const tg = nearestTo(b, TG, 240 * U);
       if (tg) {
         const sp = Math.hypot(b.vx, b.vy), cur = Math.atan2(b.vy, b.vx);
         let df = Math.atan2(tg.y - b.y, tg.x - b.x) - cur; df = Math.atan2(Math.sin(df), Math.cos(df));
-        const na = cur + clamp(df, -b.hom * dt, b.hom * dt); b.vx = Math.cos(na) * sp; b.vy = Math.sin(na) * sp;
+        if (Math.abs(df) < 0.9) { const na = cur + clamp(df, -b.hom * dt, b.hom * dt); b.vx = Math.cos(na) * sp; b.vy = Math.sin(na) * sp; }
       }
     }
     b.x += b.vx * dt; b.y += b.vy * dt; b.life -= dt;
