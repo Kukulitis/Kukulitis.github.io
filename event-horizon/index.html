@@ -624,7 +624,7 @@ body.paused .tbtn{display:none!important}
 <script>
 'use strict';
 // Versioning: next version -> next whole number (4.00), sub version -> +0.01 (3.01)
-const VERSION = '4.26';
+const VERSION = '4.27';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -5389,7 +5389,7 @@ function drawHUDi(W, H) {
     if (ship && Math.hypot(ship.x, ship.y) < owSafeR()) {
       const [mx0, my0, ms] = mmLayout(touch, W, H), under = mx0 < W / 2 + 180 && mx0 + ms > W / 2 - 180 && my0 + ms > H - 60;
       ctx.save(); ctx.font = `600 ${touch ? 10 : 11}px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = 'rgba(143,255,214,0.7)';
-      spaced(W < 560 ? 'NO ORBS HERE  ·  ONLY RED DRONES ENTER' : 'SAFE ZONE  ·  NO ORBS SPAWN HERE  ·  ONLY RED DRONES CAN ENTER', W / 2, under ? my0 - 26 : H - 16, 1.2, 'center'); ctx.restore();
+      spaced(W < 560 ? 'NO ORBS HERE  ·  ONLY RED DRONES ENTER' : 'SAFE ZONE  ·  NO ORBS SPAWN HERE  ·  ONLY RED DRONES CAN ENTER', W / 2, under ? my0 - 46 : H - 40, 1.2, 'center'); ctx.restore();
     }
   }
   let bx = 34;
