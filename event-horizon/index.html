@@ -196,7 +196,22 @@ svg{stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-l
 .gorb{position:relative;padding:7px 14px;border-radius:999px;border:1px solid rgba(180,140,255,.45);background:rgba(180,140,255,.1);color:#e3d6ff;font:600 13px var(--f);letter-spacing:.06em;cursor:pointer;white-space:nowrap}
 .gorb:hover{background:rgba(180,140,255,.18)}
 .gorb i{position:absolute;top:-2px;right:-2px;width:8px;height:8px;border-radius:50%;background:var(--mint);box-shadow:0 0 6px var(--mint)}
-.skbar{width:100%;max-width:1060px;display:flex;gap:10px;align-items:center;margin:12px 0 8px;flex:none}
+.skbar{width:100%;max-width:1060px;display:grid;grid-template-columns:auto minmax(0,1fr) auto;grid-template-rows:auto auto;column-gap:10px;row-gap:6px;align-items:center;margin:12px 0 8px;flex:none}
+.skl{font-size:10px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--dim);width:64px}
+.skall{grid-column:3;grid-row:1 / span 2;align-self:stretch;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:8px 16px;border-radius:12px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.04);color:#fff;font:600 12px var(--f);letter-spacing:.08em;cursor:pointer;position:relative}
+.skall small{font-size:10px;color:var(--dim);font-weight:500;letter-spacing:.04em}
+.skall:hover{background:rgba(255,255,255,.09)}
+.skall.can::after{content:'';position:absolute;top:-3px;right:-3px;width:8px;height:8px;border-radius:50%;background:var(--mint);box-shadow:0 0 6px var(--mint)}
+.skc.sm{width:auto;flex-direction:row;gap:8px;padding:5px 12px 5px 5px}
+.skc.sm canvas{width:34px;height:34px;flex:none}
+.skc.sm .skn{font-size:12px}
+.gskins{display:none;grid-area:s;min-height:0;flex-direction:column;gap:10px;z-index:1}
+.gsh{display:flex;gap:10px;align-items:center}.gsh .subseg{flex:1;margin:0}.gsh .sec{padding:9px 14px}
+.skgrid{flex:1;min-height:0;overflow-y:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px;align-content:start;padding:2px 4px 10px 2px}
+.skgrid .skc{width:auto}
+.garage.skmode{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;grid-template-areas:"s c" "s d"}
+.garage.skmode .gskins{display:flex}
+.garage.skmode .gl,.garage.skmode .gr,.garage.skmode .gbot,.garage.skmode #gLines{display:none}
 .skbar .subseg{flex:none;flex-direction:column;margin:0;width:96px}
 .skbar .subseg button{padding:9px 6px}
 .skscroll{flex:1;min-width:0;display:flex;gap:8px;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;touch-action:pan-x;padding:2px 2px 6px;scroll-snap-type:x proximity}
@@ -212,6 +227,8 @@ svg{stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-l
 #gLines{position:absolute;left:0;top:0;pointer-events:none;z-index:0}
 .gcol{display:flex;flex-direction:column;gap:9px;justify-content:center;min-height:0;z-index:1}
 .gl{grid-area:l}.gr{grid-area:r}
+@media (max-width:900px) and (min-height:521px){.garage.skmode{grid-template-columns:minmax(0,1fr);grid-template-rows:repeat(3,max-content);grid-template-areas:"c" "d" "s"}.skgrid{overflow:visible;grid-template-columns:repeat(auto-fill,minmax(96px,1fr))}.skbar{grid-template-columns:minmax(0,1fr) auto}.skl{display:none}.skall{grid-column:2}}
+@media (max-height:520px){.garage.skmode{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);grid-template-rows:max-content max-content 1fr;grid-template-areas:"s c" "s d" "s ."}.skc.sm{padding:3px 8px 3px 3px}.skc.sm canvas{width:26px;height:26px}.skc.sm .skn{display:none}.skbar{row-gap:4px;margin:4px 0}.skall{padding:4px 10px}.skl{width:auto;font-size:9px}}
 .gbay{grid-area:c;min-height:0;display:flex;z-index:1;position:relative}
 #pvCv{display:block;width:100%;height:100%;min-height:200px;border-radius:50% / 46%;background:radial-gradient(ellipse at 50% 50%,rgba(var(--c),.12),rgba(0,0,0,.25) 60%,rgba(0,0,0,0) 72%);cursor:pointer}
 .gdet{grid-area:d;z-index:1;display:flex;align-items:center;gap:14px;padding:12px 14px;border-radius:14px;background:rgba(10,12,24,.75);border:1px solid rgba(var(--c),.4);height:104px;box-sizing:border-box;overflow:hidden;text-align:left;transition:border-color .25s}
@@ -428,8 +445,9 @@ body.paused .tbtn{display:none!important}
 
 <div id="hangar" class="ov scr hidden">
   <div class="hd a1"><div><div class="h3" id="hTitle">GARAGE</div><div class="sub" id="hSub"></div></div><div class="hdr"><button class="gorb" id="gOrbBtn"><span id="gOrbT">Orbs</span><i class="hidden" id="gOrbDot"></i></button><div class="pill">◆ <span id="hDust">0</span></div></div></div>
-  <div class="skbar a2" id="skBar"><div class="subseg" id="skSeg"><button data-sub="ship">Ships</button><button data-sub="bullet">Bullets</button></div><div class="skscroll" id="skList"></div></div>
+  <div class="skbar a2" id="skBar"><div class="skl">Ships</div><div class="skscroll" id="skShips"></div><div class="skl">Bullets</div><div class="skscroll" id="skBul"></div><button class="skall" id="skAllBtn"><b>All skins</b><small id="skAllN"></small></button></div>
   <div class="garage a3" id="garage">
+    <div class="gskins" id="gS"><div class="gsh"><button class="sec" id="skBack">◂ Garage</button><div class="subseg" id="skSeg"><button data-sub="ship">Ships</button><button data-sub="bullet">Bullets</button></div></div><div class="skgrid" id="skList"></div></div>
     <canvas id="gLines"></canvas>
     <div class="gcol gl" id="gL"></div>
     <div class="gbay"><canvas id="pvCv"></canvas></div>
@@ -478,7 +496,7 @@ body.paused .tbtn{display:none!important}
 <script>
 'use strict';
 // Versioning (renumbered by request): next version -> next whole number (3.00), sub version -> +0.01 (2.01)
-const VERSION = '2.14';
+const VERSION = '2.15';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -1577,7 +1595,7 @@ function openHangar(from) {
   hangarFrom = from; hideAll(); show('hangar');
   if (from === 'cleared') { $('hGoT').textContent = 'NEXT'; $('hGoS').textContent = playLabel(sector + 1); }
   else { $('hGoT').textContent = 'PLAY'; $('hGoS').textContent = playLabel(save.sel); }
-  if (hTab !== 'ORB') hTab = 'G';
+  if (hTab !== 'ORB' && hTab !== 'SK') hTab = 'G';
   shopSel.G = '';
   renderHangar();
 }
@@ -1585,14 +1603,14 @@ const upgCan = () => UPG.some(u => tier(u.k) < u.max && save.dust >= u.cost[tier
 const chipR = r => `<span class="chip" style="background:rgba(${RAR[r].c},.16);color:rgb(${RAR[r].c})">${RAR[r].n}</span>`;
 function renderHangar(flashK) {
   $('hDust').textContent = fmt(save.dust);
-  const orb = hTab === 'ORB';
-  $('garage').classList.toggle('hidden', orb); $('skBar').classList.toggle('hidden', orb); $('orbV').classList.toggle('hidden', !orb);
+  const orb = hTab === 'ORB', skm = hTab === 'SK';
+  $('garage').classList.toggle('hidden', orb); $('garage').classList.toggle('skmode', skm); $('skBar').classList.toggle('hidden', orb || skm); $('orbV').classList.toggle('hidden', !orb);
   $('gOrbT').textContent = orb ? 'Back to garage' : 'Orbs' + (orbCount() ? ' (' + orbCount() + ')' : '');
   $('gOrbDot').classList.toggle('hidden', orb || !(orbCount() > 0 || save.dust >= ORBS.void.cost));
-  $('hTitle').textContent = orb ? 'ORBS' : 'GARAGE';
-  $('hSub').textContent = orb ? 'Open orbs for random skins. Beat any sector boss for a free Void Orb.' : 'Pick an upgrade around your ship to see it in action. Choose your look at the top.';
+  $('hTitle').textContent = orb ? 'ORBS' : skm ? 'SKINS' : 'GARAGE';
+  $('hSub').textContent = orb ? 'Open orbs for random skins. Beat any sector boss for a free Void Orb.' : skm ? 'Every ship and bullet skin. Tap one to preview it, then buy or equip it.' : 'Pick an upgrade around your ship to see it in action. Your skins are at the top.';
   if (orb) renderOrbs(); else {
-    renderSkins(); renderNodes(); renderPrevInfo();
+    renderOwned(); if (skm) renderSkins(); else renderNodes(); renderPrevInfo();
     if (flashK) { const p = $('pvI'); p.classList.remove('flash'); void p.offsetWidth; p.classList.add('flash'); }
   }
   startShopAnim();
@@ -1608,6 +1626,19 @@ function renderNodes() {
   $('gL').innerHTML = '<div class="ghd">Ship</div>' + by('SHIP').map(u => nodeHTML(u)).join('');
   $('gR').innerHTML = '<div class="ghd">Weapons</div>' + by('WEAPON').map(u => nodeHTML(u)).join('');
   $('gB').innerHTML = `<div class="gbg"><div class="ghd">Power-ups</div><div class="gbr">${by('POWER').map(u => nodeHTML(u, true)).join('')}</div></div><div class="gbg"><div class="ghd">Unlocks</div><div class="gbr">${by('UNLOCK').map(u => nodeHTML(u, true)).join('')}</div></div>`;
+}
+function renderOwned() {
+  const row = (list, owned, cur, sub) => list.filter(x => owned.includes(x.id)).sort((a, b) => a.cost - b.cost || 0).map(it => {
+    const id = sub + ':' + it.id, eq = cur.id === it.id;
+    return `<button class="skc sm${shopSel.G === id ? ' sel' : ''}${eq ? ' eq' : ''}" data-sel="${id}" style="--c:${RAR[it.rar].c}" title="${it.name}"><canvas class="sth" data-${sub === 'ship' ? 's' : 'b'}="${it.id}"></canvas><span class="skn">${it.name}</span></button>`;
+  }).join('');
+  const os = save.skins || ['scrap'], ob = save.bskins || ['pellet'];
+  const a = $('skShips'), b = $('skBul'), sa = a.scrollLeft, sb = b.scrollLeft;
+  a.innerHTML = row(SKINS, os, SK(), 'ship'); b.innerHTML = row(BSKINS, ob, BS(), 'bullet');
+  a.scrollLeft = sa; b.scrollLeft = sb;
+  $('skAllN').textContent = `${os.length + ob.length}/${SKINS.length + BSKINS.length} owned`;
+  $('skAllBtn').classList.toggle('can', skinAffordable());
+  drawThumbs('#skBar');
 }
 function renderSkins() {
   document.querySelectorAll('#skSeg button').forEach(b => b.classList.toggle('on', b.dataset.sub === skSub));
@@ -1698,16 +1729,20 @@ $('garage').addEventListener('click', e => {
 let hovT = 0;
 $('garage').addEventListener('pointerover', e => { if (e.pointerType !== 'mouse') return; const n = e.target.closest('.gnode'); if (n) { clearTimeout(hovT); selectShop(n.dataset.sel); } });
 $('garage').addEventListener('pointerout', e => { if (e.pointerType !== 'mouse') return; const n = e.target.closest('.gnode'); if (n && !(e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest('.gnode'))) { clearTimeout(hovT); hovT = setTimeout(() => selectShop(''), 160); } });
-$('skList').addEventListener('click', e => {
+function skinClick(e) {
   const b = e.target.closest('.skc'); if (!b) return;
   const id = b.dataset.sel, ship = id.startsWith('ship:'), sid = id.slice(ship ? 5 : 7), owned = ship ? (save.skins || ['scrap']) : (save.bskins || ['pellet']);
   shopSel.G = id;
   if (owned.includes(sid)) { if (ship) buySkin(sid); else buyBSkin(sid); }
-  else { sfx.ui(); renderSkins(); renderPrevInfo(); }
+  else { sfx.ui(); if (hTab === 'SK') renderSkins(); renderOwned(); renderPrevInfo(); }
   document.querySelectorAll('#garage .gnode').forEach(r => r.classList.remove('sel'));
-});
+}
+$('skList').addEventListener('click', skinClick);
+$('skBar').addEventListener('click', e => { if (e.target.closest('#skAllBtn')) return; skinClick(e); });
+$('skAllBtn').onclick = () => { sfx.ui(); hTab = 'SK'; shopSel.G = ''; const k = shopSel.G; renderHangar(); };
+$('skBack').onclick = () => { sfx.ui(); hTab = 'G'; shopSel.G = ''; renderHangar(); };
 $('skSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b || b.dataset.sub === skSub) return; skSub = b.dataset.sub; sfx.ui(); renderSkins(); });
-$('gOrbBtn').onclick = () => { sfx.ui(); hTab = hTab === 'ORB' ? 'G' : 'ORB'; renderHangar(); };
+$('gOrbBtn').onclick = () => { sfx.ui(); hTab = hTab === 'ORB' ? 'G' : 'ORB'; shopSel.G = ''; renderHangar(); };
 const shopBuyClick = e => { const b = e.target.closest('.buy'); if (!b || b.disabled) return; if (b.dataset.buyorb) buyOrb(b.dataset.buyorb); else if (b.dataset.openorb) openOrb(b.dataset.openorb); else if (b.dataset.skin) buySkin(b.dataset.skin); else if (b.dataset.bskin) buyBSkin(b.dataset.bskin); else if (b.dataset.k) buy(b.dataset.k); };
 $('pvI').addEventListener('click', shopBuyClick);
 $('orbV').addEventListener('click', shopBuyClick);
