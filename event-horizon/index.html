@@ -510,7 +510,7 @@ body.paused .tbtn{display:none!important}
 <script>
 'use strict';
 // Versioning (renumbered by request): next version -> next whole number (3.00), sub version -> +0.01 (2.01)
-const VERSION = '2.25';
+const VERSION = '2.26';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -1870,7 +1870,7 @@ function shopLoop(now) {
   if (hTab === 'ORB') {
     document.querySelectorAll('#orbV canvas.orbp').forEach(cvs => {
       const d = Math.min(2, window.devicePixelRatio || 1), w = cvs.clientWidth, h = cvs.clientHeight; if (!w) return;
-      if (cvs.width !== (w * d | 0)) { cvs.width = w * d | 0; cvs.height = h * d | 0; }
+      if (cvs.width !== (w * d | 0) || cvs.height !== (h * d | 0)) { cvs.width = w * d | 0; cvs.height = h * d | 0; }
       const c = cvs.getContext('2d'); c.setTransform(d, 0, 0, d, 0, 0); c.clearRect(0, 0, w, h);
       const o = ORBS[cvs.dataset.o]; drawOrb(c, w / 2, h / 2, Math.min(w, h) * 0.27, o.col, o.col2, t);
     });
@@ -2234,7 +2234,7 @@ function crateTap() {
 }
 function crateFrame(dt) {
   const cr = crate, cvs = $('crCv'), d = Math.min(2, window.devicePixelRatio || 1), w = cvs.clientWidth, h = cvs.clientHeight;
-  if (cvs.width !== (w * d | 0)) { cvs.width = w * d | 0; cvs.height = h * d | 0; }
+  if (cvs.width !== (w * d | 0) || cvs.height !== (h * d | 0)) { cvs.width = w * d | 0; cvs.height = h * d | 0; }
   const c = cvs.getContext('2d'); c.setTransform(d, 0, 0, d, 0, 0); c.clearRect(0, 0, w, h);
   cr.t += dt; const t = performance.now() / 1000, o = ORBS[cr.k], rc = RAR[cr.res.rar].c, cx = w / 2, cy = h / 2, R0 = Math.min(w, h) * 0.22;
   const myth = cr.res.rar === 'mythic';
@@ -2792,7 +2792,7 @@ function beastLoop(now) {
   document.querySelectorAll('#bxList canvas.bxc').forEach(cvs => {
     const r_ = cvs.getBoundingClientRect(); if (r_.bottom < 0 || r_.top > innerHeight) return;
     const d = Math.min(2, window.devicePixelRatio || 1), w = cvs.clientWidth, h = cvs.clientHeight; if (!w) return;
-    if (cvs.width !== (w * d | 0)) { cvs.width = w * d | 0; cvs.height = h * d | 0; }
+    if (cvs.width !== (w * d | 0) || cvs.height !== (h * d | 0)) { cvs.width = w * d | 0; cvs.height = h * d | 0; }
     const c = cvs.getContext('2d'); c.setTransform(d, 0, 0, d, 0, 0); c.clearRect(0, 0, w, h);
     const unk = cvs.dataset.k ? !(sn.k && sn.k[cvs.dataset.k]) : !(sn.b && sn.b[cvs.dataset.b]);
     c.save(); if (unk) { c.globalAlpha = 0.18; }
