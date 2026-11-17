@@ -624,7 +624,7 @@ body.paused .tbtn{display:none!important}
 <script>
 'use strict';
 // Versioning: next version -> next whole number (4.00), sub version -> +0.01 (3.01)
-const VERSION = '4.25';
+const VERSION = '4.26';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -3226,7 +3226,7 @@ function owPre() {
     for (let i = holes.length - 1; i >= 0; i--) if (Math.hypot(holes[i].x, holes[i].y) > OWM * CH - 350 * U) holes.splice(i, 1);
     if (!cx && !cy) holes.push({ x: 0, y: 0, m: 4.5, rh: 34 * U * Math.pow(4.5, 0.7), white: false, big: true, ck: key, ph: 0 });
     const Ro = rng(hash2(cx, cy, 55 + ow.seed)), orbs = [];
-    const add = (t, i) => { const o = { x: (cx - 0.4 + Ro() * 0.8) * CH, y: (cy - 0.4 + Ro() * 0.8) * CH, ck: key + t + i, ph: Ro() * 6, t }; if (Math.hypot(o.x, o.y) < OWM * CH - 160 * U && !holes.some(h => Math.hypot(h.x - o.x, h.y - o.y) < h.rh * 6)) orbs.push(o); };
+    const add = (t, i) => { const o = { x: (cx - 0.4 + Ro() * 0.8) * CH, y: (cy - 0.4 + Ro() * 0.8) * CH, ck: key + t + i, ph: Ro() * 6, t }; if (Math.hypot(o.x, o.y) < OWM * CH - 160 * U && Math.hypot(o.x, o.y) > OWM * CH * 0.3 + 120 * U && !holes.some(h => Math.hypot(h.x - o.x, h.y - o.y) < h.rh * 6)) orbs.push(o); };
     // orb chances are 2/3 of what they were (50% rarer)
     if (dc >= 1.2 && dc <= OWM) { if (Ro() < 0.333) add('b', 0); if (Ro() < 0.133) add('b', 1); if (Ro() < B.orb * 0.333) add('a', 0); if (Ro() < 0.093) add('d', 0); }
     ow.all.set(key, { holes, orbs });
@@ -3389,6 +3389,7 @@ function owBasic(o) {
 function owDrop(t, x, y) {
   if (!ow) return;
   x += rand(-26, 26) * U; y += rand(-26, 26) * U;
+  if (Math.hypot(x, y) < owSafeR() + 60 * U) return; // the safe zone never gets orbs
   const id = (mp ? mp.id : 'L') + '.' + (++ow.dc);
   ow.drops.push({ ck: id, t, x, y, ph: rand(0, 6), life: 60 });
   if (mp) mp.ev.push(['dr', id, t, Math.round(x / U), Math.round(y / U)]);
@@ -5383,7 +5384,14 @@ function drawHUDi(W, H) {
   const ly = touch ? 96 : H - 22, by = touch ? (gmode === 'world' && ow ? upBox(W, H, true)[1] + upBox(W, H, true)[3] + 24 : 128) : H - 58;
   if (gmode !== 'world') for (let i = 0; i < lives; i++) miniShip(28 + i * 20, ly, 0.85);
   else if (mp) { const ry = touch ? 96 : 88; for (let i = 0; i < lives; i++) miniShip(28 + i * 20, ry, 0.85); ctx.font = `600 11px ${FONT}`; ctx.fillStyle = 'rgba(233,238,247,0.62)'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; spaced(mpRoom().toUpperCase() + '  ·  ' + (1 + Object.values(mp.peers).filter(q => !q.away).length) + '/' + MPMAX + ' PILOTS' + (mp.host ? '  ·  HOST' : ''), 28 + Math.max(1, lives) * 20, ry, 1.6, 'left'); }
-  if (gmode === 'world' && ow) { drawMinimap(W, H); if (mp) drawScoreboard(W, H, touch); }
+  if (gmode === 'world' && ow) {
+    drawMinimap(W, H); if (mp) drawScoreboard(W, H, touch);
+    if (ship && Math.hypot(ship.x, ship.y) < owSafeR()) {
+      const [mx0, my0, ms] = mmLayout(touch, W, H), under = mx0 < W / 2 + 180 && mx0 + ms > W / 2 - 180 && my0 + ms > H - 60;
+      ctx.save(); ctx.font = `600 ${touch ? 10 : 11}px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = 'rgba(143,255,214,0.7)';
+      spaced(W < 560 ? 'NO ORBS HERE  ·  ONLY RED DRONES ENTER' : 'SAFE ZONE  ·  NO ORBS SPAWN HERE  ·  ONLY RED DRONES CAN ENTER', W / 2, under ? my0 - 26 : H - 16, 1.2, 'center'); ctx.restore();
+    }
+  }
   let bx = 34;
   if (pw.shield > 0) { badge(bx, by, 14, 'shieldpk', PICK.shield.c, 1, pw.shield > 1 ? '×' + pw.shield : '', false); bx += 38; }
   else if (S.shieldRe && ship) { ctx.save(); ctx.globalAlpha *= 0.55; badge(bx, by, 14, 'shieldpk', PICK.shield.c, shieldReT / S.shieldRe, '', false); ctx.restore(); bx += 38; }
