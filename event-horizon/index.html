@@ -624,7 +624,7 @@ body.paused .tbtn{display:none!important}
 <script>
 'use strict';
 // Versioning: next version -> next whole number (4.00), sub version -> +0.01 (3.01)
-const VERSION = '4.24';
+const VERSION = '4.25';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -1621,6 +1621,22 @@ function swallow(o, amt) {
   if (gmode === 'world') { if (gHole) ring(gHole.x, gHole.y, gHole.rh / U * 3, TH.glow[1], 0.6, 2); } else ring(CX, CY, rh / U * 3, TH.glow[1], 0.6, 2);
   bhPulse = 1;
   sfx.feed();
+  holeSpit(o);
+}
+// black holes spit some of what they eat back out as stardust, and very rarely an orb (multiplayer)
+function holeSpit(o) {
+  if (mode !== 'play' && mode !== 'clear') return;
+  const H_ = gmode === 'world' && gHole ? gHole : null, hx = H_ ? H_.x : CX, hy = H_ ? H_.y : CY, R = H_ ? H_.rh : rh;
+  const n = o.kind ? 2 + (Math.random() < 0.5 ? 1 : 0) : o.size >= 3 ? 2 : o.size === 2 ? 1 : Math.random() < 0.5 ? 1 : 0;
+  for (let i = 0; i < n; i++) {
+    const a = rand(0, TAU), d = R * rand(2.6, 3.4), s = rand(220, 380) * U;
+    dust.push({ x: hx + Math.cos(a) * d, y: hy + Math.sin(a) * d, vx: Math.cos(a) * s, vy: Math.sin(a) * s, v: 1, life: 16, rot: rand(0, TAU), ng: 1.2 });
+  }
+  if (n) { ring(hx, hy, R / U * 3.2, '143,255,214', 0.4, 2); }
+  if (gmode === 'world' && ow && (!mp || mp.host) && Math.random() < 0.025) {
+    const a = rand(0, TAU), d = R * 5.5, r = Math.random(), t = r < 0.15 ? 'a' : r < 0.6 ? 'b' : 'd';
+    owDrop(t, hx + Math.cos(a) * d, hy + Math.sin(a) * d);
+  }
 }
 function shatter(x, y, r, col) {
   for (let i = 0; i < 22; i++) { const a = i / 22 * TAU, s = rand(90, 170) * U; part(x + Math.cos(a) * r, y + Math.sin(a) * r, Math.cos(a) * s, Math.sin(a) * s, rand(0.3, 0.6), col, 2.4 * Math.max(1, U), 0, 0.93); }
@@ -4727,7 +4743,7 @@ function update(dt, rdt) {
   // ---- stardust ----
   for (let i = dust.length - 1; i >= 0; i--) {
     const d = dust[i];
-    const r = gravity(d, 0.5, dt);
+    let r; if (d.ng > 0) { d.ng -= dt; r = 1e9; } else r = gravity(d, 0.5, dt);
     const dr = Math.pow(0.985, dt * 60); d.vx *= dr; d.vy *= dr;
     if (ship) {
       const mdx = ship.x - d.x, mdy = ship.y - d.y, md = Math.hypot(mdx, mdy);
