@@ -172,6 +172,9 @@ svg{stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-l
 #mmSz{width:100%;accent-color:rgb(200,150,255)}.mmb{display:flex;gap:8px}.mmb>*{flex:1}
 .owt{width:min(320px,70vw);height:4px;border-radius:2px;background:rgba(255,255,255,.12);overflow:hidden}.owt i{display:block;height:100%;background:rgb(200,150,255);transform-origin:left;transition:transform .12s linear}
 .owtm{font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgb(220,190,255)}
+.gmsel{display:flex;gap:4px;padding:4px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.04);margin-bottom:12px}
+.gmsel button{padding:8px 14px;border-radius:10px;border:0;background:none;color:var(--dim);font:inherit;font-size:11.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;transition:background .15s,color .15s}
+.gmsel button:hover{color:#fff}.gmsel button.on{background:rgba(255,255,255,.12);color:#fff}
 .mpw{flex:1;min-height:0;width:100%;max-width:940px;display:grid;grid-template-columns:1fr 1fr;gap:16px;align-content:center;margin:16px 0;overflow-y:auto}
 .mpc{display:flex;flex-direction:column;gap:12px;text-align:left;padding:22px;border-radius:20px;border:1px solid rgba(200,150,255,.32);background:linear-gradient(180deg,rgba(200,150,255,.1),rgba(255,255,255,.02))}
 .mpt{font-size:12px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgb(220,190,255)}.mpt2{margin-top:6px}
@@ -413,6 +416,7 @@ body.paused .tbtn{display:none!important}
   <div class="top"><div class="title">EVENT HORIZON</div></div>
   <div class="hole"></div>
   <div class="bot">
+    <div class="gmsel a2" id="gmSel"><button data-g="story">Story</button><button data-g="waves">Endless</button><button data-g="world">Multiplayer</button></div>
     <button class="play a2" id="play"><span class="pm">PLAY</span><span class="ps" id="playSub"></span></button>
     <div class="icons a3">
       <button class="ib" id="mapBtn"><i data-ic="map"></i><span>Map</span></button>
@@ -532,7 +536,7 @@ body.paused .tbtn{display:none!important}
   <div class="ft a3"><button class="sec" id="mdBack">Back</button></div>
 </div>
 
-<div id="owPick" class="hidden"><div class="owp"><div class="h3" style="font-size:24px">CHOOSE AN ABILITY</div><div class="sub">The game keeps going - you're shielded while you choose. Lose your ship and you lose your abilities and half your upgrades.</div><div class="owt"><i id="owBar"></i></div><div class="owtm" id="owTm"></div><div class="owc" id="owC"></div></div></div>
+<div id="owPick" class="hidden"><div class="owp"><div class="h3" style="font-size:24px">CHOOSE AN ABILITY</div><div class="sub">Your ship holds still and is shielded while you choose. Lose your ship and you lose your abilities and half your upgrades.</div><div class="owt"><i id="owBar"></i></div><div class="owtm" id="owTm"></div><div class="owc" id="owC"></div></div></div>
 
 <div id="mmEd" class="hidden"><canvas id="mmCv"></canvas>
   <div class="mmp" id="mmP"><div class="mmt">Minimap layout</div><div class="mmx" id="mmX"></div>
@@ -597,7 +601,7 @@ body.paused .tbtn{display:none!important}
 <script>
 'use strict';
 // Versioning: next version -> next whole number (4.00), sub version -> +0.01 (3.01)
-const VERSION = '4.10';
+const VERSION = '4.11';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -1753,11 +1757,19 @@ function hideAll() { for (const id of OVS) $(id).classList.add('hidden'); }
 function show(id) { $(id).classList.remove('hidden'); }
 const playLabel = n => (n > NS ? 'Endless' : 'Sector ' + n) + ' · ' + themeFor(n).name;
 function affordable() { return orbCount() > 0 || skinAffordable() || UPG.some(u => tier(u.k) < u.max && save.dust >= u.cost[tier(u.k)]); }
+const menuMode = () => ['story', 'waves', 'world'].includes(save.gm) ? save.gm : 'story';
+function startMode() { const gm = menuMode(); audio(); goFull(); if (gm === 'story') startRun(save.sel); else if (gm === 'waves') startWaves(); else { sfx.ui(); openMP(); } }
 function refreshMenu() {
   $('bestM').textContent = fmt(save.best);
   $('dustM').textContent = fmt(save.dust);
   $('orbM').textContent = orbCount() ? '● ' + orbCount() + ' orb' + (orbCount() > 1 ? 's' : '') : '';
-  $('playSub').textContent = 'Story · Endless · Multiplayer';
+  const gm = menuMode();
+  for (const b of $('gmSel').children) b.classList.toggle('on', b.dataset.g === gm);
+  $('playSub').textContent = gm === 'story' ? playLabel(Math.min(save.sel, NS)) : gm === 'waves' ? (save.bestWave ? 'Endless · best wave ' + save.bestWave : 'Endless waves') : 'Online · up to 4 pilots';
+  // map only in story; shop and enemies in story and endless; profile and settings everywhere
+  $('mapBtn').classList.toggle('hidden', gm !== 'story');
+  $('shopBtn').classList.toggle('hidden', gm === 'world');
+  $('beastBtn').classList.toggle('hidden', gm === 'world');
   $('shopDot').classList.toggle('hidden', !affordable());
   $('ver').textContent = 'V ' + VERSION;
   $('pilotBtn').querySelector('span').textContent = cloudUser ? (save.name || cloudUser) : 'Profile';
@@ -3090,7 +3102,7 @@ $('bxList').addEventListener('click', e => { const cd = e.target.closest('.card.
 $('bxX').onclick = () => { sfx.ui(); $('bxM').classList.add('hidden'); bxS = null; };
 $('bxM').addEventListener('click', e => { if (e.target === $('bxM')) $('bxX').click(); });
 
-$('beastBtn').onclick = () => { audio(); sfx.ui(); openBeast(); };
+$('beastBtn').onclick = () => { if (menuMode() === 'world') return; audio(); sfx.ui(); openBeast(); };
 $('bxBack').onclick = () => { $('bxM').classList.add('hidden'); bxS = null; goMenu(); };
 $('bxSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; bxTab = b.dataset.t; sfx.ui(); renderBeast(); });
 
@@ -3881,7 +3893,7 @@ $('mpCode').addEventListener('keydown', e => { if (e.key === 'Enter') mpJoinCode
 $('mpCode').addEventListener('input', e => { const v = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); if (v !== e.target.value) e.target.value = v; });
 $('mpList').addEventListener('click', e => { const b = e.target.closest('.mpr'); if (b && !b.disabled) mpJoinCode(b.dataset.c); });
 $('mpPub').addEventListener('click', e => { const b = e.target.closest('.mpo'); if (!b) return; mpPub = b.dataset.pub === '1'; for (const x of $('mpPub').children) x.classList.toggle('on', x === b); sfx.ui(); });
-$('mpBack').onclick = () => { mpLeave(); closeLobby(); openModes(); };
+$('mpBack').onclick = () => { mpLeave(); closeLobby(); goMenu(); };
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) { mpHidT = performance.now(); return; }
   if (!mp || mp.state !== 'play') return;
@@ -3967,12 +3979,13 @@ function openModes() {
   $('mdStory').textContent = playLabel(Math.min(save.sel, NS));
   $('mdWaves').textContent = save.bestWave ? 'Best: wave ' + save.bestWave : 'No record yet';
 }
-$('play').onclick = () => { audio(); sfx.ui(); openModes(); };
+$('play').onclick = () => startMode();
+$('gmSel').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; save.gm = b.dataset.g; persist(); audio(); sfx.ui(); refreshMenu(); });
 $('mdBack').onclick = () => goMenu();
 $('modes').addEventListener('click', e => { const b = e.target.closest('.mcd'); if (!b) return; audio(); goFull(); const m = b.dataset.m; if (m === 'story') startRun(save.sel); else if (m === 'waves') startWaves(); else openMP(); });
 $('again').onclick = () => { audio(); goFull(); if (gmode === 'waves') startWaves(); else startRun(save.sel); };
-$('mapBtn').onclick = () => { audio(); sfx.ui(); openMap(); };
-$('shopBtn').onclick = () => { audio(); sfx.ui(); openHangar('menu'); };
+$('mapBtn').onclick = () => { if (menuMode() !== 'story') return; audio(); sfx.ui(); openMap(); };
+$('shopBtn').onclick = () => { if (menuMode() === 'world') return; audio(); sfx.ui(); openHangar('menu'); };
 $('ovShop').onclick = () => { sfx.ui(); openHangar('over'); };
 $('ovMenu').onclick = () => goMenu();
 $('resume').onclick = () => setPause(false);
@@ -3986,7 +3999,7 @@ $('hBack').onclick = () => {
   else if (hangarFrom === 'over') { $('ovDot').classList.toggle('hidden', !affordable()); show('over'); }
   else { $('clDot').classList.toggle('hidden', !affordable()); $('clTiles').children[2].querySelector('b').textContent = lives; show('cleared'); }
 };
-$('hGo').onclick = () => { audio(); if (hangarFrom === 'cleared' && gmode === 'story' && sector >= NS) { goMenu(); return; } goFull(); if (hangarFrom === 'cleared') warpTo(sector + 1); else openModes(); };
+$('hGo').onclick = () => { audio(); if (hangarFrom === 'cleared' && gmode === 'story' && sector >= NS) { goMenu(); return; } goFull(); if (hangarFrom === 'cleared') warpTo(sector + 1); else startMode(); };
 
 $('rBack').onclick = () => goMenu();
 $('rGo').onclick = () => { if (mapFocus && mapFocus > save.unlocked) return; audio(); goFull(); startRun(mapFocus && mapFocus <= save.unlocked ? mapFocus : save.sel); };
@@ -4068,6 +4081,7 @@ function update(dt, rdt) {
       ship.vx += (tx * vo * dir - ship.vx) * kk; ship.vy += (ty * vo * dir - ship.vy) * kk;
       if (r0 < dR * 0.9) { ship.vx += rx / r0 * 160 * U * dt; ship.vy += ry / r0 * 160 * U * dt; }
     } else { const dr = Math.pow(0.992, dt * 60); ship.vx *= dr; ship.vy *= dr; }
+    if (gmode === 'world' && owChoosing) { ship.vx = 0; ship.vy = 0; ship.thr = 0; }
     ship.x += ship.vx * dt; ship.y += ship.vy * dt; if (bound(ship, 15 * U, 0.25)) edgeFlash = 1;
     if (aimT) {
       const adx = aimT.x - aimT.ox, ady = aimT.y - aimT.oy;
@@ -4079,7 +4093,7 @@ function update(dt, rdt) {
     const wasCool = ship.dcd > 0;
     ship.dcd -= dt;
     if (wasCool && ship.dcd <= 0) dashFlash = 1;
-    if (wantDash && ship.dcd <= 0) {
+    if (wantDash && ship.dcd <= 0 && !(gmode === 'world' && owChoosing)) {
       tutEv('dash');
       let dx = ix, dy = iy;
       if (Math.hypot(dx, dy) < 0.2) { dx = Math.cos(ship.ang); dy = Math.sin(ship.ang); }
@@ -4150,7 +4164,7 @@ function update(dt, rdt) {
   // ---- weapons ----
   fireCD -= dt; beamPath = null;
   if (ship && mode === 'play') {
-    const firing = mdown || keys.Space || aimT;
+    const firing = (mdown || keys.Space || aimT) && !(gmode === 'world' && owChoosing);
     if (pw.beam > 0 && firing) {
       traceBeam(TG, dt);
     } else if (firing && fireCD <= 0) {
