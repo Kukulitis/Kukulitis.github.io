@@ -153,6 +153,28 @@ svg{stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-l
 .pvi{display:flex;flex-direction:column;gap:10px;text-align:left}
 .slist,.sprev{text-align:left}
 .orbc .row2{margin-top:auto}
+.mgrid{flex:1;min-height:0;width:100%;max-width:1100px;display:grid;grid-template-columns:repeat(3,1fr);gap:16px;align-content:center;margin:16px 0;overflow-y:auto}
+.mcd{--c:255,255,255;display:flex;flex-direction:column;align-items:flex-start;gap:10px;text-align:left;padding:24px 22px;border-radius:20px;border:1px solid rgba(var(--c),.35);background:linear-gradient(180deg,rgba(var(--c),.12),rgba(255,255,255,.02));color:#eaf6ff;cursor:pointer;font:inherit;min-height:260px;transition:transform .2s,border-color .2s,box-shadow .2s}
+.mcd:hover{transform:translateY(-4px);border-color:rgba(var(--c),.85);box-shadow:0 14px 40px rgba(var(--c),.18)}
+.mci{width:54px;height:54px;border-radius:16px;display:grid;place-items:center;background:rgba(var(--c),.15);border:1px solid rgba(var(--c),.45);color:rgb(var(--c))}.mci svg{width:26px;height:26px}
+.mct{font-size:24px;font-weight:500;letter-spacing:.08em;text-transform:uppercase}
+.mcs{font-size:12px;font-weight:600;letter-spacing:.08em;color:rgb(var(--c))}
+.mcx{font-size:13.5px;line-height:1.55;color:var(--dim)}
+@media (max-width:760px){.mgrid{grid-template-columns:1fr;align-content:start;gap:10px}.mcd{min-height:0;padding:16px;gap:6px}.mct{font-size:19px}.mcx{font-size:12.5px}.mci{width:42px;height:42px}}
+@media (max-height:520px){.mgrid{grid-template-columns:repeat(3,1fr);margin:8px 0}.mcd{min-height:0;padding:12px;gap:5px}.mcx{display:none}.mct{font-size:17px}}
+#owPick{position:fixed;inset:0;z-index:25;display:flex;align-items:center;justify-content:center;background:rgba(3,2,12,.72);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);padding:16px}
+#owPick.hidden{display:none}
+.owp{width:min(860px,96vw);text-align:center;display:flex;flex-direction:column;gap:10px;align-items:center;animation:up .35s cubic-bezier(.2,.8,.2,1) both}
+.owc{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;width:100%;margin-top:8px}
+.owcard{position:relative;display:flex;flex-direction:column;align-items:center;gap:8px;padding:22px 14px 18px;border-radius:18px;border:1px solid rgba(200,150,255,.45);background:linear-gradient(180deg,rgba(200,150,255,.16),rgba(20,12,40,.9));color:#fff;cursor:pointer;font:inherit;transition:transform .15s,box-shadow .15s}
+.owcard:hover{transform:translateY(-4px);box-shadow:0 0 30px rgba(200,150,255,.35)}
+.owcard.up{border-color:rgba(255,210,120,.6);background:linear-gradient(180deg,rgba(255,210,120,.16),rgba(30,20,10,.9))}
+.owk{position:absolute;top:8px;left:10px;font-size:11px;color:var(--dim)}
+.owi{width:56px;height:56px;border-radius:16px;display:grid;place-items:center;background:rgba(200,150,255,.18);color:rgb(220,190,255)}.owi svg{width:28px;height:28px}
+.owcard.up .owi{background:rgba(255,210,120,.18);color:rgb(255,220,150)}
+.own{font-size:17px;font-weight:600}.owl{font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgb(200,150,255)}.owcard.up .owl{color:rgb(255,210,120)}
+.owd{font-size:12.5px;color:var(--dim);line-height:1.45}
+@media (max-width:640px){.owc{grid-template-columns:1fr}.owcard{display:grid;grid-template-columns:42px 1fr;grid-template-areas:'i n' 'i l' 'i d';justify-items:start;align-items:center;text-align:left;padding:12px 14px;gap:2px 12px}.owcard .owi{grid-area:i;width:42px;height:42px}.owcard .own{grid-area:n}.owcard .owl{grid-area:l}.owcard .owd{grid-area:d}}
 #roadmap{background:linear-gradient(180deg,rgba(3,5,12,.75),rgba(3,5,12,.15) 30%,rgba(3,5,12,.15) 70%,rgba(3,5,12,.8))}
 .mapw{position:relative;flex:1;min-height:0;width:100%;max-width:min(1100px,96vw)}
 .mapv{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;scroll-snap-type:y mandatory;-webkit-overflow-scrolling:touch;touch-action:pan-y;scrollbar-width:none;-webkit-mask-image:linear-gradient(180deg,transparent,#000 7%,#000 93%,transparent);mask-image:linear-gradient(180deg,transparent,#000 7%,#000 93%,transparent)}
@@ -473,6 +495,18 @@ body.paused .tbtn{display:none!important}
   <div class="ft a4"><button class="sec" id="hBack">Back</button><button class="play sm" id="hGo"><span class="pm" id="hGoT">PLAY</span><span class="ps" id="hGoS"></span></button></div>
 </div>
 
+<div id="modes" class="ov scr hidden">
+  <div class="hd a1"><div><div class="h3">CHOOSE A MODE</div><div class="sub">Three ways to play. Stardust you collect counts in every mode.</div></div></div>
+  <div class="mgrid a2">
+    <button class="mcd" data-m="story" style="--c:255,170,90"><div class="mci"><i data-ic="map"></i></div><div class="mct">Story</div><div class="mcs" id="mdStory"></div><div class="mcx">Fight through 10 sectors and their bosses. Unlock new enemies, abilities and sectors on the way.</div></button>
+    <button class="mcd" data-m="waves" style="--c:255,90,120"><div class="mci"><i data-ic="rate"></i></div><div class="mct">Endless Waves</div><div class="mcs" id="mdWaves"></div><div class="mcx">Survive as many waves as you can. Sectors keep coming with no breaks, and it gets harder every time.</div></button>
+    <button class="mcd" data-m="world" style="--c:200,150,255"><div class="mci"><i data-ic="enemy"></i></div><div class="mct">Open World</div><div class="mcs">Explore an endless galaxy</div><div class="mcx">Start with a bare ship. Fly through biomes full of black holes and white holes, grab ability orbs and build your loadout as you go.</div></button>
+  </div>
+  <div class="ft a3"><button class="sec" id="mdBack">Back</button></div>
+</div>
+
+<div id="owPick" class="hidden"><div class="owp"><div class="h3" style="font-size:24px">CHOOSE AN ABILITY</div><div class="sub">Pick one. If your ship is destroyed you respawn, but lose every ability you picked.</div><div class="owc" id="owC"></div></div></div>
+
 <div id="beast" class="ov scr hidden">
   <div class="hd a1"><div><div class="h3">ENEMIES</div><div class="sub">Everything you have run into out there. New ones appear as you reach new sectors.</div></div><div class="pill" id="bxProg"></div></div>
   <div class="subseg a2" id="bxSeg" style="width:100%;max-width:min(1200px,96vw);margin:14px 0 10px"><button data-t="k" class="on">Drones</button><button data-t="b">Bosses</button></div>
@@ -509,8 +543,8 @@ body.paused .tbtn{display:none!important}
 
 <script>
 'use strict';
-// Versioning (renumbered by request): next version -> next whole number (3.00), sub version -> +0.01 (2.01)
-const VERSION = '2.26';
+// Versioning: next version -> next whole number (4.00), sub version -> +0.01 (3.01)
+const VERSION = '3.00';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -665,7 +699,8 @@ function persist() {
   if (pk !== lastPacked) { lastPacked = pk; save.ts = Date.now(); cloudSoon(); }
   try { localStorage.setItem('eh_save2', JSON.stringify(save)); } catch (e) {}
 }
-const tier = k => save.up[k] || 0;
+let gmode = 'story';
+const tier = k => gmode === 'world' ? 0 : (save.up[k] || 0);
 const CATS = [['SHIP', 'Ship'], ['WEAPON', 'Weapons'], ['POWER', 'Power-ups'], ['UNLOCK', 'Unlocks'], ['SKIN', 'Skins'], ['ORB', 'Orbs']];
 const CATCOL = { SHIP: '120,230,255', WEAPON: '255,180,100', POWER: '200,150,255', UNLOCK: '200,150,255', SKIN: '255,140,220', ORB: '160,120,255' };
 const abLocked = u => !!UPAB[u.k] && !hasAb(UPAB[u.k]);
@@ -1194,6 +1229,7 @@ function announce(title, o = {}) {
 }
 function slowmo(s, d) { timeScale = s; slowT = d; }
 function gravity(o, k, dt) {
+  if (gmode === 'world') return worldGravity(o, k, dt);
   const dx = CX - o.x, dy = CY - o.y, r2 = dx * dx + dy * dy, r = Math.sqrt(r2) + 1e-6;
   const a = GMv * k / (r2 + 36 * U * U);
   o.vx += dx / r * a * dt; o.vy += dy / r * a * dt;
@@ -1205,8 +1241,9 @@ function wrap(o, m) {
 }
 const dangerR = () => Math.max(rh * 8, 170 * U);
 const onScreen = o => Math.abs(o.x - camX) < W / 2 && Math.abs(o.y - camY) < H / 2;
-function outOfWorld(o, m) { return follow ? (o.x - CX) ** 2 + (o.y - CY) ** 2 > (WR + m) ** 2 : o.x < -m || o.x > W + m || o.y < -m || o.y > H + m; }
+function outOfWorld(o, m) { if (gmode === 'world') return Math.abs(o.x - camX) > W * 1.6 || Math.abs(o.y - camY) > H * 1.6; return follow ? (o.x - CX) ** 2 + (o.y - CY) ** 2 > (WR + m) ** 2 : o.x < -m || o.x > W + m || o.y < -m || o.y > H + m; }
 function bound(o, m, bounce) {
+  if (gmode === 'world') return false;
   if (!follow) { wrap(o, m); return false; }
   const dx = o.x - CX, dy = o.y - CY, r = Math.hypot(dx, dy);
   if (r <= WR - m) return false;
@@ -1231,7 +1268,7 @@ function mkAst(x, y, vx, vy, size) {
   const craters = [];
   for (let i = 0; i < size; i++) craters.push([rand(-0.4, 0.4) * R, rand(-0.4, 0.4) * R, rand(0.12, 0.25) * R]);
   const o = { pts0: pts, cr0: craters, x, y, vx, vy, size, R, pts, craters, rot: rand(0, TAU), vr: rand(-1.2, 1.2), hp: [0, 1, 2, 4][size] * hpMul(), hit: 0, bw: -1, dead: false, v: '' };
-  if (mode === 'play' || mode === 'warp') { const pool = sector >= NS ? AVAR.slice(1) : sector > NS ? AVAR.slice(1) : [AVAR[Math.min(sector, NS) - 1]]; const v = pool[Math.random() * pool.length | 0]; if (v && Math.random() < (sector >= NS ? 0.6 : 0.45)) setVar(o, v); }
+  if (!owGen && (mode === 'play' || mode === 'warp')) { const pool = sector >= NS ? AVAR.slice(1) : sector > NS ? AVAR.slice(1) : [AVAR[Math.min(sector, NS) - 1]]; const v = pool[Math.random() * pool.length | 0]; if (v && Math.random() < (sector >= NS ? 0.6 : 0.45)) setVar(o, v); }
   o.max = o.hp;
   return o;
 }
@@ -1324,6 +1361,7 @@ const PICK = {
 };
 let lastDropT = -9;
 function dropRoll(p) {
+  if (gmode === 'world') return false;
   const ew = (sector - 1) * 2 + Math.max(1, wave);
   let f = 0.85 * (ew <= 3 ? 1 : Math.max(0.35, 1 - (ew - 3) * 0.05));
   const busy = drones.length + pickups.length * 2;
@@ -1378,8 +1416,10 @@ const TIPS = {
   dust: ['Grab ◆ stardust before the black hole eats it', 'Spend it on upgrades in the Shop'],
 };
 let tut = null;
-function startRun(sec) {
+function startRun(sec, keepMode) {
   if (!cloudUser) { goMenu(); return; }
+  if (!keepMode) gmode = 'story';
+  ow = null; owChoosing = false; $('owPick').classList.add('hidden');
   tut = null; $('tutBox').classList.add('hidden');
   calcStats();
   score = 0; dispScore = 0; lives = S.lives; bombs = S.bombs; maxMult = 1; swallowed = 0; kills = 0; runDust = 0; sectorsCleared = 0;
@@ -1450,9 +1490,10 @@ function sectorClear() {
   let vac = 0; for (const d of dust) vac += d.v; dust = [];
   const bonus = 30 + sector * 20;
   save.dust += vac + bonus; runDust += vac + bonus; secDust += vac + bonus;
-  if (sector <= NS) save.unlocked = Math.max(save.unlocked, Math.min(NS + 1, sector + 1));
+  if (gmode === 'waves') { save.bestWave = Math.max(save.bestWave || 0, sector * WPS); save.best = Math.max(save.best, score); sectorsCleared++; persist(); announce('Sector cleared', { sub: '+◆ ' + fmt(vac + bonus) + '  ·  keep going', col: '143,255,214', dur: 2 }); warpTo(sector + 1); return; }
+  if (sector <= NS) save.unlocked = Math.max(save.unlocked, Math.min(NS, sector + 1));
   else save.deep = Math.max(save.deep || 0, sector - NS);
-  save.sel = Math.min(9, sector + 1);
+  save.sel = Math.min(NS, sector + 1);
   save.sbest[sector] = Math.max(save.sbest[sector] || 0, secScore);
   save.best = Math.max(save.best, score);
   sectorsCleared++;
@@ -1469,7 +1510,8 @@ function sectorClear() {
     `<div class="tile"><b>${lives}</b><span>Ships</span></div>` + (secOrbs ? `<div class="tile"><b style="color:rgb(${ORBS.void.col})">+${secOrbs}</b><span>Void Orb</span></div>` : '');
   const nt = themeFor(sector + 1);
   $('clNextInfo').innerHTML = `<span>Next</span><i style="background:rgb(${nt.danger});box-shadow:0 0 10px rgb(${nt.danger})"></i><b>${nt.name}</b><span>· ${nt.twist}</span>`;
-  $('clNextSub').textContent = sector + 1 > NS ? 'Endless mode' : 'Sector ' + (sector + 1);
+  $('clNextSub').textContent = sector >= NS ? 'Story complete - back to menu' : 'Sector ' + (sector + 1);
+  if (sector >= NS) $('clNextInfo').innerHTML = '<span>You beat the story. Try Endless Waves or Open World next.</span>';
   $('clDot').classList.toggle('hidden', !affordable());
   show('cleared');
 }
@@ -1486,10 +1528,10 @@ function swallow(o, amt) {
   o.dead = true;
   bhMass = Math.min(2.6 + (TH.mods.mass || 1) - 1, bhMass + amt); swallowed++;
   for (let k = 0; k < 16; k++) {
-    const a = Math.atan2(o.y - CY, o.x - CX) + Math.PI / 2;
+    const hx = gmode === 'world' && gHole ? gHole.x : CX, hy = gmode === 'world' && gHole ? gHole.y : CY, a = Math.atan2(o.y - hy, o.x - hx) + Math.PI / 2;
     part(o.x + rand(-8, 8) * U, o.y + rand(-8, 8) * U, Math.cos(a) * rand(60, 160) * U, Math.sin(a) * rand(60, 160) * U, 1.5, TH.glow[0], 2.2 * Math.max(1, U), 1, 1);
   }
-  ring(CX, CY, rh / U * 3, TH.glow[1], 0.6, 2);
+  if (gmode === 'world') { if (gHole) ring(gHole.x, gHole.y, gHole.rh / U * 3, TH.glow[1], 0.6, 2); } else ring(CX, CY, rh / U * 3, TH.glow[1], 0.6, 2);
   bhPulse = 1;
   sfx.feed();
 }
@@ -1508,6 +1550,7 @@ function hurt() {
 function killShip() {
   if (!ship) return;
   if (tut) lives++;
+  if (gmode === 'world' && ow) { lives++; ow.dx = ship.x; ow.dy = ship.y; if (Object.keys(ow.ab).length) { ow.ab = {}; ow.timers = {}; owApply(); queue.push({ t: 0.6, f: () => announce('Abilities lost', { sub: 'Find new ability orbs to power up again', col: '200,150,255', dur: 2.4 }) }); } }
   burst(ship.x, ship.y, 90, '120,240,255', 320, 1.6, 2.6);
   burst(ship.x, ship.y, 60, '255,255,255', 200, 1.0, 2);
   ring(ship.x, ship.y, 220, '120,240,255', 0.9, 5);
@@ -1535,7 +1578,7 @@ function breakAst(j, scored) {
   if (a.size > 1) {
     for (const k of [-1, 1]) {
       const ang = Math.atan2(a.vy, a.vx) + k * rand(0.5, 1.1), sp = rand(40, 95) * U;
-      const ch = mkAst(a.x, a.y, a.vx + Math.cos(ang) * sp, a.vy + Math.sin(ang) * sp, a.size - 1); ch.v = ''; if (a.v) { setVar(ch, a.v); ch.max = ch.hp; } asts.push(ch);
+      const ch = mkAst(a.x, a.y, a.vx + Math.cos(ang) * sp, a.vy + Math.sin(ang) * sp, a.size - 1); ch.v = ''; ch.pts = ch.pts0; ch.craters = ch.cr0; ch.hp = ch.max = [0, 1, 2, 4][ch.size] * hpMul(); if (a.v) { setVar(ch, a.v); ch.max = ch.hp; } ch.ck = a.ck; asts.push(ch);
     }
   }
   if (scored && !tut && dropRoll(0.06 * S.luck)) dropPickup(a.x, a.y);
@@ -1588,16 +1631,18 @@ function gameOver() {
   mode = 'over'; document.body.classList.remove('playing'); ann = null; annQ = []; tip = null;
   const nb = score > runBest && score > 0;
   save.best = Math.max(save.best, score);
-  save.sel = Math.min(sector, save.unlocked);
+  if (gmode !== 'waves') save.sel = Math.min(sector, save.unlocked, NS);
+  const wv = (sector - 1) * WPS + Math.max(1, wave), nbw = gmode === 'waves' && wv > (save.bestWave || 0);
+  if (gmode === 'waves') save.bestWave = Math.max(save.bestWave || 0, wv);
   save.lb = (save.lb || []).concat([{ s: score, sec: sector, d: Date.now() }]).sort((a, b) => b.s - a.s).slice(0, 5);
   persist();
   $('oScore').textContent = fmt(score);
   $('oBestWrap').innerHTML = nb ? '<span class="badge">NEW BEST</span>' : `<div class="bestl">Best <b>${fmt(save.best)}</b></div>`;
   $('oTiles').innerHTML =
-    `<div class="tile"><b>${TH.deep ? 'Void ' + (sector - 8) : sector}</b><span>${TH.deep ? 'Reached' : 'Sector'}</span></div>` +
+    (gmode === 'waves' ? `<div class="tile"><b>${wv}</b><span>${nbw ? 'Wave · best!' : 'Wave (best ' + save.bestWave + ')'}</span></div>` : `<div class="tile"><b>${sector}</b><span>Sector</span></div>`) +
     `<div class="tile m"><b>+${fmt(runDust)}</b><span>Stardust</span></div>` +
     `<div class="tile"><b>${kills}</b><span>Kills</span></div>`;
-  $('againSub').textContent = save.sel > NS ? 'Deep Void' : 'Sector ' + save.sel;
+  $('againSub').textContent = gmode === 'waves' ? 'Endless Waves' : 'Sector ' + save.sel;
   $('ovDot').classList.toggle('hidden', !affordable());
   show('over');
 }
@@ -1607,6 +1652,9 @@ function setPause(p) {
   if (p) { beamSound(false); buildKeysRef(); }
 }
 function goMenu() {
+  owChoosing = false; $('owPick').classList.add('hidden');
+  if (gmode === 'world') { ow = null; owHoles.length = 0; owOrbs.length = 0; asts = []; dust = []; camX = CX; camY = CY; }
+  if (gmode !== 'story') gmode = 'story';
   hideAll(); document.body.classList.remove('playing');
   mode = 'menu'; paused = false; document.body.classList.remove('paused'); ship = null; boss = null; drones = []; bullets = []; ebullets = []; missiles = []; pickups = []; dust = []; queue = []; bw = null; ann = null; annQ = []; tip = null;
   beamSound(false); follow = false; camX = CX; camY = CY;
@@ -1620,7 +1668,7 @@ function goMenu() {
 }
 
 // ================= UI: overlays =================
-const OVS = ['login', 'tutAsk', 'beast', 'menu', 'over', 'pause', 'cleared', 'hangar', 'roadmap', 'profile', 'settings', 'crate'];
+const OVS = ['login', 'tutAsk', 'modes', 'beast', 'menu', 'over', 'pause', 'cleared', 'hangar', 'roadmap', 'profile', 'settings', 'crate'];
 function hideAll() { for (const id of OVS) $(id).classList.add('hidden'); }
 function show(id) { $(id).classList.remove('hidden'); }
 const playLabel = n => (n > NS ? 'Endless' : 'Sector ' + n) + ' · ' + themeFor(n).name;
@@ -1629,7 +1677,7 @@ function refreshMenu() {
   $('bestM').textContent = fmt(save.best);
   $('dustM').textContent = fmt(save.dust);
   $('orbM').textContent = orbCount() ? '● ' + orbCount() + ' orb' + (orbCount() > 1 ? 's' : '') : '';
-  $('playSub').textContent = playLabel(save.sel);
+  $('playSub').textContent = 'Story · Endless · Open World';
   $('shopDot').classList.toggle('hidden', !affordable());
   $('ver').textContent = 'V ' + VERSION;
   $('pilotBtn').querySelector('span').textContent = cloudUser ? (save.name || cloudUser) : 'Profile';
@@ -2326,7 +2374,7 @@ function renderMap() {
   $('mapProg').innerHTML = `${cleared}/${NS} <small>CLEARED</small>`;
   const V = $('mapV'), H_ = V.clientHeight || 500, stopH = Math.round(H_ * 0.44), pad = Math.round((H_ - stopH) / 2);
   let h = `<div style="height:${pad}px"></div>`;
-  for (let n = 1; n <= NS + 1; n++) {
+  for (let n = 1; n <= NS; n++) {
     const T = n <= NS ? SECTORS[n - 1] : null, un = n <= save.unlocked, sel = n === save.sel;
     const c1 = T ? T.glow[0] : '255,255,255', c2 = T ? T.danger : '200,200,220';
     const bg = T ? `radial-gradient(circle at 50% 50%,#000 0 28%,rgba(${c1},1) 34%,rgba(${c2},.9) 50%,rgba(${c2},.2) 68%,transparent 71%)` : 'radial-gradient(circle,#000 0 32%,#fff 37%,#777 54%,transparent 70%)';
@@ -2393,7 +2441,7 @@ let mapDwell = 0;
 $('rList').addEventListener('pointerover', e => { if (e.pointerType !== 'mouse') return; const st = e.target.closest('.mstop'); const n = st ? +st.dataset.n : 0; if (n && n !== mapHover) { mapHover = n; mapTheme(n); clearTimeout(mapDwell); if (n !== mapFocus) mapDwell = setTimeout(() => { if (mapHover === n) mapGo(n, true); }, 350); } });
 $('rList').addEventListener('pointerleave', () => { mapHover = 0; clearTimeout(mapDwell); mapTheme(mapFocus); });
 $('mUp').onclick = () => { sfx.ui(); mapGo(Math.max(1, mapFocus - 1), true); };
-$('mDn').onclick = () => { sfx.ui(); mapGo(Math.min(NS + 1, mapFocus + 1), true); };
+$('mDn').onclick = () => { sfx.ui(); mapGo(Math.min(NS, mapFocus + 1), true); };
 
 // ================= SAVE CODES / PROFILE =================
 function hashStr(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36); }
@@ -2668,6 +2716,7 @@ const TSTEPS = [
   { k: 'bomb', t: 'Gravity bomb', d: ['Surrounded? Press E to blast everything nearby.', 'Surrounded? Tap the bomb button to blast everything nearby.'], n: 1 },
 ];
 function startTutorial() {
+  gmode = 'story';
   if (!cloudUser) { goMenu(); return; }
   calcStats();
   score = 0; dispScore = 0; lives = S.lives; bombs = S.bombs; maxMult = 1; swallowed = 0; kills = 0; runDust = 0; sectorsCleared = 0;
@@ -2965,6 +3014,220 @@ $('beastBtn').onclick = () => { audio(); sfx.ui(); openBeast(); };
 $('bxBack').onclick = () => { $('bxM').classList.add('hidden'); bxS = null; goMenu(); };
 $('bxSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; bxTab = b.dataset.t; sfx.ui(); renderBeast(); });
 
+// ================= GAME MODES: Endless Waves + Open World =================
+// Open world: an endless galaxy split into biomes, generated in chunks around the ship.
+const BIOMES = [
+  { n: 'The Drift', th: 0, rocks: [2, 4], bh: 0.08, wh: 0, en: 0.6, orb: 0.22, v: '' },
+  { n: 'Ember Fields', th: 1, rocks: [4, 7], bh: 0.12, wh: 0, en: 1, orb: 0.2, v: 'ember' },
+  { n: 'Comet Stream', th: 2, rocks: [5, 8], bh: 0.08, wh: 0.08, en: 0.8, orb: 0.2, v: 'comet' },
+  { n: 'Verdant Reef', th: 3, rocks: [7, 11], bh: 0.1, wh: 0, en: 0.8, orb: 0.22, v: 'crystal' },
+  { n: 'Maw Cluster', th: 4, rocks: [2, 4], bh: 0.55, wh: 0.05, en: 1, orb: 0.3, v: 'obsidian' },
+  { n: 'Gold Vein', th: 5, rocks: [5, 8], bh: 0.1, wh: 0, en: 1.2, orb: 0.2, v: 'gold' },
+  { n: 'Frozen Wastes', th: 6, rocks: [5, 8], bh: 0.08, wh: 0.35, en: 1, orb: 0.22, v: 'ice' },
+  { n: 'Ion Expanse', th: 7, rocks: [3, 6], bh: 0.15, wh: 0.15, en: 1.4, orb: 0.25, v: 'ion' },
+  { n: 'Void Reaches', th: 8, rocks: [3, 6], bh: 0.3, wh: 0.3, en: 1.6, orb: 0.3, v: 'monolith' },
+];
+const OWA = {
+  multi: { n: 'Spread shot', ic: 'multi', max: 3, d: l => ['Triple', 'Quad', 'Penta'][l - 1] + ' shot, always on' },
+  seek: { n: 'Seeker rounds', ic: 'seekpk', max: 3, d: l => ['Slight', 'Strong', 'Fierce'][l - 1] + ' homing on every bullet' },
+  rapid: { n: 'Rapid fire', ic: 'rapid', max: 3, d: l => '+' + 20 * l + '% fire rate' },
+  dmg: { n: 'Plasma core', ic: 'damage', max: 4, d: l => '+' + 25 * l + '% damage' },
+  speed: { n: 'Thrusters', ic: 'engine', max: 3, d: l => '+' + 15 * l + '% speed' },
+  missile: { n: 'Missile pods', ic: 'missile', max: 3, d: l => l + ' homing missile' + (l > 1 ? 's' : '') + ' every ' + [3, 2.6, 2.2][l - 1] + 's' },
+  sats: { n: 'Orbital drones', ic: 'u_drones', max: 1, d: () => 'Two drones orbit you and shoot' },
+  defl: { n: 'Deflector', ic: 'deflpk', max: 1, d: () => 'Rotating arcs destroy enemy shots' },
+  nova: { n: 'Supernova pulse', ic: 'u_nova', max: 3, d: l => 'Blast of homing bolts every ' + [14, 11, 8][l - 1] + 's' },
+  beam: { n: 'Photon burst', ic: 'u_beam', max: 3, d: l => [2, 3, 4][l - 1] + 's laser every 11s' },
+  well: { n: 'Gravity well', ic: 'wellpk', max: 2, d: l => 'Drops a small black hole every ' + [16, 11][l - 1] + 's' },
+  shield: { n: 'Shield regen', ic: 'shieldpk', max: 3, d: l => 'Shield recharges every ' + [24, 17, 11][l - 1] + 's' },
+  magnet: { n: 'Tractor field', ic: 'magnet', max: 3, d: l => '+' + 60 * l + '% pull range' },
+  slow: { n: 'Time warp', ic: 'u_time', max: 2, d: l => 'Slows enemies for ' + [3.5, 5][l - 1] + 's every 18s' },
+};
+const OWH = [0, 1.2, 1.9, 2.7];
+let ow = null, owChoosing = false, owGen = false;
+const owHoles = [], owOrbs = [];
+function hash2(x, y, s) { let h = (Math.imul(x | 0, 374761393) + Math.imul(y | 0, 668265263) + Math.imul(s | 0, 1442695041)) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; }
+function rng(seed) { let a = (seed * 4294967296) >>> 0; return () => { a = (a + 0x6D2B79F5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+const owCH = () => 1500 * U;
+function owBiomeAt(cx, cy) {
+  const rx = Math.floor(cx / 3), ry = Math.floor(cy / 3);
+  if (Math.abs(rx) + Math.abs(ry) === 0) return 0;
+  return 1 + Math.floor(hash2(rx, ry, 7) * (BIOMES.length - 1));
+}
+const owDanger = (cx, cy) => Math.min(9, Math.floor(Math.hypot(cx, cy) / 3));
+function startWorld() {
+  if (!cloudUser) { goMenu(); return; }
+  gmode = 'world'; tut = null; $('tutBox').classList.add('hidden');
+  ow = { ab: {}, chunks: new Map(), taken: {}, cx: 9999, cy: 9999, biome: -1, spawnT: 3, timers: {}, dist: 0, orbs: 0, kills0: 0, dx: 0, dy: 0 };
+  owHoles.length = 0; owOrbs.length = 0;
+  score = 0; dispScore = 0; maxMult = 1; swallowed = 0; kills = 0; runDust = 0; sectorsCleared = 0;
+  owApply(); lives = 3; bombs = S.bombs; pw = freshPw(); mult = 1; lastMultInt = 1; bestFlag = false; newBestT = 0; runBest = save.best;
+  follow = true;
+  hideAll(); document.body.classList.add('playing');
+  asts = []; drones = []; boss = null; bullets = []; ebullets = []; pickups = []; queue = []; missiles = []; dust = []; bw = null;
+  wave = 0; clearing = false; waveTimer = 1e9; surge = 0; surgeWarn = 0; surgeK = 1;
+  sector = 1; TH = SECTORS[0]; buildNebula(); buildStars();
+  ship = mkShip(); ship.x = 0; ship.y = 0; ship.vx = 0; ship.vy = 0; ship.inv = 2.5;
+  camX = 0; camY = 0;
+  mode = 'play'; timeScale = 1; paused = false; ann = null; annQ = [];
+  owUpdateChunks(true);
+  announce('Open World', { big: true, kick: 'Explore', sub: 'Grab purple ability orbs to power up your ship', col: '200,150,255', dur: 3.2 });
+  sfx.warp();
+}
+function owApply() {
+  calcStats();
+  const L = ow ? ow.ab : {};
+  S.multi = Math.max(0, (L.multi || 1) - 1);
+  S.rate *= 1 / (1 + 0.2 * (L.rapid || 0));
+  S.dmg *= 1 + 0.25 * (L.dmg || 0);
+  S.thrust *= 1 + 0.15 * (L.speed || 0);
+  S.missiles = [0, 1, 2, 3][L.missile || 0]; S.missileT = [0, 3, 2.6, 2.2][L.missile || 0];
+  S.shieldRe = L.shield ? [0, 24, 17, 11][L.shield] : 0;
+  S.magnet *= 1 + 0.6 * (L.magnet || 0);
+}
+function owChunkGen(cx, cy) {
+  const key = cx + ',' + cy, CH = owCH(), bi = owBiomeAt(cx, cy), B = BIOMES[bi], dg = owDanger(cx, cy), R = rng(hash2(cx, cy, 99));
+  const ch = { key, cx, cy, holes: [], orbs: [] };
+  const near0 = Math.abs(cx) <= 0 && Math.abs(cy) <= 0;
+  if (!near0) {
+    if (R() < B.bh) { const m = 0.7 + R() * 0.9; ch.holes.push({ x: (cx + 0.2 + R() * 0.6) * CH, y: (cy + 0.2 + R() * 0.6) * CH, m, rh: rh * Math.pow(m, 0.7), white: false, ck: key, ph: R() * 6 }); }
+    if (R() < B.wh) { const m = 0.7 + R() * 0.7; ch.holes.push({ x: (cx + 0.2 + R() * 0.6) * CH, y: (cy + 0.2 + R() * 0.6) * CH, m, rh: rh * Math.pow(m, 0.7), white: true, ck: key, ph: R() * 6 }); }
+  }
+  const nr = B.rocks[0] + Math.floor(R() * (B.rocks[1] - B.rocks[0] + 1));
+  sector = Math.min(NS, 1 + dg);
+  for (let i = 0; i < nr; i++) {
+    const x = (cx + R()) * CH, y = (cy + R()) * CH;
+    if (ship && Math.hypot(x - ship.x, y - ship.y) < 300 * U) continue;
+    if (ch.holes.some(h => Math.hypot(h.x - x, h.y - y) < h.rh * 6)) continue;
+    const a = mkAst(x, y, (R() - 0.5) * 60 * U, (R() - 0.5) * 60 * U, 1 + Math.floor(R() * 3));
+    a.v = ''; if (B.v && R() < 0.55) { setVar(a, B.v); a.max = a.hp; } a.ck = key; asts.push(a);
+  }
+  if (!ow.taken[key] && R() < B.orb && !near0) ch.orbs.push({ x: (cx + 0.15 + R() * 0.7) * CH, y: (cy + 0.15 + R() * 0.7) * CH, ck: key, ph: R() * 6 });
+  if (R() < 0.3) { const x = (cx + R()) * CH, y = (cy + R()) * CH; for (let k = 0; k < 6; k++) dust.push({ x: x + (R() - 0.5) * 80 * U, y: y + (R() - 0.5) * 80 * U, vx: 0, vy: 0, v: B.v === 'gold' ? 2 : 1, life: 60, rot: R() * 6 }); }
+  return ch;
+}
+function owUpdateChunks(force) {
+  if (!ship) return;
+  const CH = owCH(), cx = Math.floor(ship.x / CH), cy = Math.floor(ship.y / CH);
+  if (!force && cx === ow.cx && cy === ow.cy) return;
+  ow.cx = cx; ow.cy = cy;
+  owGen = true;
+  for (let x = cx - 2; x <= cx + 2; x++) for (let y = cy - 2; y <= cy + 2; y++) { const k = x + ',' + y; if (!ow.chunks.has(k)) ow.chunks.set(k, owChunkGen(x, y)); }
+  owGen = false;
+  for (const [k, ch] of ow.chunks) if (Math.abs(ch.cx - cx) > 3 || Math.abs(ch.cy - cy) > 3) { ow.chunks.delete(k); asts = asts.filter(a => a.ck !== k); }
+  owHoles.length = 0; owOrbs.length = 0;
+  for (const ch of ow.chunks.values()) { for (const h of ch.holes) owHoles.push(h); for (const o of ch.orbs) owOrbs.push(o); }
+  const bi = owBiomeAt(cx, cy);
+  if (bi !== ow.biome) {
+    const first = ow.biome < 0; ow.biome = bi; TH = SECTORS[BIOMES[bi].th]; buildNebula(); buildStars();
+    if (!first) announce(BIOMES[bi].n, { kick: 'Entering', sub: owDanger(cx, cy) ? 'Danger level ' + owDanger(cx, cy) : 'Safe zone', col: TH.danger, dur: 2.2 });
+  }
+}
+let gHole = null;
+function worldGravity(o, k, dt) {
+  let best = 1e9; gHole = null;
+  for (const h of owHoles) {
+    const dx = h.x - o.x, dy = h.y - o.y, r2 = dx * dx + dy * dy;
+    if (r2 > (1300 * U) ** 2) continue;
+    const r = Math.sqrt(r2) + 1e-6, a = GMv * h.m * k / (r2 + 36 * U * U);
+    if (h.white) { o.vx -= dx / r * a * 1.3 * dt; o.vy -= dy / r * a * 1.3 * dt; continue; }
+    o.vx += dx / r * a * dt; o.vy += dy / r * a * dt;
+    const eff = r / h.rh * rh; if (eff < best) { best = eff; gHole = h; }
+  }
+  return best;
+}
+function owOffer() {
+  const L = ow.ab, ups = Object.keys(L).filter(k => L[k] < OWA[k].max), news = Object.keys(OWA).filter(k => !L[k]);
+  const out = [];
+  for (let i = 0; i < 3; i++) {
+    const useUp = ups.length && (Math.random() < 0.35 || !news.length);
+    const src = useUp ? ups : news; if (!src.length) break;
+    const k = src.splice(Math.random() * src.length | 0, 1)[0]; out.push(k);
+  }
+  return out;
+}
+function owOpenPick() {
+  const ch = owOffer();
+  if (!ch.length) { save.dust += 60; runDust += 60; dustPop = 1; announce('Fully powered', { sub: '+◆ 60 stardust', col: '143,255,214', dur: 2 }); return; }
+  owChoosing = true; beamSound(false);
+  $('owC').innerHTML = ch.map((k, i) => { const A = OWA[k], l = (ow.ab[k] || 0) + 1; return `<button class="owcard${l > 1 ? ' up' : ''}" data-k="${k}"><span class="owk">${i + 1}</span><div class="owi">${svgIcon(A.ic)}</div><div class="own">${A.n}</div><div class="owl">${l > 1 ? 'Upgrade to level ' + l : 'New ability'}</div><div class="owd">${A.d(l)}</div></button>`; }).join('');
+  $('owPick').classList.remove('hidden');
+  tone(660, 0.4, 'triangle', 0.07, 990);
+}
+function owChoose(k) {
+  if (!owChoosing) return;
+  ow.ab[k] = Math.min(OWA[k].max, (ow.ab[k] || 0) + 1); ow.orbs++;
+  owApply(); owChoosing = false; $('owPick').classList.add('hidden');
+  if (ship) ring(ship.x, ship.y, 140, '200,150,255', 0.6, 4);
+  sfx.buy(); popText(ship ? ship.x : camX, (ship ? ship.y : camY) - 30 * U, OWA[k].n + (ow.ab[k] > 1 ? ' ' + ow.ab[k] : ''), 'rgb(220,190,255)', 16);
+}
+$('owC').addEventListener('click', e => { const b = e.target.closest('.owcard'); if (b) owChoose(b.dataset.k); });
+addEventListener('keydown', e => { if (!owChoosing) return; const n = { Digit1: 0, Digit2: 1, Digit3: 2 }[e.code]; if (n == null) return; const b = document.querySelectorAll('#owC .owcard')[n]; if (b) owChoose(b.dataset.k); });
+function novaBlast() {
+  if (!ship) return; doBomb(true);
+  for (let k = 0; k < 20; k++) { const a = k / 20 * TAU, s = 600 * U; bullets.push({ x: ship.x, y: ship.y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: 1.6, dmg: 2 * S.dmg, pierce: 1, hits: null, hom: 6 }); }
+}
+function owTick(dt) {
+  if (!ow || !ship) return;
+  owUpdateChunks(false);
+  ow.dist = Math.max(ow.dist, Math.hypot(ship.x, ship.y) / U);
+  const L = ow.ab, T = ow.timers;
+  pw.multi = L.multi ? 99 : 0; pw.seek = L.seek ? 99 : 0; if (L.sats) pw.sats = 99; if (L.defl) pw.defl = 99;
+  const every = (k, iv, fn) => { T[k] = (T[k] || iv * 0.5) - dt; if (T[k] <= 0) { T[k] = iv; fn(); } };
+  if (L.nova) every('nova', [0, 14, 11, 8][L.nova], novaBlast);
+  if (L.beam) every('beam', 11, () => { pw.beam = [0, 2, 3, 4][L.beam]; });
+  if (L.well) every('well', [0, 16, 11][L.well], () => { pw.well = 6; pw.wx = ship.x; pw.wy = ship.y; ring(ship.x, ship.y, 160, PICK.well.c, 0.6, 4); });
+  if (L.slow) every('slow', 18, () => { pw.slow = [0, 3.5, 5][L.slow]; });
+  // ability orbs
+  for (const o of owOrbs) { if (ow.taken[o.ck]) continue; if (Math.hypot(o.x - ship.x, o.y - ship.y) < 36 * U) { ow.taken[o.ck] = 1; burst(o.x, o.y, 40, '200,150,255', 220, 0.8, 2.4); owUpdateChunks(true); owOpenPick(); return; } }
+  // enemies drift in from the dark, tougher the further out you go
+  const dg = owDanger(ow.cx, ow.cy), B = BIOMES[ow.biome];
+  ow.spawnT -= dt;
+  if (ow.spawnT <= 0) {
+    ow.spawnT = rand(2.6, 4.6) / B.en;
+    if (drones.length < Math.min(14, 3 + dg * 2) && (dg > 0 || ow.biome !== 0 || Math.random() < 0.5)) {
+      const pool = KINDS.slice(0, Math.min(KINDS.length, 1 + dg)), k = pool[Math.random() * pool.length | 0], a = rand(0, TAU), r = Math.max(W, H) * 0.75;
+      sector = Math.min(NS, 1 + dg);
+      const d = droneObj(ship.x + Math.cos(a) * r, ship.y + Math.sin(a) * r, k); d.extra = true;
+      if (k === 'seeker') { drones.push(d); for (let j = 0; j < 2; j++) { const d2 = droneObj(d.x + rand(-30, 30) * U, d.y + rand(-30, 30) * U, 'seeker'); d2.extra = true; drones.push(d2); } } else drones.push(d);
+    }
+  }
+  // clean up things far behind you
+  const far = (o, m) => Math.hypot(o.x - ship.x, o.y - ship.y) > m;
+  if (Math.random() < 0.1) { drones = drones.filter(d => !far(d, 2600 * U)); asts = asts.filter(a => a.ck || !far(a, 3000 * U)); dust = dust.filter(d => !far(d, 3000 * U)); }
+}
+function drawHoles() {
+  for (const h of owHoles) {
+    if (Math.abs(h.x - camX) > W / 2 + 400 * U || Math.abs(h.y - camY) > H / 2 + 400 * U) continue;
+    const R = h.rh, t = time + h.ph;
+    if (h.white) {
+      const g = ctx.createRadialGradient(h.x, h.y, 0, h.x, h.y, R * 7); g.addColorStop(0, 'rgba(255,255,255,0.95)'); g.addColorStop(0.15, 'rgba(220,240,255,0.6)'); g.addColorStop(1, 'rgba(180,220,255,0)');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(h.x, h.y, R * 7, 0, TAU); ctx.fill();
+      ctx.save(); ctx.translate(h.x, h.y); ctx.rotate(t * 0.6); ctx.strokeStyle = 'rgba(230,245,255,0.5)'; ctx.lineWidth = 2;
+      for (let i = 0; i < 10; i++) { ctx.rotate(TAU / 10); const f = (t * 0.8 + i * 0.37) % 1; ctx.globalAlpha = 1 - f; ctx.beginPath(); ctx.moveTo(R * (1.4 + f * 4), 0); ctx.lineTo(R * (2.2 + f * 4), 0); ctx.stroke(); }
+      ctx.restore(); ctx.globalAlpha = 1;
+      ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(h.x, h.y, R * 0.9, 0, TAU); ctx.fill();
+    } else {
+      const g = ctx.createRadialGradient(h.x, h.y, R, h.x, h.y, R * 4); g.addColorStop(0, `rgba(${TH.glow[0]},0.55)`); g.addColorStop(0.4, `rgba(${TH.glow[1]},0.18)`); g.addColorStop(1, `rgba(${TH.glow[1]},0)`);
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(h.x, h.y, R * 4, 0, TAU); ctx.fill();
+      ctx.save(); ctx.translate(h.x, h.y); ctx.scale(1, 0.3); ctx.rotate(t * 0.4);
+      ctx.strokeStyle = `rgba(${TH.disk[1]},0.55)`; ctx.lineWidth = R * 0.5; ctx.beginPath(); ctx.arc(0, 0, R * 2.1, 0, TAU); ctx.stroke();
+      ctx.strokeStyle = `rgba(${TH.disk[0]},0.8)`; ctx.lineWidth = R * 0.18; ctx.beginPath(); ctx.arc(0, 0, R * 1.7, 0, TAU); ctx.stroke();
+      ctx.restore();
+      ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(h.x, h.y, R, 0, TAU); ctx.fill();
+      ctx.strokeStyle = `rgba(${TH.ring},0.9)`; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(h.x, h.y, R * 1.05, 0, TAU); ctx.stroke();
+    }
+  }
+  for (const o of owOrbs) {
+    if (ow.taken[o.ck] || Math.abs(o.x - camX) > W / 2 + 100 || Math.abs(o.y - camY) > H / 2 + 100) continue;
+    const r = 14 * U * (1 + 0.08 * Math.sin(time * 3 + o.ph));
+    ctx.strokeStyle = `rgba(200,150,255,${0.3 + 0.3 * Math.sin(time * 4 + o.ph)})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(o.x, o.y, r * 2.4, 0, TAU); ctx.stroke();
+    drawOrb(ctx, o.x, o.y, r, '170,110,255', '255,220,255', time + o.ph);
+  }
+}
+// Endless waves: sectors roll on forever with no stops in between
+function startWaves() { gmode = 'waves'; startRun(1, true); }
+
 // ================= INPUT =================
 const keys = {};
 let mx = 0, my = 0, mdown = false, stick = null, aimT = null;
@@ -3032,8 +3295,15 @@ tapBtn('bombBtn', () => { wantBomb = true; });
 tapBtn('dashBtn', () => { wantDash = true; });
 $('pauseBtn').addEventListener('click', () => setPause(!paused));
 function goFull() { if (!isTouch()) return; try { const el = document.documentElement, f = el.requestFullscreen || el.webkitRequestFullscreen; if (f && !document.fullscreenElement) { const p = f.call(el); if (p && p.catch) p.catch(() => {}); } } catch (e) {} }
-$('play').onclick = () => { audio(); goFull(); startRun(save.sel); };
-$('again').onclick = () => { audio(); goFull(); startRun(save.sel); };
+function openModes() {
+  hideAll(); show('modes');
+  $('mdStory').textContent = playLabel(Math.min(save.sel, NS));
+  $('mdWaves').textContent = save.bestWave ? 'Best: wave ' + save.bestWave : 'No record yet';
+}
+$('play').onclick = () => { audio(); sfx.ui(); openModes(); };
+$('mdBack').onclick = () => goMenu();
+$('modes').addEventListener('click', e => { const b = e.target.closest('.mcd'); if (!b) return; audio(); goFull(); const m = b.dataset.m; if (m === 'story') startRun(save.sel); else if (m === 'waves') startWaves(); else startWorld(); });
+$('again').onclick = () => { audio(); goFull(); if (gmode === 'waves') startWaves(); else startRun(save.sel); };
 $('mapBtn').onclick = () => { audio(); sfx.ui(); openMap(); };
 $('shopBtn').onclick = () => { audio(); sfx.ui(); openHangar('menu'); };
 $('ovShop').onclick = () => { sfx.ui(); openHangar('over'); };
@@ -3042,14 +3312,14 @@ $('resume').onclick = () => setPause(false);
 $('muteBtn').onclick = () => { audio(); setMute(!muted); save.muted = muted; persist(); };
 $('quit').onclick = () => { save.best = Math.max(save.best, score); persist(); goMenu(); };
 $('clShop').onclick = () => { sfx.ui(); openHangar('cleared'); };
-$('clNext').onclick = () => { audio(); goFull(); warpTo(sector + 1); };
+$('clNext').onclick = () => { audio(); if (gmode === 'story' && sector >= NS) { goMenu(); return; } goFull(); warpTo(sector + 1); };
 $('hBack').onclick = () => {
   hideAll();
   if (hangarFrom === 'menu') { refreshMenu(); show('menu'); }
   else if (hangarFrom === 'over') { $('ovDot').classList.toggle('hidden', !affordable()); show('over'); }
   else { $('clDot').classList.toggle('hidden', !affordable()); $('clTiles').children[2].querySelector('b').textContent = lives; show('cleared'); }
 };
-$('hGo').onclick = () => { audio(); goFull(); if (hangarFrom === 'cleared') warpTo(sector + 1); else startRun(save.sel); };
+$('hGo').onclick = () => { audio(); if (hangarFrom === 'cleared' && gmode === 'story' && sector >= NS) { goMenu(); return; } goFull(); if (hangarFrom === 'cleared') warpTo(sector + 1); else openModes(); };
 
 $('rBack').onclick = () => goMenu();
 $('rGo').onclick = () => { if (mapFocus && mapFocus > save.unlocked) return; audio(); goFull(); startRun(mapFocus && mapFocus <= save.unlocked ? mapFocus : save.sel); };
@@ -3078,7 +3348,7 @@ function update(dt, rdt) {
   const eS = pw.slow > 0 ? 0.35 : 1, edt = dt * eS;
 
   // gravity surges
-  if (mode === 'play' && !tut && (sector > 1 || wave >= 3) && !clearing) {
+  if (mode === 'play' && !tut && gmode !== 'world' && (sector > 1 || wave >= 3) && !clearing) {
     if (surge > 0) { surge -= dt; if (surge <= 0) surgeT = rand(20, 32) * (TH.mods.surge || 1); }
     else if (surgeWarn > 0) { surgeWarn -= dt; if (surgeWarn <= 0) { surge = 4.5; shake = 12; flash = 0.3; flashCol = TH.danger; tone(45, 1.6, 'sawtooth', 0.18, 22); noise(1.2, 0.3, 900, 60); } }
     else { surgeT -= dt; if (surgeT <= 0) { surgeWarn = 2.4; announce('Gravity surge', { sub: 'Stronger pull  ·  double points', col: TH.danger, dur: 2.4, now: true }); [880, 660, 880, 660].forEach((f, i) => setTimeout(() => tone(f, 0.18, 'square', 0.04), i * 220)); } }
@@ -3123,7 +3393,7 @@ function update(dt, rdt) {
     const r = gravity(ship, 1, dt);
     const sp = Math.hypot(ship.vx, ship.vy), cap = 650 * U * S.thrust;
     if (sp > cap) { ship.vx *= cap / sp; ship.vy *= cap / sp; }
-    if (len < 0.1 && (wave === 0 || ship.inv > 0.6)) {
+    if (len < 0.1 && gmode !== 'world' && (wave === 0 || ship.inv > 0.6)) {
       // orbit stabilizer: an idle ship settles into a safe circular orbit while a sector starts or after a respawn
       const rx = ship.x - CX, ry = ship.y - CY, r0 = Math.hypot(rx, ry) || 1, vo = Math.sqrt(GMv / Math.max(r0, dR));
       const tx = -ry / r0, ty = rx / r0, dir = (ship.vx * tx + ship.vy * ty) >= 0 ? 1 : -1;
@@ -3186,7 +3456,7 @@ function update(dt, rdt) {
     if (r < rh * 1.05) killShip();
   } else if (mode === 'play') {
     mult = lerp(mult, 1, dt * 3); lastMultInt = 1;
-    if (lives > 0) { deadTimer -= rdt; if (deadTimer <= 0) { ship = mkShip(); ship.inv = 3; ebullets = ebullets.filter(b => Math.hypot(b.x - ship.x, b.y - ship.y) > 250 * U); } }
+    if (lives > 0) { deadTimer -= rdt; if (deadTimer <= 0) { ship = mkShip(); ship.inv = 3; if (gmode === 'world' && ow) { let x = ow.dx, y = ow.dy; for (const h of owHoles) { const d = Math.hypot(x - h.x, y - h.y) || 1; if (d < h.rh * 10) { x = h.x + (x - h.x) / d * h.rh * 10; y = h.y + (y - h.y) / d * h.rh * 10; } } ship.x = x; ship.y = y; ship.vx = 0; ship.vy = 0; } ebullets = ebullets.filter(b => Math.hypot(b.x - ship.x, b.y - ship.y) > 250 * U); } }
     else { overTimer -= rdt; if (overTimer <= 0) gameOver(); }
   }
   wantDash = false;
@@ -3222,7 +3492,7 @@ function update(dt, rdt) {
       const angs = pw.multi > 0 ? spreads[1 + S.multi] : spreads[0];
       for (const da of angs) {
         const a = ship.ang + da, s = 820 * U * S.bspeed;
-        bullets.push({ x: ship.x + Math.cos(a) * 16 * U, y: ship.y + Math.sin(a) * 16 * U, vx: ship.vx * 0.3 + Math.cos(a) * s, vy: ship.vy * 0.3 + Math.sin(a) * s, life: 1.4, dmg: S.dmg, pierce: Math.floor(S.pierce) + (Math.random() < S.pierce % 1 ? 1 : 0), hits: null, hom: pw.seek > 0 ? 1.6 : 0 });
+        bullets.push({ x: ship.x + Math.cos(a) * 16 * U, y: ship.y + Math.sin(a) * 16 * U, vx: ship.vx * 0.3 + Math.cos(a) * s, vy: ship.vy * 0.3 + Math.sin(a) * s, life: 1.4, dmg: S.dmg, pierce: Math.floor(S.pierce) + (Math.random() < S.pierce % 1 ? 1 : 0), hits: null, hom: pw.seek > 0 ? (gmode === 'world' ? OWH[(ow && ow.ab.seek) || 1] : 1.6) : 0 });
       }
       sfx.shoot();
     }
@@ -3318,12 +3588,12 @@ function update(dt, rdt) {
     const a = asts[i];
     if (!a) continue;
     const r = gravity(a, 1, edt);
-    if (follow && ship && !onScreen(a)) {
+    if (follow && gmode !== 'world' && ship && !onScreen(a)) {
       // off-screen asteroids drift toward the player so the big arena stays dangerous
       const dx = ship.x - a.x, dy = ship.y - a.y, d = Math.hypot(dx, dy) || 1, vt = (a.vx * dx + a.vy * dy) / d;
       if (vt < 120 * U) { a.vx += dx / d * 75 * U * edt; a.vy += dy / d * 75 * U * edt; }
     }
-    if (follow) {
+    if (follow && gmode !== 'world') {
       // near the arena wall: bleed off sliding speed and steer back in, so rocks never ride the border
       const ex = a.x - CX, ey = a.y - CY, er = Math.hypot(ex, ey) || 1;
       if (er > WR * 0.82) {
@@ -3359,8 +3629,9 @@ function update(dt, rdt) {
     const locked = d.st === 'aim' || d.st === 'fire' || d.st === 'wind' || d.st === 'dash' || d.st === 'fade';
     if (locked) { ax = 0; ay = 0; }
     const avoid = sk ? rh * 3.2 : Math.max(dR * 0.8, rh * 5);
-    if (r < avoid) { ax += (d.x - CX) / r * 700 * U; ay += (d.y - CY) / r * 700 * U; }
-    if (follow) { if (r > WR * 0.9) { ax -= (d.x - CX) / r * 500 * U; ay -= (d.y - CY) / r * 500 * U; } }
+    const hx = gmode === 'world' && gHole ? gHole.x : CX, hy = gmode === 'world' && gHole ? gHole.y : CY, hr = Math.hypot(d.x - hx, d.y - hy) || 1;
+    if (r < avoid) { ax += (d.x - hx) / hr * 700 * U; ay += (d.y - hy) / hr * 700 * U; }
+    if (follow && gmode !== 'world') { if (r > WR * 0.9) { ax -= (d.x - CX) / r * 500 * U; ay -= (d.y - CY) / r * 500 * U; } }
     else { if (d.x < 0) ax += 400 * U; if (d.x > W) ax -= 400 * U; if (d.y < 0) ay += 400 * U; if (d.y > H) ay -= 400 * U; }
     d.vx += ax * edt; d.vy += ay * edt;
     if (d.st === 'dash') { d.vx = Math.cos(d.la) * 980 * U; d.vy = Math.sin(d.la) * 980 * U; }
@@ -3592,7 +3863,8 @@ function update(dt, rdt) {
 
   // ---- wave / sector flow ----
   if (mode === 'play' && tut) tutUpdate(dt);
-  if (mode === 'play' && !tut) {
+  if (mode === 'play' && gmode === 'world') owTick(dt);
+  if (mode === 'play' && !tut && gmode !== 'world') {
     const unitsQ = queue.some(q => q.u);
     const empty = wave >= WPS ? !boss && !unitsQ : !boss && !unitsQ && (wave === 0 || waveLeft() <= Math.floor(waveTot * 0.1));
     if (wave > 0 && wave < WPS && !clearing && waveTimer <= 0 && ship && (sector - 1) * 2 + wave >= 2) {
@@ -3752,7 +4024,9 @@ function drawStars() {
     }
     ctx.globalAlpha = 1; return;
   }
-  const tE = rh * 2.3, k4 = 4 * tE * tE, ox = CX - camX + W / 2, oy = CY - camY + H / 2;
+  let lhx = CX, lhy = CY;
+  if (gmode === 'world' && mode === 'play') { lhx = 1e7; lhy = 1e7; let bd = 1e18; for (const h of owHoles) { if (h.white) continue; const d = (h.x - camX) ** 2 + (h.y - camY) ** 2; if (d < bd) { bd = d; lhx = h.x; lhy = h.y; } } }
+  const tE = rh * 2.3, k4 = 4 * tE * tE, ox = lhx - camX + W / 2, oy = lhy - camY + H / 2;
   for (const s of stars) {
     const rx = s.x + W / 2 - ox, ry = s.y + H / 2 - oy;
     const r = Math.hypot(rx, ry) || 0.01, q = Math.sqrt(r * r + k4);
@@ -4147,13 +4421,13 @@ function drawHUDi(W, H) {
   // top right: sector, wave pips, stardust
   ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
   ctx.font = `600 11px ${FONT}`; ctx.fillStyle = 'rgba(233,238,247,0.72)';
-  const lbl = TH.deep ? TH.name.toUpperCase() : 'SECTOR ' + sector;
+  const lbl = gmode === 'world' && ow ? BIOMES[Math.max(0, ow.biome)].n.toUpperCase() : gmode === 'waves' ? 'WAVE ' + ((sector - 1) * WPS + Math.max(1, wave)) : TH.deep ? TH.name.toUpperCase() : 'SECTOR ' + sector;
   const lw = spaced(lbl, W - 20, 27, 2.2, 'right');
   ctx.fillStyle = `rgb(${TH.danger})`; ctx.beginPath(); ctx.arc(W - 20 - lw - 9, 27, 3.5, 0, TAU); ctx.fill();
   const wFrac = wave > 0 && wave < WPS && waveTot > 0 ? clamp((waveTot - waveLeft()) / Math.max(1, waveTot - Math.floor(waveTot * 0.1)), 0, 1) : 0;
   const curDone = wave > 0 && (wave >= WPS ? !boss && waveTimer > 0 : waveTimer > 0 || wFrac >= 1);
   const segW = 15, gap = 4, totW = WPS * segW + (WPS - 1) * gap, x0 = W - 20 - totW;
-  for (let i = 1; i <= WPS; i++) {
+  for (let i = 1; i <= (gmode === 'world' ? 0 : WPS); i++) {
     const x = x0 + (i - 1) * (segW + gap), y = 40;
     const done = i < wave || (i === wave && curDone), cur = i === wave && !curDone, next = curDone && i === wave + 1;
     const pulse = 0.55 + 0.45 * Math.sin(rtime * 6);
@@ -4175,12 +4449,14 @@ function drawHUDi(W, H) {
   ctx.restore();
   // lives & power-up timers
   const ly = touch ? 96 : H - 22, by = touch ? 128 : H - 58;
-  for (let i = 0; i < lives; i++) miniShip(28 + i * 20, ly, 0.85);
+  if (gmode !== 'world') for (let i = 0; i < lives; i++) miniShip(28 + i * 20, ly, 0.85);
+  else if (ow) { ctx.font = `600 11px ${FONT}`; ctx.fillStyle = 'rgba(233,238,247,0.6)'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; spaced('DISTANCE ' + fmt(ow.dist / 10) + '  ·  DANGER ' + owDanger(ow.cx, ow.cy), 20, ly, 1.6, 'left'); }
   let bx = 34;
   if (pw.shield > 0) { badge(bx, by, 14, 'shieldpk', PICK.shield.c, 1, pw.shield > 1 ? '×' + pw.shield : '', false); bx += 38; }
   else if (S.shieldRe && ship) { ctx.save(); ctx.globalAlpha *= 0.55; badge(bx, by, 14, 'shieldpk', PICK.shield.c, shieldReT / S.shieldRe, '', false); ctx.restore(); bx += 38; }
   const timers = [['multi', PICK.multi.c, pw.multi, S.multiDur], ['rapid', PICK.rapid.c, pw.rapid, S.rapidDur], ['seekpk', PICK.seek.c, pw.seek, S.seekDur], ['u_drones', PICK.sats.c, pw.sats, S.satsDur], ['u_beam', PICK.beam.c, pw.beam, S.beamDur], ['u_time', PICK.slow.c, pw.slow, S.slowDur], ['deflpk', PICK.defl.c, pw.defl, S.deflDur], ['barrpk', PICK.barr.c, pw.barr, S.barrDur], ['wellpk', PICK.well.c, pw.well, S.wellDur]];
-  for (const [ic, c, t, mxT] of timers) if (t > 0) { badge(bx, by, 14, ic, c, t / mxT, '', t < 2.5); bx += 38; }
+  if (gmode === 'world' && ow) { for (const k in ow.ab) { badge(bx, by, 14, OWA[k].ic, '200,150,255', 1, ow.ab[k] > 1 ? String(ow.ab[k]) : '', false); bx += 38; } }
+  else for (const [ic, c, t, mxT] of timers) if (t > 0) { badge(bx, by, 14, ic, c, t / mxT, '', t < 2.5); bx += 38; }
   // desktop: dash + bomb
   if (!touch && ship) {
     const y = H - 42, r = 16;
@@ -4290,9 +4566,12 @@ function draw() {
   ctx.drawImage(neb, -20 + nebOX, -20 + nebOY);
   ctx.globalCompositeOperation = 'lighter'; drawStars(); ctx.globalCompositeOperation = 'source-over';
   ctx.translate(W / 2 - camX, H / 2 - camY);
+  if (gmode === 'world' && mode === 'play') drawHoles();
+  else {
   if (follow) drawEdge();
   if (mode === 'play' || mode === 'clear') drawZone();
   drawBH(1 - wi * 0.85);
+  }
   if (bw) {
     ctx.strokeStyle = `rgba(210,150,255,${1 - bw.r / bw.max})`; ctx.lineWidth = 6;
     ctx.beginPath(); ctx.arc(bw.x, bw.y, bw.r, 0, TAU); ctx.stroke();
@@ -4400,7 +4679,8 @@ function drawIndicators() {
   for (const d of drones) list.push([d, dCol(d), 6]);
   for (const p of pickups) list.push([p, PICK[p.type].c, 5]);
   if (tut && tut.bc) list.push([tut.bc, '200,150,255', 7]);
-  list.push([{ x: CX, y: CY, bh: true }, TH.ring, 7]);
+  if (gmode === 'world') { for (const o of owOrbs) if (!ow.taken[o.ck] && Math.hypot(o.x - camX, o.y - camY) < 2600 * U) list.push([o, '200,150,255', 8]); }
+  else list.push([{ x: CX, y: CY, bh: true }, TH.ring, 7]);
   const m = 26, l = SAL + m, r_ = W - SAR - m, t = SAT + m + 70, b = H - SAB - m - (isTouch() ? 0 : 40);
   ctx.save(); ctx.globalAlpha = hudA;
   for (const [o, col, sz] of list) {
@@ -4421,7 +4701,7 @@ function drawIndicators() {
 // ================= BOOT =================
 loadSave(); lastPacked = JSON.stringify(packSave()); calcStats();
 if (!save.gift2) { save.orbs = save.orbs || { void: 0, stellar: 0 }; save.orbs.void = (save.orbs.void || 0) + 1; save.gift2 = true; persist(); }
-save.sel = clamp(save.sel || 1, 1, save.unlocked);
+save.unlocked = Math.min(save.unlocked, NS); save.sel = clamp(save.sel || 1, 1, save.unlocked);
 TH = themeFor(save.sel); bhMass = TH.mods.mass || 1;
 resize(); buildDisk();
 for (let i = 0; i < 8; i++) spawnOrbital(1 + (i % 3));
@@ -4431,7 +4711,7 @@ try { for (const w of ['300', '500', '600', '700']) document.fonts.load(`${w} 16
 let last = performance.now();
 function loop(now) {
   const rdt = Math.min(0.033, (now - last) / 1000); last = now; rtime += rdt;
-  if (!paused) {
+  if (!paused && !owChoosing) {
     let dt = rdt * timeScale;
     if (freeze > 0) { freeze -= rdt; dt = 0; }
     update(dt, rdt);
