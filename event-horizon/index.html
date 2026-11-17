@@ -527,12 +527,12 @@ body.paused .tbtn{display:none!important}
   <div class="mgrid a2">
     <button class="mcd" data-m="story" style="--c:255,170,90"><div class="mci"><i data-ic="map"></i></div><div class="mct">Story</div><div class="mcs" id="mdStory"></div><div class="mcx">Fight through 10 sectors and their bosses. Unlock new enemies, abilities and sectors on the way.</div></button>
     <button class="mcd" data-m="waves" style="--c:255,90,120"><div class="mci"><i data-ic="rate"></i></div><div class="mct">Endless Waves</div><div class="mcs" id="mdWaves"></div><div class="mcx">Survive as many waves as you can. Sectors keep coming with no breaks, and it gets harder every time.</div></button>
-    <button class="mcd" data-m="world" style="--c:200,150,255"><div class="mci"><i data-ic="user"></i></div><div class="mct">Multiplayer</div><div class="mcs">Play online with up to 4 pilots</div><div class="mcx">One huge shared galaxy full of black holes and white holes. Start with a bare ship, grab ability orbs and build your loadout with friends.</div></button>
+    <button class="mcd" data-m="world" style="--c:200,150,255"><div class="mci"><i data-ic="user"></i></div><div class="mct">Multiplayer</div><div class="mcs">Play online with up to 4 pilots</div><div class="mcx">A shared galaxy for up to 4 pilots - team up or shoot each other. Grab orbs for upgrades and abilities, hunt mini bosses.</div></button>
   </div>
   <div class="ft a3"><button class="sec" id="mdBack">Back</button></div>
 </div>
 
-<div id="owPick" class="hidden"><div class="owp"><div class="h3" style="font-size:24px">CHOOSE AN ABILITY</div><div class="sub">The game keeps going - you're shielded while you choose. Lose your ship and you lose every ability you picked.</div><div class="owt"><i id="owBar"></i></div><div class="owtm" id="owTm"></div><div class="owc" id="owC"></div></div></div>
+<div id="owPick" class="hidden"><div class="owp"><div class="h3" style="font-size:24px">CHOOSE AN ABILITY</div><div class="sub">The game keeps going - you're shielded while you choose. Lose your ship and you lose your abilities and half your upgrades.</div><div class="owt"><i id="owBar"></i></div><div class="owtm" id="owTm"></div><div class="owc" id="owC"></div></div></div>
 
 <div id="mmEd" class="hidden"><canvas id="mmCv"></canvas>
   <div class="mmp" id="mmP"><div class="mmt">Minimap layout</div><div class="mmx" id="mmX"></div>
@@ -597,7 +597,7 @@ body.paused .tbtn{display:none!important}
 <script>
 'use strict';
 // Versioning: next version -> next whole number (4.00), sub version -> +0.01 (3.01)
-const VERSION = '4.03';
+const VERSION = '4.10';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -1611,7 +1611,14 @@ function killShip() {
   if (!ship) return;
   if (gmode === 'world' && ow && ow.safe > 0) return;
   if (tut) lives++;
-  if (gmode === 'world' && ow) { lives++; ow.dx = ship.x; ow.dy = ship.y; if (Object.keys(ow.ab).length) { ow.ab = {}; ow.timers = {}; owApply(); queue.push({ t: 0.6, f: () => announce('Abilities lost', { sub: 'Find new ability orbs to power up again', col: '200,150,255', dur: 2.4 }) }); } }
+  if (gmode === 'world' && ow) {
+    lives++; ow.dx = ship.x; ow.dy = ship.y;
+    const pk = mp && ow.hitBy && performance.now() - (ow.hitT || 0) < 1500 ? ow.hitBy : null; ow.hitBy = null;
+    if (pk) { mp.ev.push(['pk', pk]); owDrop('a', ship.x, ship.y); const KP_ = mp.peers[pk]; queue.push({ t: 0.2, f: () => announce('Destroyed by ' + (KP_ ? KP_.n : 'a pilot'), { kick: 'PvP', col: '255,110,110', dur: 2 }) }); }
+    const hadA = Object.keys(ow.ab).length > 0, hadB = Object.values(ow.bs).some(v => v > 0);
+    ow.ab = {}; ow.timers = {}; for (const k in ow.bs) ow.bs[k] = Math.floor(ow.bs[k] / 2); owApply();
+    if (hadA || hadB) queue.push({ t: pk ? 2.4 : 0.6, f: () => announce(hadA ? 'Abilities lost' : 'Upgrades halved', { sub: hadA ? 'Basic upgrades were halved too' : 'Grab basic orbs to build them back up', col: '200,150,255', dur: 2.4 }) });
+  }
   burst(ship.x, ship.y, 90, '120,240,255', 320, 1.6, 2.6);
   burst(ship.x, ship.y, 60, '255,255,255', 200, 1.0, 2);
   ring(ship.x, ship.y, 220, '120,240,255', 0.9, 5);
@@ -1656,8 +1663,10 @@ function killDrone(i, scored) {
     else { const by = mpBy != null ? mpBy : scored ? mp.id : ''; if (d.nid != null) mp.ev.push(['k', d.nid, by]); mine = scored && by === mp.id; drop = scored && by !== ''; }
   }
   if (d.kind === 'splitter' && !mpc) for (let k = 0; k < 3; k++) { const s2 = droneObj(d.x + rand(-12, 12) * U, d.y + rand(-12, 12) * U, 'seeker'); s2.extra = true; s2.hp = 0.7; s2.vx = rand(-200, 200) * U; s2.vy = rand(-200, 200) * U; drones.push(s2); }
-  if (mine) { addScore(K.sc, d.x, d.y); freeze = Math.max(freeze, 0.03); }
-  if (drop) dropDust(d.x, d.y, K.du);
+  if (mine) { addScore(K.sc * (d.mini ? 10 : 1), d.x, d.y); freeze = Math.max(freeze, 0.03); }
+  if (drop) dropDust(d.x, d.y, K.du * (d.mini ? 6 : 1));
+  if (gmode === 'world' && ow && !mpc && drop) owKillDrops(d, K);
+  if (d.mini) { ring(d.x, d.y, 200, '255,90,90', 0.8, 5); shake = Math.min(25, shake + 10); }
   burst(d.x, d.y, 40, K.c, 220, 1.0, 2.2);
   burst(d.x, d.y, 20, '255,220,180', 120, 0.6, 2);
   ring(d.x, d.y, 70, K.c, 0.45, 3);
@@ -3101,9 +3110,6 @@ const BIOMES = [
 const OWA = {
   multi: { n: 'Spread shot', ic: 'multi', max: 3, d: l => ['Triple', 'Quad', 'Penta'][l - 1] + ' shot, always on' },
   seek: { n: 'Seeker rounds', ic: 'seekpk', max: 3, d: l => ['Slight', 'Strong', 'Fierce'][l - 1] + ' homing on every bullet' },
-  rapid: { n: 'Rapid fire', ic: 'rapid', max: 3, d: l => '+' + 20 * l + '% fire rate' },
-  dmg: { n: 'Plasma core', ic: 'damage', max: 4, d: l => '+' + 25 * l + '% damage' },
-  speed: { n: 'Thrusters', ic: 'engine', max: 3, d: l => '+' + 15 * l + '% speed' },
   missile: { n: 'Missile pods', ic: 'missile', max: 3, d: l => l + ' homing missile' + (l > 1 ? 's' : '') + ' every ' + [3, 2.6, 2.2][l - 1] + 's' },
   sats: { n: 'Orbital drones', ic: 'u_drones', max: 1, d: () => 'Two drones orbit you and shoot' },
   defl: { n: 'Deflector', ic: 'deflpk', max: 1, d: () => 'Rotating arcs destroy enemy shots' },
@@ -3111,10 +3117,21 @@ const OWA = {
   beam: { n: 'Photon burst', ic: 'u_beam', max: 3, d: l => [2, 3, 4][l - 1] + 's laser every 11s' },
   well: { n: 'Gravity well', ic: 'wellpk', max: 2, d: l => 'Drops a small black hole every ' + [16, 11][l - 1] + 's' },
   shield: { n: 'Shield regen', ic: 'shieldpk', max: 3, d: l => 'Shield recharges every ' + [24, 17, 11][l - 1] + 's' },
-  magnet: { n: 'Tractor field', ic: 'magnet', max: 3, d: l => '+' + 60 * l + '% pull range' },
   slow: { n: 'Time warp', ic: 'u_time', max: 2, d: l => 'Slows enemies for ' + [3.5, 5][l - 1] + 's every 18s' },
 };
 const OWH = [0, 1.2, 1.9, 2.7];
+// basic orbs raise these one level at a time
+const BASICS = [
+  { k: 'dmg', n: 'Damage', ic: 'damage', max: 8, c: '255,150,90' },
+  { k: 'rate', n: 'Fire rate', ic: 'rate', max: 8, c: '255,210,110' },
+  { k: 'bspeed', n: 'Bullet speed', ic: 'velocity', max: 6, c: '120,230,255' },
+  { k: 'speed', n: 'Thrusters', ic: 'engine', max: 6, c: '143,255,214' },
+  { k: 'pierce', n: 'Pierce', ic: 'pierce', max: 4, c: '255,130,200' },
+  { k: 'magnet', n: 'Tractor range', ic: 'magnet', max: 5, c: '200,170,255' },
+  { k: 'dash', n: 'Dash recharge', ic: 'dash', max: 5, c: '120,200,255' },
+];
+const OTYPE = { a: { c: '170,110,255', c2: '255,220,255', r: 14, ring: '200,150,255' }, b: { c: '60,170,255', c2: '220,245,255', r: 10, ring: '120,210,255' }, d: { c: '40,220,160', c2: '220,255,240', r: 10, ring: '143,255,214' } };
+const PVPHP = 10;
 let ow = null, owChoosing = false, owGen = false;
 const owHoles = [], owOrbs = [];
 function hash2(x, y, s) { let h = (Math.imul(x | 0, 374761393) + Math.imul(y | 0, 668265263) + Math.imul(s | 0, 1442695041)) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; }
@@ -3141,16 +3158,17 @@ function owPre() {
       if (R() < B.wh * 0.6) { const m = 0.7 + R() * 0.7; holes.push({ x: (cx - 0.3 + R() * 0.6) * CH, y: (cy - 0.3 + R() * 0.6) * CH, m, rh: 26 * U * Math.pow(m, 0.7), white: true, ck: key, ph: R() * 6 }); }
     }
     if (!cx && !cy) holes.push({ x: 0, y: 0, m: 4.5, rh: 34 * U * Math.pow(4.5, 0.7), white: false, big: true, ck: key, ph: 0 });
-    const Ro = rng(hash2(cx, cy, 55 + ow.seed)); let orb = null;
-    if (dc >= 1.5 && dc <= OWM && Ro() < B.orb * 1.2) { orb = { x: (cx - 0.35 + Ro() * 0.7) * CH, y: (cy - 0.35 + Ro() * 0.7) * CH, ck: key, ph: Ro() * 6 }; if (holes.some(h => Math.hypot(h.x - orb.x, h.y - orb.y) < h.rh * 6)) orb = null; }
-    ow.all.set(key, { holes, orb });
+    const Ro = rng(hash2(cx, cy, 55 + ow.seed)), orbs = [];
+    const add = (t, i) => { const o = { x: (cx - 0.4 + Ro() * 0.8) * CH, y: (cy - 0.4 + Ro() * 0.8) * CH, ck: key + t + i, ph: Ro() * 6, t }; if (!holes.some(h => Math.hypot(h.x - o.x, h.y - o.y) < h.rh * 6)) orbs.push(o); };
+    if (dc >= 1.2 && dc <= OWM) { if (Ro() < 0.5) add('b', 0); if (Ro() < 0.2) add('b', 1); if (Ro() < B.orb * 0.5) add('a', 0); if (Ro() < 0.14) add('d', 0); }
+    ow.all.set(key, { holes, orbs });
   }
 }
 function startWorld(seed, sx, sy) {
   if (!cloudUser) { goMenu(); return; }
   closeLobby();
   gmode = 'world'; tut = null; $('tutBox').classList.add('hidden');
-  ow = { ab: {}, chunks: new Map(), taken: {}, cx: 9999, cy: 9999, biome: -1, spawnT: 3, timers: {}, dist: 0, orbs: 0, kills0: 0, dx: 0, dy: 0, seed: seed | 0, CH: owCH(), safe: 0, pickT: 0, sig: '' };
+  ow = { ab: {}, bs: {}, drops: [], dc: 0, miniT: 25, chunks: new Map(), taken: {}, cx: 9999, cy: 9999, biome: -1, spawnT: 3, timers: {}, dist: 0, orbs: 0, kills0: 0, dx: 0, dy: 0, seed: seed | 0, CH: owCH(), safe: 0, pickT: 0, sig: '' };
   ow.R = OWM * ow.CH;
   owPre();
   owHoles.length = 0; owOrbs.length = 0;
@@ -3171,18 +3189,21 @@ function startWorld(seed, sx, sy) {
 }
 function owApply() {
   calcStats();
-  const L = ow ? ow.ab : {};
+  const L = ow ? ow.ab : {}, B = ow && ow.bs ? ow.bs : {};
   S.multi = Math.max(0, (L.multi || 1) - 1);
-  S.rate *= 1 / (1 + 0.2 * (L.rapid || 0));
-  S.dmg *= 1 + 0.25 * (L.dmg || 0);
-  S.thrust *= 1 + 0.15 * (L.speed || 0);
+  S.dmg *= 1 + 0.15 * (B.dmg || 0);
+  S.rate *= 1 / (1 + 0.1 * (B.rate || 0));
+  S.bspeed *= 1 + 0.12 * (B.bspeed || 0);
+  S.thrust *= 1 + 0.08 * (B.speed || 0);
+  S.pierce += 0.25 * (B.pierce || 0);
+  S.magnet *= 1 + 0.3 * (B.magnet || 0);
+  S.dashCD *= 1 - 0.08 * (B.dash || 0);
   S.missiles = [0, 1, 2, 3][L.missile || 0]; S.missileT = [0, 3, 2.6, 2.2][L.missile || 0];
   S.shieldRe = L.shield ? [0, 24, 17, 11][L.shield] : 0;
-  S.magnet *= 1 + 0.6 * (L.magnet || 0);
 }
 function owChunkGen(cx, cy) {
   const key = cx + ',' + cy, CH = ow.CH, bi = owBiomeAt(cx, cy), B = BIOMES[bi], dg = owDanger(cx, cy), R = rng(hash2(cx, cy, 31 + ow.seed)), P = ow.all.get(key);
-  const ch = { key, cx, cy, holes: P.holes, orbs: P.orb ? [P.orb] : [] };
+  const ch = { key, cx, cy, holes: P.holes, orbs: P.orbs };
   const nr = Math.round((B.rocks[0] + Math.floor(R() * (B.rocks[1] - B.rocks[0] + 1))) * 0.5);
   sector = Math.min(NS, 1 + dg);
   for (let i = 0; i < nr; i++) {
@@ -3266,6 +3287,59 @@ function novaBlast() {
   if (!ship) return; doBomb(true);
   for (let k = 0; k < 20; k++) { const a = k / 20 * TAU, s = 600 * U; bullets.push({ x: ship.x, y: ship.y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: 1.6, dmg: 2 * S.dmg, pierce: 1, hits: null, hom: 6 }); }
 }
+function owGet(o) {
+  const T = OTYPE[o.t] || OTYPE.a;
+  burst(o.x, o.y, o.t === 'a' ? 40 : 22, T.ring, 200, 0.7, 2.2);
+  if (o.t === 'a') owOpenPick();
+  else if (o.t === 'd') { dropDust(o.x, o.y, 16, 2); ring(o.x, o.y, 90, T.ring, 0.5, 3); tone(880, 0.25, 'triangle', 0.06, 1320); }
+  else owBasic(o);
+}
+function owBasic(o) {
+  const av = BASICS.filter(b => (ow.bs[b.k] || 0) < b.max);
+  if (!av.length) { dropDust(o.x, o.y, 8, 2); popText(o.x, o.y - 24 * U, 'All upgrades maxed', 'rgb(143,255,214)', 13); return; }
+  const b = av[Math.random() * av.length | 0]; ow.bs[b.k] = (ow.bs[b.k] || 0) + 1; owApply();
+  ring(o.x, o.y, 70, b.c, 0.5, 3); tone(620, 0.18, 'triangle', 0.06, 930);
+  popText(o.x, o.y - 26 * U, b.n + ' ' + ow.bs[b.k] + '/' + b.max, `rgb(${b.c})`, 14);
+}
+// dropped orbs (from enemies, mini bosses and destroyed pilots) are shared with the room
+function owDrop(t, x, y) {
+  if (!ow) return;
+  x += rand(-26, 26) * U; y += rand(-26, 26) * U;
+  const id = (mp ? mp.id : 'L') + '.' + (++ow.dc);
+  ow.drops.push({ ck: id, t, x, y, ph: rand(0, 6), life: 60 });
+  if (mp) mp.ev.push(['dr', id, t, Math.round(x / U), Math.round(y / U)]);
+}
+function owKillDrops(d, K) {
+  if (d.mini) { owDrop('a', d.x, d.y); owDrop('b', d.x, d.y); owDrop('d', d.x, d.y); return; }
+  if (Math.random() < 0.02 + 0.025 * (K.cost || 1)) owDrop('a', d.x, d.y);
+  else if (Math.random() < 0.08) owDrop('b', d.x, d.y);
+}
+// mini bosses guard spots around the galaxy: big, tough, always drop an ability orb
+const MINIK = ['drone', 'lancer', 'charger', 'bomber', 'splitter', 'warden', 'gunship', 'phantom', 'carrier'];
+function owMakeMini(d, ax, ay) { d.mini = 1; d.R = (DK[d.kind] || DK.drone).R * U * 1.9; d.max *= 9; d.hp = d.max; d.ax = ax; d.ay = ay; d.extra = true; }
+function owSpawnMini(pl) {
+  for (let t = 0; t < 14; t++) {
+    const a = rand(0, TAU), r = rand(0.42, 0.9) * ow.R, x = Math.cos(a) * r, y = Math.sin(a) * r;
+    if (pl.some(P => Math.hypot(P.x - x, P.y - y) < 1400 * U)) continue;
+    let bad = false; for (const P of ow.all.values()) for (const h of P.holes) if (Math.hypot(h.x - x, h.y - y) < h.rh * 10) bad = true;
+    if (bad) continue;
+    const dg = owDanger(x / ow.CH, y / ow.CH), pool = MINIK.slice(0, Math.max(1, dg)), k = pool[Math.max(0, pool.length - 1 - (Math.random() * 3 | 0))];
+    sector = Math.min(NS, 1 + dg);
+    const d = droneObj(x, y, k); owMakeMini(d, x, y); drones.push(d); return;
+  }
+}
+function drawMini(d) {
+  ctx.save();
+  ctx.strokeStyle = `rgba(255,90,90,${0.35 + 0.2 * Math.sin(time * 3 + d.ph)})`; ctx.lineWidth = 2; ctx.setLineDash([6 * U, 5 * U]); ctx.lineDashOffset = -time * 20 * U;
+  ctx.beginPath(); ctx.arc(d.x, d.y, d.R * 1.5, 0, TAU); ctx.stroke(); ctx.setLineDash([]);
+  ctx.translate(d.x, d.y); ctx.scale(1.9, 1.9); ctx.translate(-d.x, -d.y); drawDrone(d);
+  ctx.restore();
+  const w = 74 * U, f = clamp(d.hp / d.max, 0, 1), y = d.y - d.R * 1.5 - 12 * U;
+  ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillRect(d.x - w / 2, y, w, 5 * U);
+  ctx.fillStyle = 'rgb(255,90,90)'; ctx.fillRect(d.x - w / 2, y, w * f, 5 * U);
+  ctx.font = `700 ${Math.round(10 * Math.max(1, U))}px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = 'rgba(255,160,160,0.95)';
+  ctx.fillText('MINI BOSS', d.x, y - 9 * U);
+}
 // enemies chase whichever pilot is closest
 function owTarget(d) {
   if (!mp) return ship;
@@ -3297,9 +3371,10 @@ function owTick(dt) {
   if (L.well) every('well', [0, 16, 11][L.well], () => { pw.well = 6; pw.wx = ship.x; pw.wy = ship.y; ring(ship.x, ship.y, 160, PICK.well.c, 0.6, 4); });
   if (L.slow) every('slow', 18, () => { pw.slow = [0, 3.5, 5][L.slow]; });
   // ability orbs
-  if (!owChoosing) for (const o of owOrbs) {
-    if (ow.taken[o.ck]) continue;
-    if (Math.hypot(o.x - ship.x, o.y - ship.y) < 36 * U) { ow.taken[o.ck] = performance.now(); if (mp) mp.ev.push(['o', o.ck]); burst(o.x, o.y, 40, '200,150,255', 220, 0.8, 2.4); owUpdateChunks(true); owOpenPick(); return; }
+  for (let i = ow.drops.length - 1; i >= 0; i--) { const o = ow.drops[i]; o.life -= dt; if (o.life <= 0 || ow.taken[o.ck]) ow.drops.splice(i, 1); }
+  for (const o of owOrbs.concat(ow.drops)) {
+    if (ow.taken[o.ck] || (o.t === 'a' && owChoosing)) continue;
+    if (Math.hypot(o.x - ship.x, o.y - ship.y) < 36 * U) { ow.taken[o.ck] = performance.now(); if (mp) mp.ev.push(['o', o.ck]); owGet(o); }
   }
   // enemies drift in from the dark around every pilot - only the host spawns them
   if (!mp || mp.host) {
@@ -3309,7 +3384,7 @@ function owTick(dt) {
       const P = pl[Math.random() * pl.length | 0], pcx = Math.round(P.x / ow.CH), pcy = Math.round(P.y / ow.CH);
       const bi = owBiomeAt(pcx, pcy), B = BIOMES[bi], dg = owDanger(pcx, pcy);
       ow.spawnT = rand(2.6, 4.6) / B.en / Math.sqrt(pl.length);
-      const near = drones.filter(d => Math.abs(d.x - P.x) < 1600 * U && Math.abs(d.y - P.y) < 1600 * U).length;
+      const near = drones.filter(d => !d.mini && Math.abs(d.x - P.x) < 1600 * U && Math.abs(d.y - P.y) < 1600 * U).length;
       if (drones.length < 40 && near < Math.min(14, 3 + dg * 2) && (dg > 0 || Math.random() < 0.5)) {
         const pool = KINDS.slice(0, Math.min(KINDS.length, 1 + dg)), k = pool[Math.random() * pool.length | 0], a = rand(0, TAU), r = 1000 * U;
         sector = Math.min(NS, 1 + dg);
@@ -3318,7 +3393,9 @@ function owTick(dt) {
         if (k === 'seeker') { drones.push(d); for (let j = 0; j < 2; j++) { const d2 = droneObj(d.x + rand(-30, 30) * U, d.y + rand(-30, 30) * U, 'seeker'); d2.extra = true; drones.push(d2); } } else drones.push(d);
       }
     }
-    if (Math.random() < 0.1 && pl.length) drones = drones.filter(d => pl.some(P => Math.hypot(d.x - P.x, d.y - P.y) < 2600 * U));
+    ow.miniT -= dt;
+    if (ow.miniT <= 0) { ow.miniT = rand(35, 60); if (drones.filter(d => d.mini).length < 3) owSpawnMini(pl); }
+    if (Math.random() < 0.1 && pl.length) drones = drones.filter(d => d.mini || pl.some(P => Math.hypot(d.x - P.x, d.y - P.y) < 2600 * U));
   }
   // clean up things far behind you
   const far = (o, m) => Math.hypot(o.x - ship.x, o.y - ship.y) > m;
@@ -3356,11 +3433,13 @@ function drawHoles() {
       ctx.strokeStyle = `rgba(${TH.ring},0.9)`; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(h.x, h.y, R * 1.05, 0, TAU); ctx.stroke();
     }
   }
-  for (const o of owOrbs) {
+  for (const o of owOrbs.concat(ow.drops)) {
     if (ow.taken[o.ck] || Math.abs(o.x - camX) > W / 2 + 100 || Math.abs(o.y - camY) > H / 2 + 100) continue;
-    const r = 14 * U * (1 + 0.08 * Math.sin(time * 3 + o.ph));
-    ctx.strokeStyle = `rgba(200,150,255,${0.3 + 0.3 * Math.sin(time * 4 + o.ph)})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(o.x, o.y, r * 2.4, 0, TAU); ctx.stroke();
-    drawOrb(ctx, o.x, o.y, r, '170,110,255', '255,220,255', time + o.ph);
+    const T = OTYPE[o.t] || OTYPE.a, r = T.r * U * (1 + 0.08 * Math.sin(time * 3 + o.ph)), fade = o.life != null && o.life < 8 ? (Math.sin(time * 14) > 0 ? 1 : 0.35) : 1;
+    ctx.save(); ctx.globalAlpha *= fade;
+    ctx.strokeStyle = `rgba(${T.ring},${0.3 + 0.3 * Math.sin(time * 4 + o.ph)})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(o.x, o.y, r * 2.4, 0, TAU); ctx.stroke();
+    drawOrb(ctx, o.x, o.y, r, T.c, T.c2, time + o.ph);
+    ctx.restore();
   }
   drawWorldEdge();
 }
@@ -3413,7 +3492,9 @@ function drawMinimap(W, H) {
   ctx.save(); ctx.beginPath(); ctx.arc(ox, oy, h, 0, TAU); ctx.clip();
   ctx.drawImage(ow.mm, x0, y0, Sz, Sz);
   const now = performance.now();
-  for (const [key, P] of ow.all) if (P.orb && !ow.taken[key]) { ctx.fillStyle = `rgba(210,160,255,${0.6 + 0.35 * Math.sin(rtime * 4 + P.orb.ph)})`; ctx.beginPath(); ctx.arc(X(P.orb.x), Y(P.orb.y), 1.5, 0, TAU); ctx.fill(); }
+  for (const P of ow.all.values()) for (const o of P.orbs) if (!ow.taken[o.ck]) { const a = o.t === 'a'; ctx.fillStyle = `rgba(${OTYPE[o.t].ring},${a ? 0.6 + 0.35 * Math.sin(rtime * 4 + o.ph) : 0.45})`; ctx.beginPath(); ctx.arc(X(o.x), Y(o.y), a ? 1.6 : 0.9, 0, TAU); ctx.fill(); }
+  for (const o of ow.drops) if (!ow.taken[o.ck]) { ctx.fillStyle = `rgb(${OTYPE[o.t].ring})`; ctx.beginPath(); ctx.arc(X(o.x), Y(o.y), 1.6, 0, TAU); ctx.fill(); }
+  for (const d of drones) if (d.mini) { ctx.fillStyle = 'rgb(255,80,80)'; ctx.beginPath(); ctx.arc(X(d.x), Y(d.y), 2.6, 0, TAU); ctx.fill(); ctx.strokeStyle = 'rgba(0,0,0,0.6)'; ctx.lineWidth = 1; ctx.stroke(); }
   const vw = cv.width / (DPR || 1), vh = cv.height / (DPR || 1);
   ctx.strokeStyle = 'rgba(255,255,255,0.3)'; ctx.lineWidth = 1; ctx.strokeRect(X(camX - vw / 2), Y(camY - vh / 2), vw * k, vh * k);
   if (mp) for (const id in mp.peers) { const P = mp.peers[id]; if (!P.alive) continue; ctx.fillStyle = `rgb(${P.col})`; ctx.beginPath(); ctx.arc(X(P.x), Y(P.y), 2.4, 0, TAU); ctx.fill(); }
@@ -3426,11 +3507,39 @@ function drawMinimap(W, H) {
   ctx.restore();
 }
 
+// side panel: basic upgrade bars, then every ability with its level (dim = not unlocked yet)
+function upBox(W, H, touch) {
+  const sc = touch ? 0.84 : 1.12, w = 140 * sc, h = (20 + 12 + BASICS.length * 16 + 14 + 12 + 2 * 30) * sc;
+  return [touch ? 12 : 16, touch ? 110 : Math.round(H / 2 - h / 2), w, h, sc];
+}
+function drawUpPanel(W, H, touch) {
+  const [x0, y0, w, h, sc] = upBox(W, H, touch), pad = 10 * sc;
+  ctx.save();
+  rr(x0, y0, w, h, 12 * sc); ctx.fillStyle = 'rgba(4,6,14,0.5)'; ctx.fill(); ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.lineWidth = 1; ctx.stroke();
+  const label = (t, y) => { ctx.font = `700 ${Math.round(9 * sc)}px ${FONT}`; ctx.fillStyle = 'rgba(233,238,247,0.55)'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; spaced(t, x0 + pad, y, 1.6 * sc, 'left'); };
+  let y = y0 + pad + 5 * sc; label('UPGRADES', y); y += 10 * sc;
+  const segW = 7.5 * sc, segG = 2 * sc;
+  for (const b of BASICS) {
+    const lv = ow.bs[b.k] || 0, cy = y + 8 * sc;
+    drawIcon(b.ic, x0 + pad + 6 * sc, cy, 13 * sc, `rgba(${b.c},${lv ? 1 : 0.4})`, 1.8);
+    for (let i = 0; i < b.max; i++) { ctx.fillStyle = i < lv ? `rgb(${b.c})` : 'rgba(255,255,255,0.1)'; rr(x0 + pad + 18 * sc + i * (segW + segG), cy - 2.5 * sc, segW, 5 * sc, 1.5 * sc); ctx.fill(); }
+    y += 16 * sc;
+  }
+  y += 10 * sc; label('ABILITIES', y); y += 8 * sc;
+  const ks = Object.keys(OWA), cell = (w - pad * 2) / 5;
+  ks.forEach((k, i) => {
+    const A = OWA[k], lv = ow.ab[k] || 0, cx = x0 + pad + (i % 5) * cell + cell / 2, cy = y + Math.floor(i / 5) * 30 * sc + 11 * sc;
+    if (lv) { ctx.fillStyle = 'rgba(200,150,255,0.18)'; ctx.beginPath(); ctx.arc(cx, cy, 10 * sc, 0, TAU); ctx.fill(); }
+    drawIcon(A.ic, cx, cy, 14 * sc, lv ? 'rgb(225,195,255)' : 'rgba(255,255,255,0.22)', 1.8);
+    for (let j = 0; j < A.max; j++) { ctx.fillStyle = j < lv ? 'rgb(200,150,255)' : 'rgba(255,255,255,0.14)'; ctx.beginPath(); ctx.arc(cx + (j - (A.max - 1) / 2) * 4.5 * sc, cy + 14 * sc, 1.5 * sc, 0, TAU); ctx.fill(); }
+  });
+  ctx.restore();
+}
 // ---- minimap layout editor (Settings) ----
 let mmE = null;
 function openMMEd() {
   const touch = isTouch(), w = innerWidth, h = innerHeight, [x0, y0, sz] = mmLayout(touch, w, h);
-  const keep = ow; ow = { seed: 4242, CH: owCH(), taken: {} }; ow.R = OWM * ow.CH; owPre(); const demo = ow; ow = keep;
+  const keep = ow; ow = { seed: 4242, CH: owCH(), taken: {}, drops: [] }; ow.R = OWM * ow.CH; owPre(); const demo = ow; ow = keep;
   const st = []; for (let i = 0; i < 160; i++) st.push([Math.random(), Math.random(), Math.random() * 1.4 + 0.3, Math.random()]);
   mmE = { touch, x: x0 + sz / 2, y: y0 + sz / 2, s: sz, drag: null, demo, img: null, imgS: 0, st };
   $('mmSz').value = sz;
@@ -3455,7 +3564,7 @@ function mmLoop() {
   g.textAlign = 'right'; g.fillText('THE DRIFT', w - 20, 27); g.font = `600 15px ${FONT}`; g.fillText('◆ 500', w - 20, 64);
   g.strokeStyle = ghost; g.lineWidth = 1.5;
   const circ = (x, y, r) => { g.beginPath(); g.arc(x, y, r, 0, TAU); g.stroke(); };
-  for (let i = 0; i < 4; i++) circ(34 + i * 38, t ? 128 : h - 58, 14);
+  { const [bx0, by0, bw, bh] = upBox(w, h, t); g.beginPath(); g.roundRect ? g.roundRect(bx0, by0, bw, bh, 12) : g.rect(bx0, by0, bw, bh); g.stroke(); g.font = `700 9px ${FONT}`; g.textAlign = 'left'; g.fillText('UPGRADES', bx0 + 10, by0 + 15); }
   if (t) { circ(w / 2, 29, 21); circ(w - 49, h - 265, 33); circ(w - 49, h - 183, 33); }
   else { circ(w - 86, h - 42, 16); circ(w - 38, h - 42, 16); }
   drawShipModel(g, SK(), w / 2, h / 2, -0.6, 1.3, rtime, false);
@@ -3593,13 +3702,13 @@ function mpOn(ev, p) {
   P.n = String(p.n || 'Pilot').slice(0, 20); P.j = +p.j || 0; P.sd = p.sd; P.pub = p.pub; P.last = now; P.k = +p.k || 0;
   P.sk = SKINS.find(x => x.id === p.sk) || SKINS[0]; P.bs = BSKINS.find(x => x.id === p.bs) || BSKINS[0];
   const s = Array.isArray(p.s) ? p.s : null;
-  if (s) { P.sx = s[0] * U; P.sy = s[1] * U; P.svx = s[2] * U; P.svy = s[3] * U; P.sa = +s[4] || 0; P.safe = !!s[5]; P.rt = now; }
+  if (s) { P.sx = s[0] * U; P.sy = s[1] * U; P.svx = s[2] * U; P.svy = s[3] * U; P.sa = +s[4] || 0; P.safe = !!s[5]; P.php = s[6] == null ? PVPHP : +s[6]; P.rt = now; }
   if (mp.state !== 'play') { if (s) { P.x = P.sx; P.y = P.sy; P.alive = true; } if (!mp.firstT) mp.firstT = now; return; }
   if (fresh) { announce(P.n + ' joined', { kick: 'Pilot', col: P.col, dur: 1.8 }); tone(520, 0.2, 'triangle', 0.05, 780); }
   if (p.sd != null && p.sd !== mp.seed && p.j < mp.j) { mpClash(); return; }
   if (s) { if (!P.alive) { P.x = P.sx; P.y = P.sy; P.ang = P.sa; if (P.seen) ring(P.x, P.y, 80, P.col, 0.6, 3); } P.alive = true; P.seen = true; }
   else if (P.alive) { P.alive = false; burst(P.x, P.y, 60, P.col, 260, 1.2, 2.4); ring(P.x, P.y, 160, P.col, 0.8, 4); if (onScreen(P)) sfx.boom(0.6); }
-  if (Array.isArray(p.b)) for (const b of p.b) if (rbul.length < 240) rbul.push({ x: b[0] * U, y: b[1] * U, vx: b[2] * U, vy: b[3] * U, life: 1.4, bs: P.bs });
+  if (Array.isArray(p.b)) for (const b of p.b) if (rbul.length < 240) rbul.push({ x: b[0] * U, y: b[1] * U, vx: b[2] * U, vy: b[3] * U, life: 1.4, bs: P.bs, dmg: Math.min(10, (+b[4] || 10) / 10), by: P.id });
   if (Array.isArray(p.tk) && ow) for (const k of p.tk) if (!ow.taken[k]) ow.taken[k] = now;
   if (Array.isArray(p.ev)) for (const e of p.ev) if (Array.isArray(e)) mpEvent(P, e);
   mpElect();
@@ -3614,6 +3723,11 @@ function mpEvent(P, e) {
     if (i >= 0) { mpKill = { by: e[2] || '' }; killDrone(i, false); mpKill = null; }
   }
   else if (e[0] === 'o' && ow) ow.taken[e[1]] = now;
+  else if (e[0] === 'dr' && ow && typeof e[1] === 'string' && !ow.taken[e[1]] && !ow.drops.some(o => o.ck === e[1]) && OTYPE[e[2]]) ow.drops.push({ ck: e[1], t: e[2], x: e[3] * U, y: e[4] * U, ph: rand(0, 6), life: 60 });
+  else if (e[0] === 'pk') {
+    if (e[1] === mp.id) { addScore(2500, P.x, P.y); announce('You destroyed ' + P.n, { kick: 'PvP', col: '143,255,214', dur: 2 }); }
+    else { const K = mp.peers[e[1]]; popText(P.x, P.y - 30 * U, (K ? K.n : 'A pilot') + ' destroyed ' + P.n, 'rgb(255,170,170)', 13); }
+  }
 }
 function mpDrop(id, said) {
   const P = mp.peers[id]; if (!P) return; delete mp.peers[id];
@@ -3630,7 +3744,7 @@ function mpSnap(E) {
     const [id, ki, x, y, vx, vy, hp, mx, st, stT, la, cd] = e; seen.add(id);
     if (mp.dead[id] > now) continue;
     let d = map.get(id); const X = x * U, Y = y * U;
-    if (!d) { d = droneObj(X, Y, KINDS[ki] || 'drone'); d.nid = id; d.extra = true; d.hp = hp / 10; drones.push(d); }
+    if (!d) { d = droneObj(X, Y, KINDS[ki] || 'drone'); d.nid = id; d.extra = true; if (e[12]) owMakeMini(d, e[13] * U, e[14] * U); d.hp = hp / 10; drones.push(d); }
     else {
       const ex = X + vx * U * 0.06 - d.x, ey = Y + vy * U * 0.06 - d.y;
       if (ex * ex + ey * ey > (260 * U) ** 2) { d.x = X; d.y = Y; } else { d.x += ex * 0.5; d.y += ey * 0.5; }
@@ -3652,12 +3766,12 @@ function mpSend() {
   for (const nid in mp.hits) mp.ev.push(['h', +nid, R(mp.hits[nid] * 100) / 100, 1]);
   mp.hits = {};
   const pk = { i: mp.id, n: cloudUser, j: mp.j, sd: mp.seed, pub: mp.pub ? 1 : 0, sk: save.skin, bs: save.bskin, k: score,
-    s: ship ? [R(ship.x / U), R(ship.y / U), R(ship.vx / U), R(ship.vy / U), R(ship.ang * 100) / 100, ow && ow.safe > 0 ? 1 : 0] : null };
+    s: ship ? [R(ship.x / U), R(ship.y / U), R(ship.vx / U), R(ship.vy / U), R(ship.ang * 100) / 100, (ow && ow.safe > 0) || ship.inv > 0 ? 1 : 0, R(ship.php == null ? PVPHP : ship.php)] : null };
   if (mp.shots.length) { pk.b = mp.shots; mp.shots = []; }
   if (mp.ev.length) { pk.ev = mp.ev; mp.ev = []; }
   if (mp.host) {
     for (const d of drones) if (d.nid == null) d.nid = ++mp.nid;
-    pk.e = drones.map(d => [d.nid, Math.max(0, KINDS.indexOf(d.kind)), R(d.x / U), R(d.y / U), R(d.vx / U), R(d.vy / U), R(d.hp * 10), R(d.max * 10), Math.max(0, MPST.indexOf(d.st)), R((d.stT || 0) * 100), R((d.la || 0) * 100), R((d.cd || 0) * 100)]);
+    pk.e = drones.map(d => [d.nid, Math.max(0, KINDS.indexOf(d.kind)), R(d.x / U), R(d.y / U), R(d.vx / U), R(d.vy / U), R(d.hp * 10), R(d.max * 10), Math.max(0, MPST.indexOf(d.st)), R((d.stT || 0) * 100), R((d.la || 0) * 100), R((d.cd || 0) * 100), d.mini ? 1 : 0, R((d.ax || 0) / U), R((d.ay || 0) / U)]);
     if (++mp.tkT % 10 === 0 && ow) pk.tk = Object.keys(ow.taken);
   }
   mp.ch.send('p', pk);
@@ -3704,11 +3818,25 @@ function mpPoll(rdt) {
 }
 // remote bullets are only visual - damage is reported by whoever fired them
 function mpWorld(dt) {
+  const now = performance.now();
+  if (ship && now - (ow.hitT || 0) > 3000) ship.php = Math.min(PVPHP, (ship.php == null ? PVPHP : ship.php) + 2.5 * dt);
   for (let i = rbul.length - 1; i >= 0; i--) {
     const b = rbul[i]; b.x += b.vx * dt; b.y += b.vy * dt; b.life -= dt;
+    // PvP: the pilot being shot decides the hit
+    if (ship && ow.safe <= 0 && ship.inv <= 0 && dist2(b, ship) < (12 * U) ** 2) {
+      rbul.splice(i, 1); burst(b.x, b.y, 8, '255,120,120', 140, 0.35, 2); sfx.hit();
+      ship.php = (ship.php == null ? PVPHP : ship.php) - b.dmg; ow.hitBy = b.by; ow.hitT = now;
+      if (ship.php <= 0) { ship.php = PVPHP; hurt(); }
+      continue;
+    }
     let hit = b.life <= 0;
     if (!hit) for (const d of drones) if (dist2(d, b) < (d.R + 3 * U) ** 2) { hit = true; burst(b.x, b.y, 4, '255,150,170', 100, 0.3, 1.6); break; }
     if (hit) rbul.splice(i, 1);
+  }
+  // your shots stop on other pilots (they register the damage on their side)
+  for (let i = bullets.length - 1; i >= 0; i--) {
+    const b = bullets[i];
+    for (const P of mpPl) { if (P === ship || P.safe) continue; if (dist2(b, P) < (12 * U) ** 2) { burst(b.x, b.y, 6, P.col, 140, 0.3, 1.8); bullets.splice(i, 1); break; } }
   }
 }
 function mpDraw() {
@@ -3719,6 +3847,7 @@ function mpDraw() {
     const P = mp.peers[k]; if (!P.alive || Math.abs(P.x - camX) > W / 2 + 80 || Math.abs(P.y - camY) > H / 2 + 80) continue;
     if (P.safe) drawAura(P.x, P.y, 1, '200,150,255');
     drawShipModel(ctx, P.sk || SKINS[0], P.x, P.y, P.ang, U, rtime, false);
+    if (P.php < PVPHP) { const w = 34 * U; ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(P.x - w / 2, P.y + 20 * U, w, 3.5 * U); ctx.fillStyle = 'rgb(255,110,110)'; ctx.fillRect(P.x - w / 2, P.y + 20 * U, w * clamp(P.php / PVPHP, 0, 1), 3.5 * U); }
     ctx.font = `700 ${Math.round(12 * Math.max(1, U))}px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillText(P.n, P.x + 1, P.y - 30 * U + 1);
     ctx.fillStyle = `rgb(${P.col})`; ctx.fillText(P.n, P.x, P.y - 30 * U);
@@ -4033,7 +4162,7 @@ function update(dt, rdt) {
         bullets.push({ x: ship.x + Math.cos(a) * 16 * U, y: ship.y + Math.sin(a) * 16 * U, vx: ship.vx * 0.3 + Math.cos(a) * s, vy: ship.vy * 0.3 + Math.sin(a) * s, life: 1.4, dmg: S.dmg, pierce: Math.floor(S.pierce) + (Math.random() < S.pierce % 1 ? 1 : 0), hits: null, hom: pw.seek > 0 ? (gmode === 'world' ? OWH[(ow && ow.ab.seek) || 1] : 1.6) : 0 });
       }
       sfx.shoot();
-      if (mp && gmode === 'world') for (let q = Math.max(0, bullets.length - angs.length); q < bullets.length; q++) { const b = bullets[q]; if (mp.shots.length < 12) mp.shots.push([Math.round(b.x / U), Math.round(b.y / U), Math.round(b.vx / U), Math.round(b.vy / U)]); }
+      if (mp && gmode === 'world') for (let q = Math.max(0, bullets.length - angs.length); q < bullets.length; q++) { const b = bullets[q]; if (mp.shots.length < 12) mp.shots.push([Math.round(b.x / U), Math.round(b.y / U), Math.round(b.vx / U), Math.round(b.vy / U), Math.round(b.dmg * 10)]); }
     }
     missileCD -= dt;
     if (S.missiles && missileCD <= 0 && TG.some(o => !o.dead && onScreen(o))) {
@@ -4156,7 +4285,8 @@ function update(dt, rdt) {
     const d = drones[i];
     if (!d) continue;
     const r = gravity(d, 1, edt);
-    const TS = gmode === 'world' ? owTarget(d) : ship;
+    let TS = gmode === 'world' ? owTarget(d) : ship;
+    if (d.mini && (!TS || Math.hypot(TS.x - d.x, TS.y - d.y) > 1100 * U || Math.hypot(d.x - d.ax, d.y - d.ay) > 1600 * U)) { TS = { x: d.ax + Math.cos(time * 0.3 + d.ph) * 220 * U, y: d.ay + Math.sin(time * 0.3 + d.ph) * 220 * U, vx: 0, vy: 0 }; d.cd = Math.max(d.cd, 0.6); if (d.st !== 'move' && d.st !== 'rest') { d.st = 'move'; d.stT = 0; } }
     const tx = TS ? TS.x : CX + Math.cos(time * 0.5 + d.ph) * MIN * 0.4;
     const ty = TS ? TS.y : CY + Math.sin(time * 0.5 + d.ph) * MIN * 0.4;
     const dx = tx - d.x, dy = ty - d.y, dl = Math.hypot(dx, dy) || 1;
@@ -4234,7 +4364,7 @@ function update(dt, rdt) {
       sfx.eshot();
     }
     if (r < rh) { swallow(d, 0.03); drones.splice(i, 1); mpGone(d); continue; }
-    if (ship && ship.inv <= 0 && dist2(d, ship) < (d.R + 9 * U) ** 2) { hurt(); killDrone(i, false); continue; }
+    if (ship && ship.inv <= 0 && dist2(d, ship) < (d.R + 9 * U) ** 2) { hurt(); if (!d.mini) { killDrone(i, false); continue; } if (ship) { const a = Math.atan2(ship.y - d.y, ship.x - d.x); ship.vx = Math.cos(a) * 420 * U; ship.vy = Math.sin(a) * 420 * U; } }
     if (Math.random() < 0.5) part(d.x - Math.cos(d.ang) * 10 * U, d.y - Math.sin(d.ang) * 10 * U, -Math.cos(d.ang) * 80 * U, -Math.sin(d.ang) * 80 * U, 0.25, dCol(d), 1.8 * Math.max(1, U), 0.2, 0.95);
   }
 
@@ -4989,7 +5119,7 @@ function drawHUDi(W, H) {
   ctx.fillText('◆ ' + fmt(save.dust), 0, 0);
   ctx.restore();
   // lives & power-up timers
-  const ly = touch ? 96 : H - 22, by = touch ? 128 : H - 58;
+  const ly = touch ? 96 : H - 22, by = touch ? (gmode === 'world' && ow ? upBox(W, H, true)[1] + upBox(W, H, true)[3] + 24 : 128) : H - 58;
   if (gmode !== 'world') for (let i = 0; i < lives; i++) miniShip(28 + i * 20, ly, 0.85);
   else if (mp) { ctx.font = `600 11px ${FONT}`; ctx.fillStyle = 'rgba(233,238,247,0.62)'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; spaced('ROOM ' + mp.code + '  ·  ' + (1 + Object.keys(mp.peers).length) + '/' + MPMAX + ' PILOTS' + (mp.host ? '  ·  HOST' : ''), 20, touch ? 96 : 88, 1.6, 'left'); }
   if (gmode === 'world' && ow) drawMinimap(W, H);
@@ -4997,7 +5127,7 @@ function drawHUDi(W, H) {
   if (pw.shield > 0) { badge(bx, by, 14, 'shieldpk', PICK.shield.c, 1, pw.shield > 1 ? '×' + pw.shield : '', false); bx += 38; }
   else if (S.shieldRe && ship) { ctx.save(); ctx.globalAlpha *= 0.55; badge(bx, by, 14, 'shieldpk', PICK.shield.c, shieldReT / S.shieldRe, '', false); ctx.restore(); bx += 38; }
   const timers = [['multi', PICK.multi.c, pw.multi, S.multiDur], ['rapid', PICK.rapid.c, pw.rapid, S.rapidDur], ['seekpk', PICK.seek.c, pw.seek, S.seekDur], ['u_drones', PICK.sats.c, pw.sats, S.satsDur], ['u_beam', PICK.beam.c, pw.beam, S.beamDur], ['u_time', PICK.slow.c, pw.slow, S.slowDur], ['deflpk', PICK.defl.c, pw.defl, S.deflDur], ['barrpk', PICK.barr.c, pw.barr, S.barrDur], ['wellpk', PICK.well.c, pw.well, S.wellDur]];
-  if (gmode === 'world' && ow) { let ry = by; const [mx0, my0, msz] = mmLayout(touch, W, H), inRow = !touch && my0 < by + 20 && my0 + msz > by - 20; if (inRow && mx0 < 200) bx = Math.max(bx, mx0 + msz + 34); const lim = touch ? W - 40 : inRow && mx0 >= 200 ? mx0 - 30 : W * 0.55; for (const k in ow.ab) { if (bx > lim) { bx = 34; ry += touch ? 38 : -38; } badge(bx, ry, 14, OWA[k].ic, '200,150,255', 1, ow.ab[k] > 1 ? String(ow.ab[k]) : '', false); bx += 38; } }
+  if (gmode === 'world' && ow) drawUpPanel(W, H, touch);
   else for (const [ic, c, t, mxT] of timers) if (t > 0) { badge(bx, by, 14, ic, c, t / mxT, '', t < 2.5); bx += 38; }
   // desktop: dash + bomb
   if (!touch && ship) {
@@ -5123,7 +5253,7 @@ function draw() {
   if (tut && tut.bc) drawBeacon(tut.bc);
   if (pw.well > 0) drawWell();
   for (const a of asts) drawAst(a);
-  for (const d of drones) drawDrone(d);
+  for (const d of drones) { if (d.mini) drawMini(d); else drawDrone(d); }
   if (boss) drawBoss(boss);
   ctx.globalCompositeOperation = 'lighter';
   const ds = Math.max(3, 4 * U);
@@ -5195,6 +5325,7 @@ function draw() {
   if (mp && gmode === 'world') mpDraw();
   if (ship && gmode === 'world' && ow && ow.safe > 0) drawAura(ship.x, ship.y, Math.min(1, ow.safe / 0.6), '200,150,255');
   if (ship) drawShip();
+  if (ship && gmode === 'world' && ship.php != null && ship.php < PVPHP) { const w = 34 * U; ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(ship.x - w / 2, ship.y + 22 * U, w, 3.5 * U); ctx.fillStyle = 'rgb(255,110,110)'; ctx.fillRect(ship.x - w / 2, ship.y + 22 * U, w * clamp(ship.php / PVPHP, 0, 1), 3.5 * U); }
   for (const t of texts) {
     const age = t.max - t.life, a = Math.min(1, t.life * 2.5), s = 0.7 + 0.3 * easeOut(clamp(age / 0.15, 0, 1));
     ctx.save(); ctx.globalAlpha = a; ctx.translate(t.x, t.y - 26 * easeOut(clamp(age / t.max, 0, 1))); ctx.scale(s, s);
@@ -5225,9 +5356,9 @@ function drawIndicators() {
   if (mp && gmode === 'world') for (const k in mp.peers) { const P = mp.peers[k]; if (P.alive) list.push([P, P.col, 9]); }
   for (const p of pickups) list.push([p, PICK[p.type].c, 5]);
   if (tut && tut.bc) list.push([tut.bc, '200,150,255', 7]);
-  if (gmode === 'world') { for (const o of owOrbs) if (!ow.taken[o.ck] && Math.hypot(o.x - camX, o.y - camY) < 2600 * U) list.push([o, '200,150,255', 8]); }
+  if (gmode === 'world') { for (const o of owOrbs.concat(ow.drops)) { if (ow.taken[o.ck]) continue; if (o.t === 'a' && Math.hypot(o.x - camX, o.y - camY) < 2600 * U) list.push([o, OTYPE.a.ring, 8]); } for (const d of drones) if (d.mini && Math.hypot(d.x - camX, d.y - camY) < 3200 * U) list.push([d, '255,90,90', 10]); }
   else list.push([{ x: CX, y: CY, bh: true }, TH.ring, 7]);
-  const m = 26, l = SAL + m, r_ = W - SAR - m, t = SAT + m + 70, b = H - SAB - m - (isTouch() ? 0 : 40);
+  const m = 26, l = SAL + m + (gmode === 'world' && ow && !isTouch() ? upBox(W, H, false)[2] + 20 : 0), r_ = W - SAR - m, t = SAT + m + 70, b = H - SAB - m - (isTouch() ? 0 : 40);
   ctx.save(); ctx.globalAlpha = hudA;
   for (const [o, col, sz] of list) {
     const sx = o.x - camX + W / 2, sy = o.y - camY + H / 2;
