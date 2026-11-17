@@ -626,7 +626,7 @@ body.paused .tbtn{display:none!important}
 <script>
 'use strict';
 // Versioning: next version -> next whole number (4.00), sub version -> +0.01 (3.01)
-const VERSION = '4.20';
+const VERSION = '4.21';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -3181,6 +3181,9 @@ const BASICS = [
 ];
 const OTYPE = { a: { c: '170,110,255', c2: '255,220,255', r: 14, ring: '200,150,255' }, b: { c: '60,170,255', c2: '220,245,255', r: 10, ring: '120,210,255' }, d: { c: '40,220,160', c2: '220,255,240', r: 10, ring: '143,255,214' } };
 const PVPHP = 10;
+const PWR_B = { dmg: 12, rate: 10, bspeed: 5, speed: 6, pierce: 9, magnet: 3, dash: 4 };
+const PWR_A = { multi: 25, seek: 15, missile: 18, sats: 20, defl: 15, nova: 18, beam: 20, well: 14, shield: 16, slow: 14 };
+function owPower(bs, ab) { let p = 0; for (const k in bs || {}) p += (PWR_B[k] || 0) * bs[k]; for (const k in ab || {}) p += (PWR_A[k] || 0) * ab[k]; return p; }
 let ow = null, owChoosing = false, owGen = false;
 const owHoles = [], owOrbs = [];
 function hash2(x, y, s) { let h = (Math.imul(x | 0, 374761393) + Math.imul(y | 0, 668265263) + Math.imul(s | 0, 1442695041)) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; }
@@ -3619,7 +3622,9 @@ function drawUpPanel(W, H, touch, c = ctx, box = null, bs = ow ? ow.bs : {}, ab 
   const label = (t, y) => { c.font = `700 ${Math.round(9 * sc)}px ${FONT}`; c.fillStyle = 'rgba(233,238,247,0.55)'; c.textAlign = 'left'; c.textBaseline = 'middle'; let x = x0 + pad; for (const ch of t) { c.fillText(ch, x, y); x += c.measureText(ch).width + 1.6 * sc; } };
   c.save();
   rrC(x0, y0, w, h, 12 * sc); c.fillStyle = 'rgba(4,6,14,0.5)'; c.fill(); c.strokeStyle = 'rgba(255,255,255,0.08)'; c.lineWidth = 1; c.stroke();
-  let y = y0 + pad + 5 * sc; label('UPGRADES', y); y += 10 * sc;
+  let y = y0 + pad + 5 * sc; label('UPGRADES', y);
+  c.font = `700 ${Math.round(10 * sc)}px ${FONT}`; c.textAlign = 'right'; c.fillStyle = 'rgb(255,210,110)'; c.fillText('⚡' + owPower(bs, ab), x0 + w - pad, y); c.textAlign = 'left';
+  y += 10 * sc;
   const segW = 7.5 * sc, segG = 2 * sc;
   for (const b of BASICS) {
     const lv = bs[b.k] || 0, cy = y + 8 * sc;
@@ -3639,7 +3644,7 @@ function drawUpPanel(W, H, touch, c = ctx, box = null, bs = ow ? ow.bs : {}, ab 
 }
 // multiplayer scoreboard, top right under the stardust counter
 const SB_MIN = 0.6, SB_MAX = 1.6;
-const sbDims = (sc, n) => [184 * sc, (22 + n * 19) * sc];
+const sbDims = (sc, n) => [224 * sc, (22 + n * 19) * sc];
 // top-left anchored so it grows downward as pilots join
 function sbBox(W, H, touch, n) {
   const L = touch ? save.sbT : save.sbD, sc = L && L.s ? clamp(L.s, SB_MIN, SB_MAX) : (touch ? 0.82 : 1), [w, h] = sbDims(sc, n);
@@ -3653,8 +3658,8 @@ function sbBox(W, H, touch, n) {
 }
 function drawScoreboard(W, H, touch, c = ctx, box = null, rows = null) {
   if (!rows) {
-    rows = [{ n: cloudUser || 'You', k: score, col: '255,255,255', me: true }];
-    for (const id in mp.peers) { const P = mp.peers[id]; rows.push({ n: P.n, k: P.k || 0, col: P.col, dead: !P.alive || P.away, tag: P.away ? 'away' : P.out ? 'out' : '' }); }
+    rows = [{ n: cloudUser || 'You', k: score, pw: ow ? owPower(ow.bs, ow.ab) : 0, col: '255,255,255', me: true }];
+    for (const id in mp.peers) { const P = mp.peers[id]; rows.push({ n: P.n, k: P.k || 0, pw: P.pw || 0, col: P.col, dead: !P.alive || P.away, tag: P.away ? 'away' : P.out ? 'out' : '' }); }
     if (ow && ow.out) rows[0].tag = 'out';
     rows.sort((a, b) => b.k - a.k);
   }
@@ -3663,22 +3668,23 @@ function drawScoreboard(W, H, touch, c = ctx, box = null, rows = null) {
   const R = 10 * sc; c.beginPath(); c.moveTo(x0 + R, y0); c.arcTo(x1, y0, x1, y0 + h, R); c.arcTo(x1, y0 + h, x0, y0 + h, R); c.arcTo(x0, y0 + h, x0, y0, R); c.arcTo(x0, y0, x1, y0, R); c.closePath();
   c.fillStyle = 'rgba(4,6,14,0.45)'; c.fill(); c.strokeStyle = 'rgba(255,255,255,0.08)'; c.lineWidth = 1; c.stroke();
   c.font = `700 ${9 * sc}px ${FONT}`; c.fillStyle = 'rgba(233,238,247,0.55)'; c.textAlign = 'left'; c.textBaseline = 'middle';
-  { let x = x0 + 10 * sc; for (const ch of 'SCOREBOARD') { c.fillText(ch, x, y0 + 12 * sc); x += c.measureText(ch).width + 1.6 * sc; } }
+  { let x = x0 + 10 * sc; for (const ch of 'SCOREBOARD') { c.fillText(ch, x, y0 + 12 * sc); x += c.measureText(ch).width + 1.6 * sc; } c.textAlign = 'right'; c.fillText('POWER', x1 - 62 * sc, y0 + 12 * sc); c.fillText('SCORE', x1 - 10 * sc, y0 + 12 * sc); c.textAlign = 'left'; }
   rows.forEach((r, i) => {
     const y = y0 + 22 * sc + i * rh_ + rh_ / 2 - 2 * sc;
     c.globalAlpha = r.dead ? 0.5 : 1;
     c.font = `700 ${fs}px ${FONT}`; c.textAlign = 'left'; c.fillStyle = 'rgba(233,238,247,0.5)'; c.fillText(String(i + 1), x0 + 10 * sc, y);
     c.fillStyle = `rgb(${r.col})`; c.font = `${r.me ? 700 : 600} ${fs}px ${FONT}`;
-    let nm = r.n; const tw = r.tag ? 34 * sc : 0; while (nm.length > 3 && c.measureText(nm).width > w - 90 * sc - tw) nm = nm.slice(0, -2) + '…';
+    let nm = r.n; const tw = r.tag ? 34 * sc : 0; while (nm.length > 3 && c.measureText(nm).width > w - 130 * sc - tw) nm = nm.slice(0, -2) + '…';
     c.fillText(nm, x0 + 24 * sc, y);
     if (r.tag) { const nw = c.measureText(nm).width; c.font = `700 ${8 * sc}px ${FONT}`; c.fillStyle = r.tag === 'out' ? 'rgba(255,140,140,0.9)' : 'rgba(233,238,247,0.55)'; c.fillText(r.tag.toUpperCase(), x0 + 30 * sc + nw, y + 0.5 * sc); c.font = `${r.me ? 700 : 600} ${fs}px ${FONT}`; }
-    c.textAlign = 'right'; c.fillStyle = r.me ? '#fff' : 'rgba(233,238,247,0.85)'; c.fillText(fmt(r.k), x1 - 10 * sc, y);
+    c.textAlign = 'right'; c.fillStyle = 'rgb(255,210,110)'; c.font = `700 ${fs}px ${FONT}`; c.fillText('⚡' + fmt(r.pw || 0), x1 - 62 * sc, y);
+    c.fillStyle = r.me ? '#fff' : 'rgba(233,238,247,0.85)'; c.font = `${r.me ? 700 : 600} ${fs}px ${FONT}`; c.fillText(fmt(r.k), x1 - 10 * sc, y);
   });
   c.restore();
 }
 // ---- HUD layout editor (Settings): move and resize the minimap and the upgrade panel ----
 let mmE = null;
-const ED_ROWS = [{ n: 'bob', k: 4200, col: '255,170,90' }, { n: 'You', k: 1800, col: '255,255,255', me: true }, { n: 'carol', k: 950, col: '143,255,214' }];
+const ED_ROWS = [{ n: 'bob', k: 4200, pw: 214, col: '255,170,90' }, { n: 'You', k: 1800, pw: 146, col: '255,255,255', me: true }, { n: 'carol', k: 950, pw: 58, col: '143,255,214' }];
 const ED_DEMO_BS = { dmg: 3, rate: 5, bspeed: 1, speed: 2, pierce: 1, magnet: 0, dash: 2 }, ED_DEMO_AB = { multi: 2, seek: 1, nova: 1, shield: 2 };
 function openMMEd() {
   const touch = isTouch(), w = innerWidth, h = innerHeight, [x0, y0, sz] = mmLayout(touch, w, h), [px, py, pw_, ph, psc] = upBox(w, h, touch);
@@ -3789,7 +3795,7 @@ $('mmCv').addEventListener('pointermove', e => {
   if (!mmE.drag) { const hit = edHit(e.clientX, e.clientY); $('mmCv').style.cursor = !hit ? 'default' : hit[1] === 'size' ? 'nwse-resize' : 'grab'; return; }
   const D = mmE.drag;
   if (D.m === 'move') { if (D.k === 'mm') { mmE.x = e.clientX + D.ox; mmE.y = e.clientY + D.oy; } else if (D.k === 'up') { mmE.px = e.clientX + D.ox; mmE.py = e.clientY + D.oy; } else { mmE.sx = e.clientX + D.ox; mmE.sy = e.clientY + D.oy; } }
-  else if (D.k === 'sb') { mmE.ss = clamp((e.clientX - D.ax) / 184, SB_MIN, SB_MAX); $('mmSz').value = Math.round(mmE.ss * 100); }
+  else if (D.k === 'sb') { mmE.ss = clamp((e.clientX - D.ax) / 224, SB_MIN, SB_MAX); $('mmSz').value = Math.round(mmE.ss * 100); }
   else if (D.k === 'mm') { mmE.s = clamp(Math.round(Math.hypot(e.clientX - mmE.x, e.clientY - mmE.y) * 2 / 1.06), MM_MIN, MM_MAX); $('mmSz').value = mmE.s; }
   else { mmE.ps = clamp((e.clientX - D.ax) / 140, UP_MIN, UP_MAX); const [w, h] = upDims(mmE.ps); mmE.px = D.ax + w / 2; mmE.py = D.ay + h / 2; $('mmSz').value = Math.round(mmE.ps * 100); }
   mmClampE(); mmPanel();
@@ -3911,7 +3917,7 @@ function mpOn(ev, p) {
   if (ev !== 'p' || !p || typeof p.i !== 'string' || p.i === mp.id) return;
   const now = performance.now(), P = mpPeer(p.i), fresh = P.isNew; P.isNew = false;
   if (p.ev && p.ev.some(e => e && e[0] === 'bye')) { if (!fresh) mpDrop(p.i, true); else delete mp.peers[p.i]; return; }
-  P.n = String(p.n || 'Pilot').slice(0, 20); P.j = +p.j || 0; P.sd = p.sd; P.pub = p.pub; P.last = now; P.k = +p.k || 0; P.away = false; P.out = !!p.o;
+  P.n = String(p.n || 'Pilot').slice(0, 20); P.j = +p.j || 0; P.sd = p.sd; P.pub = p.pub; P.last = now; P.k = +p.k || 0; P.away = false; P.out = !!p.o; P.pw = +p.pw || 0;
   P.sk = SKINS.find(x => x.id === p.sk) || SKINS[0]; P.bs = BSKINS.find(x => x.id === p.bs) || BSKINS[0];
   const s = Array.isArray(p.s) ? p.s : null;
   if (s) { P.sx = s[0] * U; P.sy = s[1] * U; P.svx = s[2] * U; P.svy = s[3] * U; P.sa = +s[4] || 0; P.safe = !!s[5]; P.php = s[6] == null ? PVPHP : +s[6]; P.rt = now; }
@@ -3977,7 +3983,7 @@ function mpSend() {
   const R = Math.round;
   for (const nid in mp.hits) mp.ev.push(['h', +nid, R(mp.hits[nid] * 100) / 100, 1]);
   mp.hits = {};
-  const pk = { i: mp.id, n: cloudUser, j: mp.j, sd: mp.seed, pub: mp.pub ? 1 : 0, sk: save.skin, bs: save.bskin, k: score, o: ow && ow.out ? 1 : 0,
+  const pk = { i: mp.id, n: cloudUser, j: mp.j, sd: mp.seed, pub: mp.pub ? 1 : 0, sk: save.skin, bs: save.bskin, k: score, o: ow && ow.out ? 1 : 0, pw: ow ? owPower(ow.bs, ow.ab) : 0,
     s: ship ? [R(ship.x / U), R(ship.y / U), R(ship.vx / U), R(ship.vy / U), R(ship.ang * 100) / 100, (ow && ow.safe > 0) || ship.inv > 0 ? 1 : 0, R(ship.php == null ? PVPHP : ship.php)] : null };
   if (mp.shots.length) { pk.b = mp.shots; mp.shots = []; }
   if (mp.ev.length) { pk.ev = mp.ev; mp.ev = []; }
