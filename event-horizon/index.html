@@ -147,6 +147,23 @@ svg{stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-l
 .pvi{display:flex;flex-direction:column;gap:10px;text-align:left}
 .slist,.sprev{text-align:left}
 .orbc .row2{margin-top:auto}
+#tutAsk{background:rgba(2,4,12,.9);z-index:20}
+.tpanel{width:min(420px,90vw);display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;padding:26px 22px 20px;border-radius:20px;background:linear-gradient(180deg,#1a1430,#0b0d1a);border:1px solid rgba(200,150,255,.4);box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.tico{width:54px;height:54px;border-radius:16px;display:grid;place-items:center;background:rgba(200,150,255,.14);border:1px solid rgba(200,150,255,.45);color:rgb(200,150,255)}
+.tico svg{width:28px;height:28px}
+.tbtns{display:flex;gap:10px;justify-content:center;width:100%;margin-top:4px}
+.tbtns .play{flex:1;padding-left:12px;padding-right:12px}.tbtns .play .pm{letter-spacing:.16em;white-space:nowrap;font-size:clamp(13px,3.8vw,18px)}
+#tutBox{position:fixed;left:0;right:0;margin:0 auto;top:calc(env(safe-area-inset-top) + 74px);width:min(440px,88vw);box-sizing:border-box;padding:12px 16px 12px;border-radius:16px;background:rgba(8,10,22,.78);border:1px solid rgba(200,150,255,.4);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);z-index:6;pointer-events:none;text-align:center;animation:up .4s cubic-bezier(.2,.8,.2,1) both}
+#tutBox .tk{font-size:10px;font-weight:700;letter-spacing:.22em;color:rgb(200,150,255)}
+#tutBox .tt{font-size:17px;font-weight:600;color:#fff;margin-top:4px}
+#tutBox .td{font-size:13px;line-height:1.45;color:var(--dim);margin-top:3px}
+#tutBox .tbar{height:4px;border-radius:2px;background:rgba(255,255,255,.1);margin-top:10px;overflow:hidden}
+#tutBox .tbar i{display:block;height:100%;width:0;background:rgb(200,150,255);border-radius:2px;transition:width .25s}
+#tutBox.ok{border-color:rgba(143,255,214,.6)}#tutBox.ok .tbar i{background:var(--mint)}
+#tutSkip{pointer-events:auto;margin-top:9px;padding:5px 12px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:var(--dim);font:600 10px var(--f);letter-spacing:.16em;text-transform:uppercase;cursor:pointer}
+body.touch #tutBox{top:calc(env(safe-area-inset-top) + 118px)}
+body.paused #tutBox{display:none}
+@media (max-height:500px){#tutBox{top:calc(env(safe-area-inset-top) + 8px);width:min(400px,52vw);padding:8px 12px}#tutBox .td{font-size:12px}#tutBox .tt{font-size:15px}body.touch #tutBox{top:calc(env(safe-area-inset-top) + 60px)}}
 .logb{width:min(420px,92vw);display:flex;flex-direction:column;gap:10px;text-align:center}
 .logb .accrow .fld{font-size:16px;padding:12px 14px}.logb .accrow .buy{padding:0 22px;font-size:14px;letter-spacing:.14em;text-transform:uppercase}
 .logb .pmsg{min-height:18px}
@@ -262,6 +279,18 @@ body.paused .tbtn{display:none!important}
   <div class="ver" id="lgVer"></div>
 </div>
 
+<div id="tutAsk" class="ov hidden">
+  <div class="tpanel a1">
+    <div class="tico"><i data-ic="map"></i></div>
+    <div class="h3" style="font-size:24px">NEW PILOT?</div>
+    <div class="sub">Take a quick 2-minute tutorial to learn how to fly, shoot and survive. You get ◆ 100 stardust for finishing it.</div>
+    <div class="tbtns"><button class="sec" id="taSkip">Skip</button><button class="play sm" id="taGo"><span class="pm">START TUTORIAL</span></button></div>
+    <div class="cd" style="font-size:12px">You can replay it any time from Settings.</div>
+  </div>
+</div>
+
+<div id="tutBox" class="hidden"><div class="tk" id="tutK"></div><div class="tt" id="tutT"></div><div class="td" id="tutD"></div><div class="tbar"><i id="tutP"></i></div><button id="tutSkip">Skip tutorial</button></div>
+
 <div id="crate" class="ov hidden">
   <div class="kick" id="crK">VOID ORB</div>
   <canvas id="crCv"></canvas>
@@ -278,6 +307,8 @@ body.paused .tbtn{display:none!important}
       <div class="opts" data-set="snd"><button data-v="on">On</button><button data-v="off">Off</button></div></div>
     <div class="card" style="--c:255,176,112"><div class="ct"><div class="ico"><i data-ic="shake"></i></div><div class="cn">Screen shake<div class="cd">Camera shake on explosions and hits.</div></div></div>
       <div class="opts" data-set="shake"><button data-v="on">On</button><button data-v="off">Off</button></div></div>
+    <div class="card" style="--c:200,150,255"><div class="ct"><div class="ico"><i data-ic="map"></i></div><div class="cn">Tutorial<div class="cd">Learn the controls step by step.</div></div></div>
+      <button class="buy ctr" id="sTut">Play tutorial</button></div>
   </div></div>
   <div class="ft a3"><button class="play sm" id="sBack"><span class="pm">DONE</span></button></div>
 </div>
@@ -342,7 +373,7 @@ body.paused .tbtn{display:none!important}
 <script>
 'use strict';
 // Versioning (renumbered by request): next version -> next whole number (3.00), sub version -> +0.01 (2.01)
-const VERSION = '2.06';
+const VERSION = '2.07';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -1110,8 +1141,10 @@ const TIPS = {
   ring: ['Fight inside the dashed ring', 'Closer to the black hole = up to ×5 points'],
   dust: ['Grab ◆ stardust before the black hole eats it', 'Spend it on upgrades in the Shop'],
 };
+let tut = null;
 function startRun(sec) {
   if (!cloudUser) { goMenu(); return; }
+  tut = null; $('tutBox').classList.add('hidden');
   calcStats();
   score = 0; dispScore = 0; lives = S.lives; bombs = S.bombs; maxMult = 1; swallowed = 0; kills = 0; runDust = 0; sectorsCleared = 0;
   pw = freshPw(); mult = 1; lastMultInt = 1; bestFlag = false; newBestT = 0; runBest = save.best;
@@ -1134,6 +1167,7 @@ function startSector() {
   if (S.shieldGen) pw.shield = Math.max(pw.shield, 1);
   mode = 'play'; timeScale = 1; slowT = 0; paused = false; gameStart = time;
   ann = null; annQ = [];
+  if (tut) { waveTimer = 1e9; announce('Tutorial', { big: true, kick: 'Training', sub: 'Learn the basics', col: '200,150,255', dur: 2.4 }); tut.wait = 2.2; return; }
   announce(TH.name, { big: true, kick: TH.deep ? 'Endless' : 'Sector ' + sector, sub: TH.twist, col: TH.danger, dur: 3.1 });
   waveTimer = 3.2;
 }
@@ -1227,6 +1261,7 @@ function hurt() {
 }
 function killShip() {
   if (!ship) return;
+  if (tut) lives++;
   burst(ship.x, ship.y, 90, '120,240,255', 320, 1.6, 2.6);
   burst(ship.x, ship.y, 60, '255,255,255', 200, 1.0, 2);
   ring(ship.x, ship.y, 220, '120,240,255', 0.9, 5);
@@ -1257,7 +1292,8 @@ function breakAst(j, scored) {
       asts.push(mkAst(a.x, a.y, a.vx + Math.cos(ang) * sp, a.vy + Math.sin(ang) * sp, a.size - 1));
     }
   }
-  if (scored && Math.random() < 0.06 * S.luck) dropPickup(a.x, a.y);
+  if (scored && Math.random() < 0.06 * S.luck && !tut) dropPickup(a.x, a.y);
+  if (scored) tutEv('rock');
 }
 function killDrone(i, scored) {
   const d = drones[i]; drones.splice(i, 1); d.dead = true;
@@ -1267,7 +1303,8 @@ function killDrone(i, scored) {
   burst(d.x, d.y, 20, '255,220,180', 120, 0.6, 2);
   ring(d.x, d.y, 70, K.c, 0.45, 3);
   sfx.boom(0.8); shake = Math.min(25, shake + 6);
-  if (scored && Math.random() < K.pk * S.luck) dropPickup(d.x, d.y);
+  if (scored && Math.random() < K.pk * S.luck && !tut) dropPickup(d.x, d.y);
+  if (scored) tutEv('drone');
 }
 function killBoss() {
   const b = boss; boss = null; b.dead = true;
@@ -1285,7 +1322,7 @@ function killBoss() {
 }
 function doBomb(free) {
   if (!ship) return;
-  if (!free) { if (bombs <= 0) return; bombs--; }
+  if (!free) { if (bombs <= 0) return; bombs--; tutEv('bomb'); }
   bwId++; buzz(70);
   bw = { x: ship.x, y: ship.y, r: 0, max: 560 * U, id: bwId };
   flash = 0.5; flashCol = free ? '255,170,80' : '200,120,255'; shake = 14; sfx.bomb();
@@ -1320,14 +1357,15 @@ function goMenu() {
   beamSound(false); follow = false; camX = CX; camY = CY;
   applyTheme(save.sel); bhMass = TH.mods.mass || 1;
   asts = []; for (let i = 0; i < 8; i++) spawnOrbital(1 + (i % 3));
-  refreshMenu();
+  refreshMenu(); tut = null; $('tutBox').classList.add('hidden');
   if (!cloudUser) { showLogin(); return; }
   show('menu');
+  if (!save.tutAsked && !save.tutDone && !save.best && save.unlocked <= 1) { save.tutAsked = true; persist(); show('tutAsk'); }
   if (cloudDirty) cloudPush();
 }
 
 // ================= UI: overlays =================
-const OVS = ['login', 'menu', 'over', 'pause', 'cleared', 'hangar', 'roadmap', 'profile', 'settings', 'crate'];
+const OVS = ['login', 'tutAsk', 'menu', 'over', 'pause', 'cleared', 'hangar', 'roadmap', 'profile', 'settings', 'crate'];
 function hideAll() { for (const id of OVS) $(id).classList.add('hidden'); }
 function show(id) { $(id).classList.remove('hidden'); }
 const playLabel = n => (n > 8 ? 'Endless' : 'Sector ' + n) + ' · ' + themeFor(n).name;
@@ -2171,6 +2209,107 @@ $('lgU').addEventListener('keydown', e => { if (e.key === 'Enter') $('lgGo').cli
 $('lgCloud').onclick = () => { if (!lgPending) return; const { u, d } = lgPending; lgPending = null; setUser(u); applyCloud(d); setCloud('ok'); sfx.buy(); lgDone('Welcome back, ' + (save.name || u) + '!'); };
 $('lgLocal').onclick = async () => { if (!lgPending) return; const { u } = lgPending; lgPending = null; setUser(u); if (!save.name) save.name = u; lastPacked = ''; persist(); await cloudPush(); sfx.ui(); lgDone('This device\'s progress is now saved to ' + (save.name || u) + '.'); };
 
+// ================= TUTORIAL =================
+const TSTEPS = [
+  { k: 'move', t: 'Fly to the markers', d: ['Move with W A S D.', 'Drag your left thumb to fly.'], n: 3 },
+  { k: 'grav', t: 'Mind the black hole', d: ['It pulls everything in. Fly into it and your ship is gone. Stay clear of the glowing ring.', 'It pulls everything in. Fly into it and your ship is gone. Stay clear of the glowing ring.'], n: 5, timer: true },
+  { k: 'rock', t: 'Shoot the asteroids', d: ['Aim with the mouse and hold click to fire.', 'Drag your right thumb to aim and fire. Hold it still to auto-aim.'], n: 4 },
+  { k: 'dust', t: 'Collect stardust', d: ['Wrecks drop ◆ stardust. Fly over it to grab it - you spend it in the Shop.', 'Wrecks drop ◆ stardust. Fly over it to grab it - you spend it in the Shop.'], n: 8 },
+  { k: 'dash', t: 'Dash', d: ['Press Shift to dash. You cannot be hit while dashing.', 'Tap the dash button. You cannot be hit while dashing.'], n: 3 },
+  { k: 'pick', t: 'Grab the power-up', d: ['Power-ups give short boosts like spread shot or a shield.', 'Power-ups give short boosts like spread shot or a shield.'], n: 1 },
+  { k: 'drone', t: 'Destroy the drones', d: ['Enemy drones shoot back. Keep moving and take them out.', 'Enemy drones shoot back. Keep moving and take them out.'], n: 2 },
+  { k: 'bomb', t: 'Gravity bomb', d: ['Surrounded? Press E to blast everything nearby.', 'Surrounded? Tap the bomb button to blast everything nearby.'], n: 1 },
+];
+function startTutorial() {
+  if (!cloudUser) { goMenu(); return; }
+  calcStats();
+  score = 0; dispScore = 0; lives = S.lives; bombs = S.bombs; maxMult = 1; swallowed = 0; kills = 0; runDust = 0; sectorsCleared = 0;
+  pw = freshPw(); mult = 1; lastMultInt = 1; bestFlag = false; newBestT = 0; runBest = save.best;
+  follow = save.cam !== 'fixed';
+  tut = { i: -1, c: 0, wait: 0, bc: null, doneT: 0, timer: 0 };
+  warpTo(1);
+}
+function tutEv(k) { if (!tut || tut.i < 0 || tut.doneT) return; const st = TSTEPS[tut.i]; if (st && st.k === k && !st.timer) { tut.c++; tutUI(); } }
+function tutNear(dist) {
+  const a0 = ship ? Math.atan2(ship.y - CY, ship.x - CX) : rand(0, TAU);
+  for (let t = 0; t < 30; t++) {
+    const a = a0 + rand(-1.4, 1.4), r = clamp(Math.hypot((ship ? ship.x : CX) - CX, (ship ? ship.y : CY) - CY) + rand(-60, 60) * U, rh * 6, follow ? WR * 0.7 : MIN * 0.45);
+    const x = CX + Math.cos(a) * r, y = CY + Math.sin(a) * r;
+    if (!ship || Math.hypot(x - ship.x, y - ship.y) > dist * 0.6) return { x, y, a, r };
+  }
+  return { x: CX + MIN * 0.3, y: CY, a: 0, r: MIN * 0.3 };
+}
+function tutRock(size) { const p = tutNear(200 * U), v = Math.sqrt(GMv / p.r) * 0.9; asts.push(mkAst(p.x, p.y, -Math.sin(p.a) * v, Math.cos(p.a) * v, size)); }
+function tutBeacon() {
+  const ang = rand(0, TAU), r = (follow ? rand(0.32, 0.55) * WR : rand(0.25, 0.4) * MIN);
+  tut.bc = { x: CX + Math.cos(ang) * r, y: CY + Math.sin(ang) * r, t: 0 };
+  if (ship && Math.hypot(tut.bc.x - ship.x, tut.bc.y - ship.y) < 150 * U) { tut.bc.x = CX - (tut.bc.x - CX); tut.bc.y = CY - (tut.bc.y - CY); }
+}
+function tutSetup() {
+  const k = TSTEPS[tut.i].k;
+  if (k === 'move') tutBeacon();
+  if (k === 'rock') { for (let i = 0; i < 4; i++) tutRock(1); }
+  if (k === 'dust') { const p = tutNear(160 * U); dropDust(p.x, p.y, 12); }
+  if (k === 'pick') { const p = tutNear(200 * U); pickups.push({ x: p.x, y: p.y, vx: 0, vy: 0, type: 'multi', life: 999, rot: 0, age: 0 }); }
+  if (k === 'drone') for (let i = 0; i < 2; i++) queue.push({ t: 0.4 + i * 0.8, f: () => { const d = mkDrone('drone'); d.hp = 2; drones.push(d); ring(clamp(d.x, 0, W), clamp(d.y, 0, H), 50, DK.drone.c, 0.6, 2); } });
+  if (k === 'bomb') { bombs = Math.max(bombs, 1); if (ship) for (let i = 0; i < 7; i++) { const a = i / 7 * TAU, x = ship.x + Math.cos(a) * 120 * U, y = ship.y + Math.sin(a) * 120 * U; asts.push(mkAst(x, y, ship.vx * 0.8, ship.vy * 0.8, 1)); } }
+}
+function tutUI() {
+  const box = $('tutBox');
+  if (!tut || tut.i < 0) { box.classList.add('hidden'); return; }
+  box.classList.remove('hidden');
+  if (tut.doneT) { box.classList.add('ok'); $('tutK').textContent = 'TUTORIAL COMPLETE'; $('tutT').textContent = 'You are ready, pilot!'; $('tutD').textContent = tut.reward ? '+◆ 100 stardust added. Good luck out there.' : 'Good luck out there.'; $('tutP').style.width = '100%'; $('tutSkip').style.display = 'none'; return; }
+  const st = TSTEPS[tut.i], done = tut.c >= st.n;
+  box.classList.toggle('ok', done);
+  $('tutK').textContent = `TUTORIAL · ${tut.i + 1} / ${TSTEPS.length}`;
+  $('tutT').textContent = done ? 'Nice!' : st.t;
+  $('tutD').textContent = st.d[isTouch() ? 1 : 0] + (st.n > 1 && !st.timer ? `  (${Math.min(tut.c, st.n)}/${st.n})` : '');
+  $('tutP').style.width = Math.min(100, (st.timer ? tut.timer / st.n : tut.c / st.n) * 100) + '%';
+  $('tutSkip').style.display = '';
+}
+function tutUpdate(dt) {
+  if (!tut) return;
+  if (tut.doneT) { tut.doneT -= dt; if (tut.doneT <= 0) goMenu(); return; }
+  if (tut.wait > 0) { tut.wait -= dt; if (tut.wait <= 0) { if (tut.i < 0 || tut.c >= TSTEPS[tut.i].n) { tut.i++; tut.c = 0; tut.timer = 0; if (tut.i >= TSTEPS.length) return tutFinish(); tutSetup(); sfx.wave(); } tutUI(); } return; }
+  if (!ship) return;
+  const st = TSTEPS[tut.i];
+  if (st.k === 'move' && tut.bc) {
+    tut.bc.t += dt;
+    if (Math.hypot(ship.x - tut.bc.x, ship.y - tut.bc.y) < 42 * U) {
+      ring(tut.bc.x, tut.bc.y, 70, '200,150,255', 0.5, 3); sfx.pick(); tut.c++; tut.bc = null;
+      if (tut.c < st.n) tutBeacon();
+      tutUI();
+    }
+  }
+  if (st.timer) { tut.timer += dt; if (tut.timer >= st.n) tut.c = st.n; tutUI(); }
+  if (st.k === 'rock' && tut.c < st.n && asts.length < 2) tutRock(1);
+  if (st.k === 'dust' && tut.c < st.n && !dust.length) { const p = tutNear(160 * U); dropDust(p.x, p.y, 6); }
+  if (st.k === 'drone' && tut.c < st.n && !drones.length && !queue.length) { const d = mkDrone('drone'); d.hp = 2; drones.push(d); }
+  if (st.k === 'bomb' && bombs < 1) bombs = 1;
+  if (tut.c >= st.n) { tut.wait = 1.1; tutUI(); sfx.buy(); }
+}
+function tutFinish() {
+  tut.reward = !save.tutDone;
+  if (tut.reward) { save.dust += 100; dustPop = 1; }
+  save.tutDone = true; save.tutAsked = true; persist();
+  tut.doneT = 3.2; tut.i = TSTEPS.length - 1; tutUI();
+  announce('Tutorial complete', { big: true, sub: tut.reward ? '+◆ 100 stardust' : 'Good luck out there', col: '143,255,214', dur: 3 });
+  asts.forEach(a => burst(a.x, a.y, 10, '200,150,255', 120, 0.6, 2)); asts = []; drones = [];
+}
+function drawBeacon(b) {
+  const k = U, p = 0.5 + 0.5 * Math.sin(time * 5);
+  ctx.save(); ctx.translate(b.x, b.y);
+  ctx.fillStyle = `rgba(200,150,255,${0.08 + 0.08 * p})`; ctx.beginPath(); ctx.arc(0, 0, 42 * k, 0, TAU); ctx.fill();
+  ctx.strokeStyle = `rgba(200,150,255,${0.5 + 0.4 * p})`; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(0, 0, (30 + 6 * p) * k, 0, TAU); ctx.stroke();
+  ctx.rotate(time * 1.5); ctx.strokeStyle = 'rgba(230,210,255,.9)'; ctx.lineWidth = 2;
+  for (let i = 0; i < 4; i++) { ctx.rotate(TAU / 4); ctx.beginPath(); ctx.moveTo(14 * k, 0); ctx.lineTo(22 * k, 0); ctx.stroke(); }
+  ctx.restore();
+}
+$('tutSkip').onclick = () => { save.tutAsked = true; persist(); goMenu(); };
+$('taGo').onclick = () => { audio(); sfx.ui(); startTutorial(); };
+$('taSkip').onclick = () => { sfx.ui(); hideAll(); show('menu'); };
+$('sTut').onclick = () => { audio(); sfx.ui(); startTutorial(); };
+
 // ================= INPUT =================
 const keys = {};
 let mx = 0, my = 0, mdown = false, stick = null, aimT = null;
@@ -2283,7 +2422,7 @@ function update(dt, rdt) {
   const eS = pw.slow > 0 ? 0.35 : 1, edt = dt * eS;
 
   // gravity surges
-  if (mode === 'play' && (sector > 1 || wave >= 3) && !clearing) {
+  if (mode === 'play' && !tut && (sector > 1 || wave >= 3) && !clearing) {
     if (surge > 0) { surge -= dt; if (surge <= 0) surgeT = rand(20, 32) * (TH.mods.surge || 1); }
     else if (surgeWarn > 0) { surgeWarn -= dt; if (surgeWarn <= 0) { surge = 4.5; shake = 12; flash = 0.3; flashCol = TH.danger; tone(45, 1.6, 'sawtooth', 0.18, 22); noise(1.2, 0.3, 900, 60); } }
     else { surgeT -= dt; if (surgeT <= 0) { surgeWarn = 2.4; announce('Gravity surge', { sub: 'Stronger pull  ·  double points', col: TH.danger, dur: 2.4, now: true }); [880, 660, 880, 660].forEach((f, i) => setTimeout(() => tone(f, 0.18, 'square', 0.04), i * 220)); } }
@@ -2348,6 +2487,7 @@ function update(dt, rdt) {
     ship.dcd -= dt;
     if (wasCool && ship.dcd <= 0) dashFlash = 1;
     if (wantDash && ship.dcd <= 0) {
+      tutEv('dash');
       let dx = ix, dy = iy;
       if (Math.hypot(dx, dy) < 0.2) { dx = Math.cos(ship.ang); dy = Math.sin(ship.ang); }
       const l = Math.hypot(dx, dy); dx /= l; dy /= l;
@@ -2664,7 +2804,7 @@ function update(dt, rdt) {
           for (let k = 0; k < 20; k++) { const a = k / 20 * TAU, s = 600 * U; bullets.push({ x: ship.x, y: ship.y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: 1.6, dmg: 2 * S.dmg, pierce: 1, hits: null, hom: 6 }); }
           break;
       }
-      popText(p.x, p.y - 22 * U, P.name(), `rgb(${P.c})`, 14);
+      popText(p.x, p.y - 22 * U, P.name(), `rgb(${P.c})`, 14); tutEv('pick');
       ring(p.x, p.y, 60, P.c, 0.4, 3); sfx.pick();
       pickups.splice(i, 1);
     }
@@ -2679,7 +2819,7 @@ function update(dt, rdt) {
       const mdx = ship.x - d.x, mdy = ship.y - d.y, md = Math.hypot(mdx, mdy);
       if (md < 120 * U * S.magnet) { d.vx += mdx / md * 1500 * U * dt; d.vy += mdy / md * 1500 * U * dt; }
       if (md < 16 * U) {
-        save.dust += d.v; runDust += d.v; secDust += d.v; saveDirty = true; sfx.dust(); dustPop = 1;
+        save.dust += d.v; runDust += d.v; secDust += d.v; saveDirty = true; tutEv('dust'); sfx.dust(); dustPop = 1;
         part(d.x, d.y, 0, 0, 0.3, '140,255,210', 3 * Math.max(1, U), 0);
         dust.splice(i, 1); continue;
       }
@@ -2720,7 +2860,8 @@ function update(dt, rdt) {
   for (let i = texts.length - 1; i >= 0; i--) { texts[i].life -= rdt; if (texts[i].life <= 0) texts.splice(i, 1); }
 
   // ---- wave / sector flow ----
-  if (mode === 'play') {
+  if (mode === 'play' && tut) tutUpdate(dt);
+  if (mode === 'play' && !tut) {
     const unitsQ = queue.some(q => q.u);
     const empty = wave >= WPS ? !boss && !unitsQ : !boss && !unitsQ && (wave === 0 || waveLeft() <= Math.floor(waveTot * 0.1));
     if (wave > 0 && wave < WPS && !clearing && waveTimer <= 0 && ship && (sector - 1) * 2 + wave >= 2) {
@@ -3325,6 +3466,7 @@ function draw() {
     ctx.beginPath(); ctx.arc(bw.x, bw.y, bw.r, 0, TAU); ctx.stroke();
   }
   for (const p of pickups) drawPickup(p);
+  if (tut && tut.bc) drawBeacon(tut.bc);
   for (const a of asts) drawAst(a);
   for (const d of drones) drawDrone(d);
   if (boss) drawBoss(boss);
@@ -3424,6 +3566,7 @@ function drawIndicators() {
   if (boss) list.push([boss, TH.boss, 9]);
   for (const d of drones) list.push([d, dCol(d), 6]);
   for (const p of pickups) list.push([p, PICK[p.type].c, 5]);
+  if (tut && tut.bc) list.push([tut.bc, '200,150,255', 7]);
   list.push([{ x: CX, y: CY, bh: true }, TH.ring, 7]);
   const m = 26, l = SAL + m, r_ = W - SAR - m, t = SAT + m + 70, b = H - SAB - m - (isTouch() ? 0 : 40);
   ctx.save(); ctx.globalAlpha = hudA;
