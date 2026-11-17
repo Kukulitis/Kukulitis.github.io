@@ -626,7 +626,7 @@ body.paused .tbtn{display:none!important}
 <script>
 'use strict';
 // Versioning: next version -> next whole number (4.00), sub version -> +0.01 (3.01)
-const VERSION = '4.19';
+const VERSION = '4.20';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -3643,7 +3643,7 @@ const sbDims = (sc, n) => [184 * sc, (22 + n * 19) * sc];
 // top-left anchored so it grows downward as pilots join
 function sbBox(W, H, touch, n) {
   const L = touch ? save.sbT : save.sbD, sc = L && L.s ? clamp(L.s, SB_MIN, SB_MAX) : (touch ? 0.82 : 1), [w, h] = sbDims(sc, n);
-  let x0 = L ? L.x * W : W - 16 - w, y0 = L ? L.y * H : (touch ? 80 : 86);
+  let x0 = L ? L.x * W : W - 16 - w, y0 = L ? L.y * H : (touch ? 112 : 86);
   if (!L) { // default spot: slide below (or beside) the minimap if it sits there
     const [mx, my, ms] = mmLayout(touch, W, H);
     if (x0 < mx + ms && x0 + w > mx && y0 < my + ms + 14 && y0 + h > my - 14) { if (my + ms + 24 + h < H) y0 = my + ms + 24; else x0 = mx - w - 14; }
@@ -3654,7 +3654,8 @@ function sbBox(W, H, touch, n) {
 function drawScoreboard(W, H, touch, c = ctx, box = null, rows = null) {
   if (!rows) {
     rows = [{ n: cloudUser || 'You', k: score, col: '255,255,255', me: true }];
-    for (const id in mp.peers) { const P = mp.peers[id]; rows.push({ n: P.n, k: P.k || 0, col: P.col, dead: !P.alive }); }
+    for (const id in mp.peers) { const P = mp.peers[id]; rows.push({ n: P.n, k: P.k || 0, col: P.col, dead: !P.alive || P.away, tag: P.away ? 'away' : P.out ? 'out' : '' }); }
+    if (ow && ow.out) rows[0].tag = 'out';
     rows.sort((a, b) => b.k - a.k);
   }
   const [x0, y0, w, h, sc] = box || sbBox(W, H, touch, rows.length), fs = 11.5 * sc, rh_ = 19 * sc, x1 = x0 + w;
@@ -3668,8 +3669,9 @@ function drawScoreboard(W, H, touch, c = ctx, box = null, rows = null) {
     c.globalAlpha = r.dead ? 0.5 : 1;
     c.font = `700 ${fs}px ${FONT}`; c.textAlign = 'left'; c.fillStyle = 'rgba(233,238,247,0.5)'; c.fillText(String(i + 1), x0 + 10 * sc, y);
     c.fillStyle = `rgb(${r.col})`; c.font = `${r.me ? 700 : 600} ${fs}px ${FONT}`;
-    let nm = r.n; while (nm.length > 3 && c.measureText(nm).width > w - 90 * sc) nm = nm.slice(0, -2) + '…';
+    let nm = r.n; const tw = r.tag ? 34 * sc : 0; while (nm.length > 3 && c.measureText(nm).width > w - 90 * sc - tw) nm = nm.slice(0, -2) + '…';
     c.fillText(nm, x0 + 24 * sc, y);
+    if (r.tag) { const nw = c.measureText(nm).width; c.font = `700 ${8 * sc}px ${FONT}`; c.fillStyle = r.tag === 'out' ? 'rgba(255,140,140,0.9)' : 'rgba(233,238,247,0.55)'; c.fillText(r.tag.toUpperCase(), x0 + 30 * sc + nw, y + 0.5 * sc); c.font = `${r.me ? 700 : 600} ${fs}px ${FONT}`; }
     c.textAlign = 'right'; c.fillStyle = r.me ? '#fff' : 'rgba(233,238,247,0.85)'; c.fillText(fmt(r.k), x1 - 10 * sc, y);
   });
   c.restore();
@@ -3896,7 +3898,7 @@ function mpFail(msg) { mpLeave(); if (!$('mp').classList.contains('hidden')) mpM
 function mpMsg(t, err) { $('mpMsg').textContent = t || ''; $('mpMsg').className = 'pmsg' + (err ? ' err' : ''); }
 function mpElect() {
   let bj = mp.j, bid = mp.id;
-  for (const k in mp.peers) { const p = mp.peers[k]; if (p.j < bj || (p.j === bj && k < bid)) { bj = p.j; bid = k; } }
+  for (const k in mp.peers) { const p = mp.peers[k]; if (p.away) continue; if (p.j < bj || (p.j === bj && k < bid)) { bj = p.j; bid = k; } }
   const was = mp.host; mp.hostId = bid; mp.host = bid === mp.id;
   if (mp.host && !was && mp.state === 'play' && ow) { ow.sig = ''; popText(ship ? ship.x : camX, (ship ? ship.y : camY) - 40 * U, 'You are now hosting', 'rgb(143,255,214)', 13); }
 }
@@ -3909,7 +3911,7 @@ function mpOn(ev, p) {
   if (ev !== 'p' || !p || typeof p.i !== 'string' || p.i === mp.id) return;
   const now = performance.now(), P = mpPeer(p.i), fresh = P.isNew; P.isNew = false;
   if (p.ev && p.ev.some(e => e && e[0] === 'bye')) { if (!fresh) mpDrop(p.i, true); else delete mp.peers[p.i]; return; }
-  P.n = String(p.n || 'Pilot').slice(0, 20); P.j = +p.j || 0; P.sd = p.sd; P.pub = p.pub; P.last = now; P.k = +p.k || 0;
+  P.n = String(p.n || 'Pilot').slice(0, 20); P.j = +p.j || 0; P.sd = p.sd; P.pub = p.pub; P.last = now; P.k = +p.k || 0; P.away = false; P.out = !!p.o;
   P.sk = SKINS.find(x => x.id === p.sk) || SKINS[0]; P.bs = BSKINS.find(x => x.id === p.bs) || BSKINS[0];
   const s = Array.isArray(p.s) ? p.s : null;
   if (s) { P.sx = s[0] * U; P.sy = s[1] * U; P.svx = s[2] * U; P.svy = s[3] * U; P.sa = +s[4] || 0; P.safe = !!s[5]; P.php = s[6] == null ? PVPHP : +s[6]; P.rt = now; }
@@ -3975,7 +3977,7 @@ function mpSend() {
   const R = Math.round;
   for (const nid in mp.hits) mp.ev.push(['h', +nid, R(mp.hits[nid] * 100) / 100, 1]);
   mp.hits = {};
-  const pk = { i: mp.id, n: cloudUser, j: mp.j, sd: mp.seed, pub: mp.pub ? 1 : 0, sk: save.skin, bs: save.bskin, k: score,
+  const pk = { i: mp.id, n: cloudUser, j: mp.j, sd: mp.seed, pub: mp.pub ? 1 : 0, sk: save.skin, bs: save.bskin, k: score, o: ow && ow.out ? 1 : 0,
     s: ship ? [R(ship.x / U), R(ship.y / U), R(ship.vx / U), R(ship.vy / U), R(ship.ang * 100) / 100, (ow && ow.safe > 0) || ship.inv > 0 ? 1 : 0, R(ship.php == null ? PVPHP : ship.php)] : null };
   if (mp.shots.length) { pk.b = mp.shots; mp.shots = []; }
   if (mp.ev.length) { pk.ev = mp.ev; mp.ev = []; }
@@ -3991,7 +3993,11 @@ function mpPoll(rdt) {
   const now = performance.now();
   if (lobby && now - (lobby.rt || 0) > 1000) { lobby.rt = now; renderRooms(); }
   if (!mp) return;
-  for (const k in mp.peers) if (now - mp.peers[k].last > 4500) mpDrop(k);
+  for (const k in mp.peers) {
+    const P = mp.peers[k], quiet = now - P.last;
+    if (quiet > 45000) mpDrop(k);
+    else if (quiet > 4500 && !P.away) { P.away = true; if (P.alive) { P.alive = false; burst(P.x, P.y, 20, P.col, 120, 0.6, 2); } mpElect(); }
+  }
   for (const k in mp.dead) if (mp.dead[k] < now) delete mp.dead[k];
   if (mp.state === 'join') {
     if (mp.firstT && now - mp.firstT > 1200) {
@@ -4011,7 +4017,7 @@ function mpPoll(rdt) {
   const f = Math.min(1, rdt * 12);
   mpPl = ship ? [ship] : [];
   for (const k in mp.peers) {
-    const P = mp.peers[k]; if (!P.alive) continue;
+    const P = mp.peers[k]; if (!P.alive || P.away) continue;
     const age = Math.min(0.4, (now - P.rt) / 1000), tx = P.sx + P.svx * age, ty = P.sy + P.svy * age;
     if (Math.hypot(tx - P.x, ty - P.y) > 400 * U) { P.x = tx; P.y = ty; } else { P.x += (tx - P.x) * f; P.y += (ty - P.y) * f; }
     P.vx = P.svx; P.vy = P.svy;
@@ -5338,7 +5344,7 @@ function drawHUDi(W, H) {
   // lives & power-up timers
   const ly = touch ? 96 : H - 22, by = touch ? (gmode === 'world' && ow ? upBox(W, H, true)[1] + upBox(W, H, true)[3] + 24 : 128) : H - 58;
   if (gmode !== 'world') for (let i = 0; i < lives; i++) miniShip(28 + i * 20, ly, 0.85);
-  else if (mp) { const ry = touch ? 96 : 88; for (let i = 0; i < lives; i++) miniShip(28 + i * 20, ry, 0.85); ctx.font = `600 11px ${FONT}`; ctx.fillStyle = 'rgba(233,238,247,0.62)'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; spaced('ROOM ' + mp.code + '  ·  ' + (1 + Object.keys(mp.peers).length) + '/' + MPMAX + ' PILOTS' + (mp.host ? '  ·  HOST' : ''), 28 + Math.max(1, lives) * 20, ry, 1.6, 'left'); }
+  else if (mp) { const ry = touch ? 96 : 88; for (let i = 0; i < lives; i++) miniShip(28 + i * 20, ry, 0.85); ctx.font = `600 11px ${FONT}`; ctx.fillStyle = 'rgba(233,238,247,0.62)'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; spaced('ROOM ' + mp.code + '  ·  ' + (1 + Object.values(mp.peers).filter(q => !q.away).length) + '/' + MPMAX + ' PILOTS' + (mp.host ? '  ·  HOST' : ''), 28 + Math.max(1, lives) * 20, ry, 1.6, 'left'); }
   if (gmode === 'world' && ow) { drawMinimap(W, H); if (mp) drawScoreboard(W, H, touch); }
   let bx = 34;
   if (pw.shield > 0) { badge(bx, by, 14, 'shieldpk', PICK.shield.c, 1, pw.shield > 1 ? '×' + pw.shield : '', false); bx += 38; }
