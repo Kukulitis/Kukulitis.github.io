@@ -257,7 +257,8 @@ svg{stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-l
 .gnode .srs{margin-top:3px}.gnode .srs .lv i{width:12px}
 .gp{font-size:12px;font-weight:600;color:var(--mint);white-space:nowrap}.gp.no{color:var(--dim);opacity:.6}.gp.tag{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:rgb(var(--c))}
 .gnode.mx{opacity:.8}
-.gnode.unl{opacity:1;border-color:rgba(var(--c),.55);background:rgba(var(--c),.08)}
+.gnode.unl{opacity:1}
+.gp.lk{display:flex;align-items:center;gap:6px}.lkt{font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);padding:1px 6px;border-radius:999px;border:1px solid rgba(255,255,255,.18)}
 .gnode.cmp{flex:1;min-width:0;grid-template-columns:32px minmax(0,1fr);row-gap:2px}
 .gbr .gnode{flex:1}
 .gnode.cmp .ico{width:32px;height:32px;grid-row:span 2}.gnode.cmp .srs{display:none}.gnode.cmp .gp{grid-column:2;font-size:11px}
@@ -503,7 +504,7 @@ body.paused .tbtn{display:none!important}
 <script>
 'use strict';
 // Versioning (renumbered by request): next version -> next whole number (3.00), sub version -> +0.01 (2.01)
-const VERSION = '2.20';
+const VERSION = '2.21';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -1627,15 +1628,15 @@ function renderHangar(flashK) {
 }
 function nodeHTML(u, compact) {
   const t = tier(u.k), mx = t >= u.max, cost = mx ? 0 : u.cost[t], ok = save.dust >= cost, unlock = u.cat === 'UNLOCK', sel = shopSel.G === u.k;
-  const sub = unlock ? `<span>${mx ? 'Unlocked' : 'New drop'}</span>` : `<div class="lv">${Array.from({ length: u.max }, (_, i) => `<i class="${i < t ? 'on' : ''}"></i>`).join('')}</div>`;
-  const price = mx ? `<div class="gp tag">${unlock ? 'Owned' : 'Max'}</div>` : `<div class="gp ${ok ? '' : 'no'}">◆ ${fmt(cost)}</div>`;
+  const sub = unlock ? `<span>${mx ? 'Unlocked' : 'Locked'}</span>` : `<div class="lv">${Array.from({ length: u.max }, (_, i) => `<i class="${i < t ? 'on' : ''}"></i>`).join('')}</div>`;
+  const price = mx ? (unlock ? '<div class="gp tag">Unlocked</div>' : '<div class="gp tag">Max</div>') : unlock ? `<div class="gp lk ${ok ? '' : 'no'}"><span class="lkt">Locked</span> ◆ ${fmt(cost)}</div>` : `<div class="gp ${ok ? '' : 'no'}">◆ ${fmt(cost)}</div>`;
   return `<button class="gnode${compact ? ' cmp' : ''}${sel ? ' sel' : ''}${mx ? ' mx' : ''}${mx && unlock ? ' unl' : ''}${!mx && ok ? ' can' : ''}" data-sel="${u.k}" style="--c:${upCol(u)}"><div class="ico">${svgIcon(u.k)}</div><div class="gn"><div class="srn">${u.name}</div><div class="srs">${sub}</div></div>${price}</button>`;
 }
 function renderNodes() {
   const by = c => UPG.filter(u => u.cat === c);
   $('gL').innerHTML = '<div class="ghd">Ship</div>' + by('SHIP').map(u => nodeHTML(u)).join('');
   $('gR').innerHTML = '<div class="ghd">Weapons</div>' + by('WEAPON').map(u => nodeHTML(u)).join('');
-  $('gB').innerHTML = `<div class="gbg"><div class="ghd">Power-ups</div><div class="gbr">${by('POWER').map(u => nodeHTML(u, true)).join('')}</div></div><div class="gbg"><div class="ghd">Unlocks</div><div class="gbr">${by('UNLOCK').map(u => nodeHTML(u, true)).join('')}</div></div>`;
+  $('gB').innerHTML = `<div class="gbg"><div class="ghd">Power-ups</div><div class="gbr">${by('POWER').concat(by('UNLOCK')).map(u => nodeHTML(u, true)).join('')}</div></div>`;
 }
 function renderOwned() {
   const row = (list, owned, cur, sub) => list.filter(x => owned.includes(x.id)).sort(byRarity).map(it => {
@@ -1716,10 +1717,11 @@ function renderPrevInfo() {
   } else if (s.type === 'upg') {
     const u = it, t = tier(u.k), mx = t >= u.max, cost = mx ? 0 : u.cost[t], ok = save.dust >= cost, unlock = u.cat === 'UNLOCK';
     col = upCol(u);
-    const catName = (CATS.find(c => c[0] === u.cat) || [0, ''])[1];
+    const catName = unlock ? (mx ? 'Power-ups' : 'Locked power-up') : (CATS.find(c => c[0] === u.cat) || [0, ''])[1];
     const stat = unlock ? '' : `<div class="cs"><span>${u.stat}</span><b>${u.val(t)}${mx ? '' : `<em>→ ${u.val(t + 1)}</em>`}</b></div>`;
     const btn = mx ? `<button class="buy done" disabled>${unlock ? 'Unlocked' : 'Max level'}</button>`
       : `<button class="buy" data-k="${u.k}" ${ok ? '' : 'disabled'}><span>${ok ? (gPT === 'mouse' ? 'Click to ' : 'Tap again to ') + (unlock ? 'unlock' : t ? 'upgrade' : 'install') : 'Need more ◆'}</span><span>◆ ${fmt(cost)}</span></button>`;
+    const btnFix = 0;
     h = `<div class="gdt"><div class="pvh"><div class="pvn">${u.name}</div><span class="chip" style="background:rgba(${col},.14);color:rgb(${col})">${catName}</span></div><div class="pvd">${u.info}</div></div><div class="gda">${stat}${btn}</div>`;
   } else {
     const ship = s.type === 'ship', owned = ship ? (save.skins || ['scrap']) : (save.bskins || ['pellet']), cur = ship ? SK() : BS();
