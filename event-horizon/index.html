@@ -169,7 +169,7 @@ svg{stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-l
 .mmp{position:absolute;left:50%;transform:translateX(-50%);top:calc(64px + env(safe-area-inset-top));width:min(360px,88vw);padding:14px 16px;border-radius:16px;background:rgba(7,10,22,.88);border:1px solid var(--line);display:flex;flex-direction:column;gap:10px;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.5)}
 .mmp.low{top:auto;bottom:calc(18px + env(safe-area-inset-bottom))}
 .mmt{font-size:12px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgb(220,190,255)}.mmx{font-size:12.5px;color:var(--dim);line-height:1.45}
-#mmSz{width:100%;accent-color:rgb(200,150,255)}.mmb{display:flex;gap:8px}.mmb>*{flex:1}
+#mmSz{width:100%;}.mmsl{font-size:10.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:rgb(220,190,255);margin-bottom:-4px}#mmSz{accent-color:rgb(200,150,255)}.mmb{display:flex;gap:8px}.mmb>*{flex:1}
 .owt{width:min(320px,70vw);height:4px;border-radius:2px;background:rgba(255,255,255,.12);overflow:hidden}.owt i{display:block;height:100%;background:rgb(200,150,255);transform-origin:left;transition:transform .12s linear}
 .owtm{font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgb(220,190,255)}
 .gmsel{display:flex;gap:4px;padding:4px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.04);margin-bottom:12px}
@@ -199,6 +199,7 @@ svg{stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-l
 .owcard.up{border-color:rgba(255,210,120,.6);background:linear-gradient(180deg,rgba(255,210,120,.16),rgba(30,20,10,.9))}
 .owk{position:absolute;top:8px;left:10px;font-size:11px;color:var(--dim)}
 .owi{width:56px;height:56px;border-radius:16px;display:grid;place-items:center;background:rgba(200,150,255,.18);color:rgb(220,190,255)}.owi svg{width:28px;height:28px}
+.owcard.bas{border-color:rgba(var(--bc),.55);background:linear-gradient(180deg,rgba(var(--bc),.14),rgba(8,14,30,.92))}.owcard.bas .owi{background:rgba(var(--bc),.16);color:rgb(var(--bc))}.owcard.bas .owl{color:rgb(var(--bc))}.owcard.bas:hover{box-shadow:0 0 30px rgba(var(--bc),.3)}
 .owcard.up .owi{background:rgba(255,210,120,.18);color:rgb(255,220,150)}
 .own{font-size:17px;font-weight:600}.owl{font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgb(200,150,255)}.owcard.up .owl{color:rgb(255,210,120)}
 .owd{font-size:12.5px;color:var(--dim);line-height:1.45}
@@ -482,8 +483,8 @@ body.paused .tbtn{display:none!important}
       <div class="opts" data-set="snd"><button data-v="on">On</button><button data-v="off">Off</button></div></div>
     <div class="card" style="--c:255,176,112"><div class="ct"><div class="ico"><i data-ic="shake"></i></div><div class="cn">Screen shake<div class="cd">Camera shake on explosions and hits.</div></div></div>
       <div class="opts" data-set="shake"><button data-v="on">On</button><button data-v="off">Off</button></div></div>
-    <div class="card" style="--c:200,150,255"><div class="ct"><div class="ico"><i data-ic="map"></i></div><div class="cn">Minimap<div class="cd">Move and resize the round map used in Multiplayer.</div></div></div>
-      <button class="buy ctr" id="sMM">Edit minimap layout</button></div>
+    <div class="card" style="--c:200,150,255"><div class="ct"><div class="ico"><i data-ic="map"></i></div><div class="cn">HUD layout<div class="cd">Move and resize the minimap and upgrade panel used in Multiplayer.</div></div></div>
+      <button class="buy ctr" id="sMM">Edit HUD layout</button></div>
     <div class="card" style="--c:200,150,255"><div class="ct"><div class="ico"><i data-ic="map"></i></div><div class="cn">Tutorial<div class="cd">Learn the controls step by step.</div></div></div>
       <button class="buy ctr" id="sTut">Play tutorial</button></div>
   </div></div>
@@ -536,12 +537,21 @@ body.paused .tbtn{display:none!important}
   <div class="ft a3"><button class="sec" id="mdBack">Back</button></div>
 </div>
 
-<div id="owPick" class="hidden"><div class="owp"><div class="h3" style="font-size:24px">CHOOSE AN ABILITY</div><div class="sub">Your ship holds still and is shielded while you choose. Lose your ship and you lose your abilities and half your upgrades.</div><div class="owt"><i id="owBar"></i></div><div class="owtm" id="owTm"></div><div class="owc" id="owC"></div></div></div>
+<div id="owPick" class="hidden"><div class="owp"><div class="h3" id="owH" style="font-size:24px">CHOOSE AN ABILITY</div><div class="sub">Your ship holds still and is shielded while you choose. Lose your ship and you lose your abilities and half your upgrades.</div><div class="owt"><i id="owBar"></i></div><div class="owtm" id="owTm"></div><div class="owc" id="owC"></div></div></div>
 
 <div id="mmEd" class="hidden"><canvas id="mmCv"></canvas>
-  <div class="mmp" id="mmP"><div class="mmt">Minimap layout</div><div class="mmx" id="mmX"></div>
+  <div class="mmp" id="mmP"><div class="mmt">HUD layout</div><div class="mmx" id="mmX"></div><div class="mmsl" id="mmSl"></div>
     <input type="range" id="mmSz" min="48" max="220" step="1" aria-label="Minimap size">
     <div class="mmb"><button class="sec" id="mmReset">Reset</button><button class="buy ctr" id="mmDone">Done</button></div></div>
+</div>
+
+<div id="mpOut" class="ov hidden">
+  <div class="top"><div class="h2 a1">OUT OF SHIPS</div><div class="sub a2" id="mpOutSub"></div></div>
+  <div class="hole"></div>
+  <div class="bot">
+    <button class="play a2" id="mpRespawn"><span class="pm">RESPAWN</span><span class="ps">3 new ships · start with a bare ship</span></button>
+    <div class="icons a3"><button class="ib" id="mpQuit"><i data-ic="home"></i><span>Leave</span></button></div>
+  </div>
 </div>
 
 <div id="mp" class="ov scr hidden">
@@ -601,7 +611,7 @@ body.paused .tbtn{display:none!important}
 <script>
 'use strict';
 // Versioning: next version -> next whole number (4.00), sub version -> +0.01 (3.01)
-const VERSION = '4.11';
+const VERSION = '4.12';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -1616,7 +1626,7 @@ function killShip() {
   if (gmode === 'world' && ow && ow.safe > 0) return;
   if (tut) lives++;
   if (gmode === 'world' && ow) {
-    lives++; ow.dx = ship.x; ow.dy = ship.y;
+    ow.dx = ship.x; ow.dy = ship.y;
     const pk = mp && ow.hitBy && performance.now() - (ow.hitT || 0) < 1500 ? ow.hitBy : null; ow.hitBy = null;
     if (pk) { mp.ev.push(['pk', pk]); owDrop('a', ship.x, ship.y); const KP_ = mp.peers[pk]; queue.push({ t: 0.2, f: () => announce('Destroyed by ' + (KP_ ? KP_.n : 'a pilot'), { kick: 'PvP', col: '255,110,110', dur: 2 }) }); }
     const hadA = Object.keys(ow.ab).length > 0, hadB = Object.values(ow.bs).some(v => v > 0);
@@ -1710,6 +1720,7 @@ function doBomb(free) {
   ring(ship.x, ship.y, 420, '255,255,255', 0.5, 2);
 }
 function gameOver() {
+  if (gmode === 'world') { owOut(); return; }
   mode = 'over'; document.body.classList.remove('playing'); ann = null; annQ = []; tip = null;
   const nb = score > runBest && score > 0;
   save.best = Math.max(save.best, score);
@@ -1752,7 +1763,7 @@ function goMenu() {
 }
 
 // ================= UI: overlays =================
-const OVS = ['login', 'tutAsk', 'modes', 'mp', 'beast', 'menu', 'over', 'pause', 'cleared', 'hangar', 'roadmap', 'profile', 'settings', 'crate'];
+const OVS = ['login', 'tutAsk', 'modes', 'mp', 'mpOut', 'beast', 'menu', 'over', 'pause', 'cleared', 'hangar', 'roadmap', 'profile', 'settings', 'crate'];
 function hideAll() { for (const id of OVS) $(id).classList.add('hidden'); }
 function show(id) { $(id).classList.remove('hidden'); }
 const playLabel = n => (n > NS ? 'Endless' : 'Sector ' + n) + ' · ' + themeFor(n).name;
@@ -3134,13 +3145,13 @@ const OWA = {
 const OWH = [0, 1.2, 1.9, 2.7];
 // basic orbs raise these one level at a time
 const BASICS = [
-  { k: 'dmg', n: 'Damage', ic: 'damage', max: 8, c: '255,150,90' },
-  { k: 'rate', n: 'Fire rate', ic: 'rate', max: 8, c: '255,210,110' },
-  { k: 'bspeed', n: 'Bullet speed', ic: 'velocity', max: 6, c: '120,230,255' },
-  { k: 'speed', n: 'Thrusters', ic: 'engine', max: 6, c: '143,255,214' },
-  { k: 'pierce', n: 'Pierce', ic: 'pierce', max: 4, c: '255,130,200' },
-  { k: 'magnet', n: 'Tractor range', ic: 'magnet', max: 5, c: '200,170,255' },
-  { k: 'dash', n: 'Dash recharge', ic: 'dash', max: 5, c: '120,200,255' },
+  { k: 'dmg', n: 'Damage', ic: 'damage', max: 8, c: '255,150,90', d: '+15% damage' },
+  { k: 'rate', n: 'Fire rate', ic: 'rate', max: 8, c: '255,210,110', d: '+10% fire rate' },
+  { k: 'bspeed', n: 'Bullet speed', ic: 'velocity', max: 6, c: '120,230,255', d: '+12% bullet speed' },
+  { k: 'speed', n: 'Thrusters', ic: 'engine', max: 6, c: '143,255,214', d: '+8% flight speed' },
+  { k: 'pierce', n: 'Pierce', ic: 'pierce', max: 4, c: '255,130,200', d: '+25% chance to pierce' },
+  { k: 'magnet', n: 'Tractor range', ic: 'magnet', max: 5, c: '200,170,255', d: '+30% stardust pull range' },
+  { k: 'dash', n: 'Dash recharge', ic: 'dash', max: 5, c: '120,200,255', d: '-8% dash cooldown' },
 ];
 const OTYPE = { a: { c: '170,110,255', c2: '255,220,255', r: 14, ring: '200,150,255' }, b: { c: '60,170,255', c2: '220,245,255', r: 10, ring: '120,210,255' }, d: { c: '40,220,160', c2: '220,255,240', r: 10, ring: '143,255,214' } };
 const PVPHP = 10;
@@ -3169,9 +3180,10 @@ function owPre() {
       if (R() < B.bh * 0.6) { const m = 0.7 + R() * 0.9; holes.push({ x: (cx - 0.3 + R() * 0.6) * CH, y: (cy - 0.3 + R() * 0.6) * CH, m, rh: 26 * U * Math.pow(m, 0.7), white: false, ck: key, ph: R() * 6 }); }
       if (R() < B.wh * 0.6) { const m = 0.7 + R() * 0.7; holes.push({ x: (cx - 0.3 + R() * 0.6) * CH, y: (cy - 0.3 + R() * 0.6) * CH, m, rh: 26 * U * Math.pow(m, 0.7), white: true, ck: key, ph: R() * 6 }); }
     }
+    for (let i = holes.length - 1; i >= 0; i--) if (Math.hypot(holes[i].x, holes[i].y) > OWM * CH - 350 * U) holes.splice(i, 1);
     if (!cx && !cy) holes.push({ x: 0, y: 0, m: 4.5, rh: 34 * U * Math.pow(4.5, 0.7), white: false, big: true, ck: key, ph: 0 });
     const Ro = rng(hash2(cx, cy, 55 + ow.seed)), orbs = [];
-    const add = (t, i) => { const o = { x: (cx - 0.4 + Ro() * 0.8) * CH, y: (cy - 0.4 + Ro() * 0.8) * CH, ck: key + t + i, ph: Ro() * 6, t }; if (!holes.some(h => Math.hypot(h.x - o.x, h.y - o.y) < h.rh * 6)) orbs.push(o); };
+    const add = (t, i) => { const o = { x: (cx - 0.4 + Ro() * 0.8) * CH, y: (cy - 0.4 + Ro() * 0.8) * CH, ck: key + t + i, ph: Ro() * 6, t }; if (Math.hypot(o.x, o.y) < OWM * CH - 160 * U && !holes.some(h => Math.hypot(h.x - o.x, h.y - o.y) < h.rh * 6)) orbs.push(o); };
     if (dc >= 1.2 && dc <= OWM) { if (Ro() < 0.5) add('b', 0); if (Ro() < 0.2) add('b', 1); if (Ro() < B.orb * 0.5) add('a', 0); if (Ro() < 0.14) add('d', 0); }
     ow.all.set(key, { holes, orbs });
   }
@@ -3277,7 +3289,16 @@ function owOffer() {
 }
 // The game never pauses in multiplayer: you get 10s to pick, shielded the whole time and for 2s after.
 const OWPICK = 10;
-function owOpenPick() {
+function owOpenPick(kind = 'a', basics = null) {
+  if (kind === 'b') {
+    owChoosing = true; ow.pickKind = 'b'; ow.pickEnd = performance.now() + OWPICK * 1000; ow.pickN = 0; ow.safe = 2;
+    $('owH').textContent = 'CHOOSE AN UPGRADE';
+    $('owC').innerHTML = basics.map((k, i) => { const b = BASICS.find(x => x.k === k), l = (ow.bs[k] || 0) + 1; return `<button class="owcard bas" data-k="${k}" style="--bc:${b.c}"><span class="owk">${i + 1}</span><div class="owi">${svgIcon(b.ic)}</div><div class="own">${b.n}</div><div class="owl">Level ${l} / ${b.max}</div><div class="owd">${b.d}</div></button>`; }).join('');
+    $('owBar').style.transform = 'scaleX(1)'; $('owTm').textContent = 'Auto-pick in ' + OWPICK + 's';
+    $('owPick').classList.remove('hidden'); tone(620, 0.3, 'triangle', 0.06, 930);
+    return;
+  }
+  ow.pickKind = 'a'; $('owH').textContent = 'CHOOSE AN ABILITY';
   const ch = owOffer();
   if (!ch.length) { save.dust += 60; runDust += 60; dustPop = 1; announce('Fully powered', { sub: '+◆ 60 stardust', col: '143,255,214', dur: 2 }); return; }
   owChoosing = true; ow.pickEnd = performance.now() + OWPICK * 1000; ow.pickN = 0; ow.safe = 2;
@@ -3287,7 +3308,15 @@ function owOpenPick() {
   tone(660, 0.4, 'triangle', 0.07, 990);
 }
 function owChoose(k, auto) {
-  if (!owChoosing || !OWA[k]) return;
+  if (!owChoosing) return;
+  if (ow.pickKind === 'b') {
+    const b = BASICS.find(x => x.k === k); if (!b) return;
+    ow.bs[k] = Math.min(b.max, (ow.bs[k] || 0) + 1); owApply(); owChoosing = false; ow.safe = 2; $('owPick').classList.add('hidden');
+    if (ship) ring(ship.x, ship.y, 110, b.c, 0.5, 3);
+    tone(620, 0.18, 'triangle', 0.06, 930); popText(ship ? ship.x : camX, (ship ? ship.y : camY) - 30 * U, (auto ? 'Auto-picked: ' : '') + b.n + ' ' + ow.bs[k] + '/' + b.max, `rgb(${b.c})`, 15);
+    return;
+  }
+  if (!OWA[k]) return;
   ow.ab[k] = Math.min(OWA[k].max, (ow.ab[k] || 0) + 1); ow.orbs++;
   owApply(); owChoosing = false; ow.safe = 2; $('owPick').classList.add('hidden');
   if (ship) ring(ship.x, ship.y, 140, '200,150,255', 0.6, 4);
@@ -3309,9 +3338,8 @@ function owGet(o) {
 function owBasic(o) {
   const av = BASICS.filter(b => (ow.bs[b.k] || 0) < b.max);
   if (!av.length) { dropDust(o.x, o.y, 8, 2); popText(o.x, o.y - 24 * U, 'All upgrades maxed', 'rgb(143,255,214)', 13); return; }
-  const b = av[Math.random() * av.length | 0]; ow.bs[b.k] = (ow.bs[b.k] || 0) + 1; owApply();
-  ring(o.x, o.y, 70, b.c, 0.5, 3); tone(620, 0.18, 'triangle', 0.06, 930);
-  popText(o.x, o.y - 26 * U, b.n + ' ' + ow.bs[b.k] + '/' + b.max, `rgb(${b.c})`, 14);
+  const ch = []; while (ch.length < 3 && av.length) ch.push(av.splice(Math.random() * av.length | 0, 1)[0].k);
+  owOpenPick('b', ch);
 }
 // dropped orbs (from enemies, mini bosses and destroyed pilots) are shared with the room
 function owDrop(t, x, y) {
@@ -3352,6 +3380,34 @@ function drawMini(d) {
   ctx.font = `700 ${Math.round(10 * Math.max(1, U))}px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = 'rgba(255,160,160,0.95)';
   ctx.fillText('MINI BOSS', d.x, y - 9 * U);
 }
+// a fresh spot away from holes, enemies, other pilots and where you just died
+function owSpawnPos() {
+  let best = null, bs = -1;
+  for (let t = 0; t < 40; t++) {
+    const a = rand(0, TAU), r = rand(0.18, 0.75) * ow.R, x = Math.cos(a) * r, y = Math.sin(a) * r;
+    let sc = Math.min(4000 * U, Math.hypot(x - ow.dx, y - ow.dy));
+    for (const P of ow.all.values()) for (const h of P.holes) sc = Math.min(sc, (Math.hypot(h.x - x, h.y - y) - h.rh * 12) * 3);
+    for (const d of drones) sc = Math.min(sc, Math.hypot(d.x - x, d.y - y) * 2);
+    if (mp) for (const k in mp.peers) { const P = mp.peers[k]; if (P.alive) sc = Math.min(sc, Math.hypot(P.x - x, P.y - y) * 2); }
+    if (sc > bs) { bs = sc; best = [x, y]; }
+  }
+  return best || [0, ow.R * 0.3];
+}
+function owOut() {
+  if (!ow || ow.out) return;
+  ow.out = true; overTimer = 1e9; owChoosing = false; $('owPick').classList.add('hidden');
+  document.body.classList.remove('playing');
+  $('mpOutSub').textContent = 'Score ' + fmt(score) + '  ·  ' + kills + ' kills  ·  ◆ ' + fmt(runDust) + ' stardust this session';
+  show('mpOut');
+}
+function owRespawn() {
+  if (!ow || !ow.out) return;
+  ow.out = false; overTimer = 0; deadTimer = 0; lives = 3; ann = null; annQ = [];
+  ow.ab = {}; ow.bs = {}; ow.timers = {}; owApply(); pw = freshPw(); bombs = S.bombs;
+  ship = mkShip(); ship.inv = 3; const [x, y] = owSpawnPos(); ship.x = x; ship.y = y; ship.vx = 0; ship.vy = 0; camX = x; camY = y;
+  owUpdateChunks(true); $('mpOut').classList.add('hidden'); document.body.classList.add('playing');
+  ring(x, y, 160, '120,240,255', 0.8, 4); sfx.warp();
+}
 // enemies chase whichever pilot is closest
 function owTarget(d) {
   if (!mp) return ship;
@@ -3385,7 +3441,7 @@ function owTick(dt) {
   // ability orbs
   for (let i = ow.drops.length - 1; i >= 0; i--) { const o = ow.drops[i]; o.life -= dt; if (o.life <= 0 || ow.taken[o.ck]) ow.drops.splice(i, 1); }
   for (const o of owOrbs.concat(ow.drops)) {
-    if (ow.taken[o.ck] || (o.t === 'a' && owChoosing)) continue;
+    if (ow.taken[o.ck] || (o.t !== 'd' && owChoosing)) continue;
     if (Math.hypot(o.x - ship.x, o.y - ship.y) < 36 * U) { ow.taken[o.ck] = performance.now(); if (mp) mp.ev.push(['o', o.ck]); owGet(o); }
   }
   // enemies drift in from the dark around every pilot - only the host spawns them
@@ -3520,46 +3576,64 @@ function drawMinimap(W, H) {
 }
 
 // side panel: basic upgrade bars, then every ability with its level (dim = not unlocked yet)
+const UP_MIN = 0.6, UP_MAX = 1.6;
+const upDims = sc => [140 * sc, (20 + 12 + BASICS.length * 16 + 14 + 12 + 2 * 30) * sc];
 function upBox(W, H, touch) {
-  const sc = touch ? 0.84 : 1.12, w = 140 * sc, h = (20 + 12 + BASICS.length * 16 + 14 + 12 + 2 * 30) * sc;
-  return [touch ? 12 : 16, touch ? 110 : Math.round(H / 2 - h / 2), w, h, sc];
+  const L = touch ? save.upT : save.upD, sc = L && L.s ? clamp(L.s, UP_MIN, UP_MAX) : (touch ? 0.84 : 1.12), [w, h] = upDims(sc);
+  let x0 = L ? L.x * W - w / 2 : (touch ? 12 : 16), y0 = L ? L.y * H - h / 2 : (touch ? 110 : Math.round(H / 2 - h / 2));
+  x0 = clamp(x0, 6, W - w - 6); y0 = clamp(y0, 6, H - h - 6);
+  return [Math.round(x0), Math.round(y0), w, h, sc];
 }
-function drawUpPanel(W, H, touch) {
-  const [x0, y0, w, h, sc] = upBox(W, H, touch), pad = 10 * sc;
-  ctx.save();
-  rr(x0, y0, w, h, 12 * sc); ctx.fillStyle = 'rgba(4,6,14,0.5)'; ctx.fill(); ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.lineWidth = 1; ctx.stroke();
-  const label = (t, y) => { ctx.font = `700 ${Math.round(9 * sc)}px ${FONT}`; ctx.fillStyle = 'rgba(233,238,247,0.55)'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; spaced(t, x0 + pad, y, 1.6 * sc, 'left'); };
+// draws on any canvas context, so the layout editor can show the real thing
+function drawUpPanel(W, H, touch, c = ctx, box = null, bs = ow ? ow.bs : {}, ab = ow ? ow.ab : {}) {
+  const [x0, y0, w, h, sc] = box || upBox(W, H, touch), pad = 10 * sc;
+  const rrC = (x, y, ww, hh, r) => { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + ww, y, x + ww, y + hh, r); c.arcTo(x + ww, y + hh, x, y + hh, r); c.arcTo(x, y + hh, x, y, r); c.arcTo(x, y, x + ww, y, r); c.closePath(); };
+  const icon = (k, x, y, size, col) => { const ps = P2D[k] || (P2D[k] = (ICONS[k] || []).map(d => new Path2D(d))); c.save(); c.translate(x - size / 2, y - size / 2); c.scale(size / 24, size / 24); c.strokeStyle = col; c.lineWidth = 1.8; c.lineCap = 'round'; c.lineJoin = 'round'; for (const p of ps) c.stroke(p); c.restore(); };
+  const label = (t, y) => { c.font = `700 ${Math.round(9 * sc)}px ${FONT}`; c.fillStyle = 'rgba(233,238,247,0.55)'; c.textAlign = 'left'; c.textBaseline = 'middle'; let x = x0 + pad; for (const ch of t) { c.fillText(ch, x, y); x += c.measureText(ch).width + 1.6 * sc; } };
+  c.save();
+  rrC(x0, y0, w, h, 12 * sc); c.fillStyle = 'rgba(4,6,14,0.5)'; c.fill(); c.strokeStyle = 'rgba(255,255,255,0.08)'; c.lineWidth = 1; c.stroke();
   let y = y0 + pad + 5 * sc; label('UPGRADES', y); y += 10 * sc;
   const segW = 7.5 * sc, segG = 2 * sc;
   for (const b of BASICS) {
-    const lv = ow.bs[b.k] || 0, cy = y + 8 * sc;
-    drawIcon(b.ic, x0 + pad + 6 * sc, cy, 13 * sc, `rgba(${b.c},${lv ? 1 : 0.4})`, 1.8);
-    for (let i = 0; i < b.max; i++) { ctx.fillStyle = i < lv ? `rgb(${b.c})` : 'rgba(255,255,255,0.1)'; rr(x0 + pad + 18 * sc + i * (segW + segG), cy - 2.5 * sc, segW, 5 * sc, 1.5 * sc); ctx.fill(); }
+    const lv = bs[b.k] || 0, cy = y + 8 * sc;
+    icon(b.ic, x0 + pad + 6 * sc, cy, 13 * sc, `rgba(${b.c},${lv ? 1 : 0.4})`);
+    for (let i = 0; i < b.max; i++) { c.fillStyle = i < lv ? `rgb(${b.c})` : 'rgba(255,255,255,0.1)'; rrC(x0 + pad + 18 * sc + i * (segW + segG), cy - 2.5 * sc, segW, 5 * sc, 1.5 * sc); c.fill(); }
     y += 16 * sc;
   }
   y += 10 * sc; label('ABILITIES', y); y += 8 * sc;
   const ks = Object.keys(OWA), cell = (w - pad * 2) / 5;
   ks.forEach((k, i) => {
-    const A = OWA[k], lv = ow.ab[k] || 0, cx = x0 + pad + (i % 5) * cell + cell / 2, cy = y + Math.floor(i / 5) * 30 * sc + 11 * sc;
-    if (lv) { ctx.fillStyle = 'rgba(200,150,255,0.18)'; ctx.beginPath(); ctx.arc(cx, cy, 10 * sc, 0, TAU); ctx.fill(); }
-    drawIcon(A.ic, cx, cy, 14 * sc, lv ? 'rgb(225,195,255)' : 'rgba(255,255,255,0.22)', 1.8);
-    for (let j = 0; j < A.max; j++) { ctx.fillStyle = j < lv ? 'rgb(200,150,255)' : 'rgba(255,255,255,0.14)'; ctx.beginPath(); ctx.arc(cx + (j - (A.max - 1) / 2) * 4.5 * sc, cy + 14 * sc, 1.5 * sc, 0, TAU); ctx.fill(); }
+    const A = OWA[k], lv = ab[k] || 0, cx = x0 + pad + (i % 5) * cell + cell / 2, cy = y + Math.floor(i / 5) * 30 * sc + 11 * sc;
+    if (lv) { c.fillStyle = 'rgba(200,150,255,0.18)'; c.beginPath(); c.arc(cx, cy, 10 * sc, 0, TAU); c.fill(); }
+    icon(A.ic, cx, cy, 14 * sc, lv ? 'rgb(225,195,255)' : 'rgba(255,255,255,0.22)');
+    for (let j = 0; j < A.max; j++) { c.fillStyle = j < lv ? 'rgb(200,150,255)' : 'rgba(255,255,255,0.14)'; c.beginPath(); c.arc(cx + (j - (A.max - 1) / 2) * 4.5 * sc, cy + 14 * sc, 1.5 * sc, 0, TAU); c.fill(); }
   });
-  ctx.restore();
+  c.restore();
 }
-// ---- minimap layout editor (Settings) ----
+// ---- HUD layout editor (Settings): move and resize the minimap and the upgrade panel ----
 let mmE = null;
+const ED_DEMO_BS = { dmg: 3, rate: 5, bspeed: 1, speed: 2, pierce: 1, magnet: 0, dash: 2 }, ED_DEMO_AB = { multi: 2, seek: 1, nova: 1, shield: 2 };
 function openMMEd() {
-  const touch = isTouch(), w = innerWidth, h = innerHeight, [x0, y0, sz] = mmLayout(touch, w, h);
+  const touch = isTouch(), w = innerWidth, h = innerHeight, [x0, y0, sz] = mmLayout(touch, w, h), [px, py, pw_, ph, psc] = upBox(w, h, touch);
   const keep = ow; ow = { seed: 4242, CH: owCH(), taken: {}, drops: [] }; ow.R = OWM * ow.CH; owPre(); const demo = ow; ow = keep;
   const st = []; for (let i = 0; i < 160; i++) st.push([Math.random(), Math.random(), Math.random() * 1.4 + 0.3, Math.random()]);
-  mmE = { touch, x: x0 + sz / 2, y: y0 + sz / 2, s: sz, drag: null, demo, img: null, imgS: 0, st };
-  $('mmSz').value = sz;
-  $('mmX').textContent = 'Drag the map to move it. Drag the round handle or the slider to resize. Saved for ' + (touch ? 'touch screens' : 'mouse and keyboard') + '.';
-  $('mmEd').classList.remove('hidden'); mmPanel(); requestAnimationFrame(mmLoop);
+  mmE = { touch, x: x0 + sz / 2, y: y0 + sz / 2, s: sz, px: px + pw_ / 2, py: py + ph / 2, ps: psc, sel: 'mm', drag: null, demo, img: null, imgS: 0, st };
+  $('mmX').textContent = 'Drag the minimap or the upgrade panel to move it. Drag its round handle or use the slider to resize. Saved for ' + (touch ? 'touch screens' : 'mouse and keyboard') + '.';
+  mmSel('mm'); $('mmEd').classList.remove('hidden'); mmPanel(); requestAnimationFrame(mmLoop);
 }
-function mmClampE() { const w = innerWidth, h = innerHeight, r = mmE.s / 2; mmE.x = clamp(mmE.x, r + 6, w - r - 6); mmE.y = clamp(mmE.y, r + 16, h - r - 6); }
-function mmPanel() { $('mmP').classList.toggle('low', mmE.y < innerHeight * 0.45); }
+function mmSel(k) {
+  mmE.sel = k; const sl = $('mmSz');
+  if (k === 'mm') { sl.min = MM_MIN; sl.max = MM_MAX; sl.step = 1; sl.value = mmE.s; } else { sl.min = UP_MIN * 100; sl.max = UP_MAX * 100; sl.step = 1; sl.value = Math.round(mmE.ps * 100); }
+  $('mmSl').textContent = k === 'mm' ? 'Minimap size' : 'Upgrade panel size';
+}
+const edPBox = () => { const [w, h] = upDims(mmE.ps); return [mmE.px - w / 2, mmE.py - h / 2, w, h, mmE.ps]; };
+function mmClampE() {
+  const w = innerWidth, h = innerHeight, r = mmE.s / 2; mmE.x = clamp(mmE.x, r + 6, w - r - 6); mmE.y = clamp(mmE.y, r + 16, h - r - 6);
+  const [pw_, ph] = upDims(mmE.ps); mmE.px = clamp(mmE.px, pw_ / 2 + 6, w - pw_ / 2 - 6); mmE.py = clamp(mmE.py, ph / 2 + 6, h - ph / 2 - 6);
+}
+function mmPanel() { const sy = mmE.sel === 'mm' ? mmE.y : mmE.py; $('mmP').classList.toggle('low', sy < innerHeight * 0.45); }
+const mmHandle = () => { const r = mmE.s / 2; return [mmE.x + (r + 6) * Math.SQRT1_2, mmE.y + (r + 6) * Math.SQRT1_2]; };
+const upHandle = () => { const [x0, y0, w, h] = edPBox(); return [x0 + w + 2, y0 + h + 2]; };
 function mmLoop() {
   if (!mmE) return;
   const c = $('mmCv'), w = innerWidth, h = innerHeight, d = DPR || 1;
@@ -3569,18 +3643,20 @@ function mmLoop() {
   g.fillStyle = bg; g.fillRect(0, 0, w, h);
   for (const [x, y, r, p] of mmE.st) { g.globalAlpha = 0.35 + 0.35 * Math.sin(rtime * 1.5 + p * 9); g.fillStyle = '#fff'; g.fillRect(x * w, y * h, r, r); }
   g.globalAlpha = 1;
-  // ghost HUD so you can see what the map might cover
+  // ghost HUD so you can see what things might cover
   const t = mmE.touch, ghost = 'rgba(255,255,255,0.28)';
   g.font = `600 30px ${FONT}`; g.fillStyle = ghost; g.textBaseline = 'top'; g.textAlign = 'left'; g.fillText('1,250', 20, 20);
   g.font = `600 11px ${FONT}`; g.textBaseline = 'middle'; g.fillText('ROOM ABCD  ·  2/4 PILOTS', 20, t ? 96 : 88);
   g.textAlign = 'right'; g.fillText('THE DRIFT', w - 20, 27); g.font = `600 15px ${FONT}`; g.fillText('◆ 500', w - 20, 64);
   g.strokeStyle = ghost; g.lineWidth = 1.5;
   const circ = (x, y, r) => { g.beginPath(); g.arc(x, y, r, 0, TAU); g.stroke(); };
-  { const [bx0, by0, bw, bh] = upBox(w, h, t); g.beginPath(); g.roundRect ? g.roundRect(bx0, by0, bw, bh, 12) : g.rect(bx0, by0, bw, bh); g.stroke(); g.font = `700 9px ${FONT}`; g.textAlign = 'left'; g.fillText('UPGRADES', bx0 + 10, by0 + 15); }
   if (t) { circ(w / 2, 29, 21); circ(w - 49, h - 265, 33); circ(w - 49, h - 183, 33); }
   else { circ(w - 86, h - 42, 16); circ(w - 38, h - 42, 16); }
   drawShipModel(g, SK(), w / 2, h / 2, -0.6, 1.3, rtime, false);
-  // the minimap itself
+  // upgrade panel
+  const pb = edPBox();
+  drawUpPanel(w, h, t, g, pb, ED_DEMO_BS, ED_DEMO_AB);
+  // minimap
   const s = Math.round(mmE.s), r = s / 2, x0 = mmE.x - r, y0 = mmE.y - r;
   if (!mmE.img || mmE.imgS !== s) { const keep = ow; ow = mmE.demo; mmE.img = owMiniBuild(s); ow = keep; mmE.imgS = s; }
   g.save(); g.globalAlpha = 0.82;
@@ -3590,36 +3666,66 @@ function mmLoop() {
   g.restore();
   g.font = `600 ${s > 110 ? 10 : 9}px ${FONT}`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = 'rgba(143,255,214,0.8)'; g.fillText('SAFE ZONE', mmE.x, y0 < 40 ? y0 + s + 11 : y0 - 9);
   g.restore();
-  // edit affordances: dashed ring + resize handle
-  g.strokeStyle = mmE.drag ? 'rgba(200,150,255,0.95)' : 'rgba(200,150,255,0.55)'; g.lineWidth = 1.5; g.setLineDash([5, 5]); g.lineDashOffset = -rtime * 20;
-  g.beginPath(); g.arc(mmE.x, mmE.y, r + 6, 0, TAU); g.stroke(); g.setLineDash([]);
-  const hx = mmE.x + (r + 6) * Math.SQRT1_2, hy = mmE.y + (r + 6) * Math.SQRT1_2;
-  g.fillStyle = 'rgb(200,150,255)'; g.beginPath(); g.arc(hx, hy, t ? 11 : 8, 0, TAU); g.fill();
-  g.strokeStyle = '#120a22'; g.lineWidth = 1.6; g.beginPath(); g.moveTo(hx - 3.5, hy - 3.5); g.lineTo(hx + 3.5, hy + 3.5); g.moveTo(hx + 3.5, hy); g.lineTo(hx + 3.5, hy + 3.5); g.lineTo(hx, hy + 3.5); g.moveTo(hx - 3.5, hy); g.lineTo(hx - 3.5, hy - 3.5); g.lineTo(hx, hy - 3.5); g.stroke();
+  // edit affordances: dashed outline (bright on the selected item) + resize handles
+  const handle = (hx, hy, on) => {
+    g.fillStyle = on ? 'rgb(200,150,255)' : 'rgba(200,150,255,0.55)'; g.beginPath(); g.arc(hx, hy, t ? 11 : 8, 0, TAU); g.fill();
+    g.strokeStyle = '#120a22'; g.lineWidth = 1.6; g.beginPath(); g.moveTo(hx - 3.5, hy - 3.5); g.lineTo(hx + 3.5, hy + 3.5); g.moveTo(hx + 3.5, hy); g.lineTo(hx + 3.5, hy + 3.5); g.lineTo(hx, hy + 3.5); g.moveTo(hx - 3.5, hy); g.lineTo(hx - 3.5, hy - 3.5); g.lineTo(hx, hy - 3.5); g.stroke();
+  };
+  g.setLineDash([5, 5]); g.lineDashOffset = -rtime * 20; g.lineWidth = 1.5;
+  g.strokeStyle = mmE.sel === 'mm' ? 'rgba(200,150,255,0.95)' : 'rgba(200,150,255,0.35)'; g.beginPath(); g.arc(mmE.x, mmE.y, r + 6, 0, TAU); g.stroke();
+  g.strokeStyle = mmE.sel === 'up' ? 'rgba(200,150,255,0.95)' : 'rgba(200,150,255,0.35)'; g.strokeRect(pb[0] - 4, pb[1] - 4, pb[2] + 8, pb[3] + 8);
+  g.setLineDash([]);
+  handle(...mmHandle(), mmE.sel === 'mm'); handle(...upHandle(), mmE.sel === 'up');
   requestAnimationFrame(mmLoop);
+}
+function edHit(x, y) {
+  const grab = mmE.touch ? 26 : 16, [mhx, mhy] = mmHandle(), [uhx, uhy] = upHandle(), [px0, py0, pw_, ph] = edPBox();
+  if (Math.hypot(x - mhx, y - mhy) < grab) return ['mm', 'size'];
+  if (Math.hypot(x - uhx, y - uhy) < grab) return ['up', 'size'];
+  if (Math.hypot(x - mmE.x, y - mmE.y) < mmE.s / 2 + 14) return ['mm', 'move'];
+  if (x > px0 - 8 && x < px0 + pw_ + 8 && y > py0 - 8 && y < py0 + ph + 8) return ['up', 'move'];
+  return null;
 }
 $('mmCv').addEventListener('pointerdown', e => {
   if (!mmE) return;
-  const r = mmE.s / 2, hx = mmE.x + (r + 6) * Math.SQRT1_2, hy = mmE.y + (r + 6) * Math.SQRT1_2, grab = mmE.touch ? 26 : 16;
-  if (Math.hypot(e.clientX - hx, e.clientY - hy) < grab) mmE.drag = { k: 'size' };
-  else if (Math.hypot(e.clientX - mmE.x, e.clientY - mmE.y) < r + 14) mmE.drag = { k: 'move', ox: mmE.x - e.clientX, oy: mmE.y - e.clientY };
-  else return;
+  const hit = edHit(e.clientX, e.clientY); if (!hit) return;
+  const [k, mode] = hit; mmSel(k);
+  if (mode === 'move') mmE.drag = { k, m: 'move', ox: (k === 'mm' ? mmE.x : mmE.px) - e.clientX, oy: (k === 'mm' ? mmE.y : mmE.py) - e.clientY };
+  else { const [x0, y0] = edPBox(); mmE.drag = { k, m: 'size', ax: x0, ay: y0 }; }
   e.preventDefault(); try { $('mmCv').setPointerCapture(e.pointerId); } catch (x) {}
 });
 $('mmCv').addEventListener('pointermove', e => {
   if (!mmE) return;
-  const r = mmE.s / 2, hx = mmE.x + (r + 6) * Math.SQRT1_2, hy = mmE.y + (r + 6) * Math.SQRT1_2;
-  if (!mmE.drag) { $('mmCv').style.cursor = Math.hypot(e.clientX - hx, e.clientY - hy) < 16 ? 'nwse-resize' : Math.hypot(e.clientX - mmE.x, e.clientY - mmE.y) < r + 14 ? 'grab' : 'default'; return; }
-  if (mmE.drag.k === 'move') { mmE.x = e.clientX + mmE.drag.ox; mmE.y = e.clientY + mmE.drag.oy; }
-  else { mmE.s = clamp(Math.round(Math.hypot(e.clientX - mmE.x, e.clientY - mmE.y) * 2 / 1.06), MM_MIN, MM_MAX); $('mmSz').value = mmE.s; }
+  if (!mmE.drag) { const hit = edHit(e.clientX, e.clientY); $('mmCv').style.cursor = !hit ? 'default' : hit[1] === 'size' ? 'nwse-resize' : 'grab'; return; }
+  const D = mmE.drag;
+  if (D.m === 'move') { if (D.k === 'mm') { mmE.x = e.clientX + D.ox; mmE.y = e.clientY + D.oy; } else { mmE.px = e.clientX + D.ox; mmE.py = e.clientY + D.oy; } }
+  else if (D.k === 'mm') { mmE.s = clamp(Math.round(Math.hypot(e.clientX - mmE.x, e.clientY - mmE.y) * 2 / 1.06), MM_MIN, MM_MAX); $('mmSz').value = mmE.s; }
+  else { mmE.ps = clamp((e.clientX - D.ax) / 140, UP_MIN, UP_MAX); const [w, h] = upDims(mmE.ps); mmE.px = D.ax + w / 2; mmE.py = D.ay + h / 2; $('mmSz').value = Math.round(mmE.ps * 100); }
   mmClampE(); mmPanel();
 });
 const mmUp = () => { if (mmE) mmE.drag = null; };
 $('mmCv').addEventListener('pointerup', mmUp); $('mmCv').addEventListener('pointercancel', mmUp);
-$('mmSz').addEventListener('input', e => { if (!mmE) return; mmE.s = clamp(+e.target.value, MM_MIN, MM_MAX); mmClampE(); mmPanel(); });
-$('mmReset').onclick = () => { if (!mmE) return; delete save[mmE.touch ? 'mmT' : 'mmD']; const [x0, y0, sz] = mmLayout(mmE.touch, innerWidth, innerHeight); mmE.x = x0 + sz / 2; mmE.y = y0 + sz / 2; mmE.s = sz; $('mmSz').value = sz; mmPanel(); sfx.ui(); };
-$('mmDone').onclick = () => { if (!mmE) return; save[mmE.touch ? 'mmT' : 'mmD'] = { x: +(mmE.x / innerWidth).toFixed(4), y: +(mmE.y / innerHeight).toFixed(4), s: Math.round(mmE.s) }; persist(); mmE = null; $('mmEd').classList.add('hidden'); if (ow) ow.mm = null; sfx.buy(); };
+$('mmSz').addEventListener('input', e => {
+  if (!mmE) return;
+  if (mmE.sel === 'mm') mmE.s = clamp(+e.target.value, MM_MIN, MM_MAX);
+  else { const [x0, y0] = edPBox(); mmE.ps = clamp(+e.target.value / 100, UP_MIN, UP_MAX); const [w, h] = upDims(mmE.ps); mmE.px = x0 + w / 2; mmE.py = y0 + h / 2; }
+  mmClampE(); mmPanel();
+});
+$('mmReset').onclick = () => {
+  if (!mmE) return; const t = mmE.touch, w = innerWidth, h = innerHeight;
+  delete save[t ? 'mmT' : 'mmD']; delete save[t ? 'upT' : 'upD'];
+  const [x0, y0, sz] = mmLayout(t, w, h), [px, py, pw_, ph, psc] = upBox(w, h, t);
+  Object.assign(mmE, { x: x0 + sz / 2, y: y0 + sz / 2, s: sz, px: px + pw_ / 2, py: py + ph / 2, ps: psc }); mmSel(mmE.sel); mmPanel(); sfx.ui();
+};
+$('mmDone').onclick = () => {
+  if (!mmE) return; const t = mmE.touch, w = innerWidth, h = innerHeight;
+  save[t ? 'mmT' : 'mmD'] = { x: +(mmE.x / w).toFixed(4), y: +(mmE.y / h).toFixed(4), s: Math.round(mmE.s) };
+  save[t ? 'upT' : 'upD'] = { x: +(mmE.px / w).toFixed(4), y: +(mmE.py / h).toFixed(4), s: +mmE.ps.toFixed(3) };
+  persist(); mmE = null; $('mmEd').classList.add('hidden'); if (ow) ow.mm = null; sfx.buy();
+};
 $('sMM').onclick = () => { audio(); sfx.ui(); openMMEd(); };
+$('mpRespawn').onclick = () => { audio(); owRespawn(); };
+$('mpQuit').onclick = () => { save.best = Math.max(save.best, score); persist(); goMenu(); };
 
 // ================= MULTIPLAYER: Supabase Realtime broadcast channels =================
 // Every pilot sends one small packet 5 times a second. The longest-standing pilot is the host:
@@ -4137,7 +4243,7 @@ function update(dt, rdt) {
     if (r < rh * 1.05) { if (gmode === 'world' && ow && ow.safe > 0 && gHole) { const hx = ship.x - gHole.x, hy = ship.y - gHole.y, hd = Math.hypot(hx, hy) || 1; ship.x = gHole.x + hx / hd * gHole.rh * 1.6; ship.y = gHole.y + hy / hd * gHole.rh * 1.6; ship.vx = hx / hd * 320 * U; ship.vy = hy / hd * 320 * U; } else killShip(); }
   } else if (mode === 'play') {
     mult = lerp(mult, 1, dt * 3); lastMultInt = 1;
-    if (lives > 0) { deadTimer -= rdt; if (deadTimer <= 0) { ship = mkShip(); ship.inv = 3; if (gmode === 'world' && ow) { let x = ow.dx, y = ow.dy; for (const h of owHoles) { const d = Math.hypot(x - h.x, y - h.y) || 1; if (d < h.rh * 10) { x = h.x + (x - h.x) / d * h.rh * 10; y = h.y + (y - h.y) / d * h.rh * 10; } } ship.x = x; ship.y = y; ship.vx = 0; ship.vy = 0; } ebullets = ebullets.filter(b => Math.hypot(b.x - ship.x, b.y - ship.y) > 250 * U); } }
+    if (lives > 0) { deadTimer -= rdt; if (deadTimer <= 0) { ship = mkShip(); ship.inv = 3; if (gmode === 'world' && ow) { const [x, y] = owSpawnPos(); ship.x = x; ship.y = y; ship.vx = 0; ship.vy = 0; camX = x; camY = y; owUpdateChunks(true); } ebullets = ebullets.filter(b => Math.hypot(b.x - ship.x, b.y - ship.y) > 250 * U); } }
     else { overTimer -= rdt; if (overTimer <= 0) gameOver(); }
   }
   wantDash = false;
@@ -5135,7 +5241,7 @@ function drawHUDi(W, H) {
   // lives & power-up timers
   const ly = touch ? 96 : H - 22, by = touch ? (gmode === 'world' && ow ? upBox(W, H, true)[1] + upBox(W, H, true)[3] + 24 : 128) : H - 58;
   if (gmode !== 'world') for (let i = 0; i < lives; i++) miniShip(28 + i * 20, ly, 0.85);
-  else if (mp) { ctx.font = `600 11px ${FONT}`; ctx.fillStyle = 'rgba(233,238,247,0.62)'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; spaced('ROOM ' + mp.code + '  ·  ' + (1 + Object.keys(mp.peers).length) + '/' + MPMAX + ' PILOTS' + (mp.host ? '  ·  HOST' : ''), 20, touch ? 96 : 88, 1.6, 'left'); }
+  else if (mp) { const ry = touch ? 96 : 88; for (let i = 0; i < lives; i++) miniShip(28 + i * 20, ry, 0.85); ctx.font = `600 11px ${FONT}`; ctx.fillStyle = 'rgba(233,238,247,0.62)'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; spaced('ROOM ' + mp.code + '  ·  ' + (1 + Object.keys(mp.peers).length) + '/' + MPMAX + ' PILOTS' + (mp.host ? '  ·  HOST' : ''), 28 + Math.max(1, lives) * 20, ry, 1.6, 'left'); }
   if (gmode === 'world' && ow) drawMinimap(W, H);
   let bx = 34;
   if (pw.shield > 0) { badge(bx, by, 14, 'shieldpk', PICK.shield.c, 1, pw.shield > 1 ? '×' + pw.shield : '', false); bx += 38; }
@@ -5347,7 +5453,7 @@ function draw() {
     ctx.restore();
   }
   ctx.restore();
-  if (!paused && !owChoosing) drawAnn();
+  if (!paused && !owChoosing && !(ow && ow.out)) drawAnn();
   bloom();
   ctx.fillStyle = vigGrad; ctx.fillRect(0, 0, W, H);
   if (pw.slow > 0) { ctx.fillStyle = `rgba(90,120,255,${0.06 + 0.02 * Math.sin(rtime * 4)})`; ctx.fillRect(0, 0, W, H); }
