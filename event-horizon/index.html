@@ -626,7 +626,7 @@ body.paused .tbtn{display:none!important}
 <script>
 'use strict';
 // Versioning: next version -> next whole number (4.00), sub version -> +0.01 (3.01)
-const VERSION = '4.22';
+const VERSION = '4.23';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -3442,11 +3442,22 @@ function owRespawn() {
   ring(x, y, 160, '120,240,255', 0.8, 4); sfx.warp();
 }
 // enemies chase whichever pilot is closest
+// only plain red drones go into the safe zone; everything else ignores pilots inside it and waits at the edge
+const owSafeR = () => ow ? ow.R * 0.3 : 0;
 function owTarget(d) {
-  if (!mp) return ship;
-  let best = null, bd = 1e18;
-  for (const p of mpPl) { const q = (p.x - d.x) ** 2 + (p.y - d.y) ** 2; if (q < bd) { bd = q; best = p; } }
-  return best;
+  const list = mp ? mpPl : ship ? [ship] : [], safeOK = d.kind === 'drone' && !d.mini, SZ = owSafeR();
+  let best = null, bd = 1e18, near = null, nd = 1e18;
+  for (const p of list) {
+    const q = (p.x - d.x) ** 2 + (p.y - d.y) ** 2;
+    if (q < nd) { nd = q; near = p; }
+    if (!safeOK && Math.hypot(p.x, p.y) < SZ) continue;
+    if (q < bd) { bd = q; best = p; }
+  }
+  if (best || !near) return best;
+  // everyone it could chase is in the safe zone: hover outside the edge near them and hold fire
+  const a = Math.atan2(near.y, near.x) + Math.sin(time * 0.25 + d.ph) * 0.5, r = SZ + 280 * U;
+  d.cd = Math.max(d.cd, 0.5); if (d.st !== 'move' && d.st !== 'rest') { d.st = 'move'; d.stT = 0; }
+  return { x: Math.cos(a) * r, y: Math.sin(a) * r, vx: 0, vy: 0 };
 }
 const onS = (d, T) => gmode === 'world' ? !!T && Math.abs(d.x - T.x) < Math.max(W / 2, 600 * U) && Math.abs(d.y - T.y) < Math.max(H / 2, 420 * U) : onScreen(d);
 function owTick(dt) {
@@ -3542,6 +3553,8 @@ function drawHoles() {
     drawOrb(ctx, o.x, o.y, r, T.c, T.c2, time + o.ph);
     ctx.restore();
   }
+  const SZ = owSafeR(), cd = Math.hypot(camX, camY);
+  if (Math.abs(cd - SZ) < Math.hypot(W, H)) { ctx.save(); ctx.strokeStyle = 'rgba(143,255,214,0.22)'; ctx.lineWidth = 2 * Math.max(1, U); ctx.setLineDash([14 * U, 12 * U]); ctx.lineDashOffset = time * 20 * U; ctx.beginPath(); ctx.arc(0, 0, SZ, 0, TAU); ctx.stroke(); ctx.setLineDash([]); ctx.restore(); }
   drawWorldEdge();
 }
 // protective aura while picking an ability (and 2s after)
@@ -4530,7 +4543,7 @@ function update(dt, rdt) {
     const avoid = sk ? rh * 3.2 : Math.max(dR * 0.8, rh * 5);
     const hx = gmode === 'world' && gHole ? gHole.x : CX, hy = gmode === 'world' && gHole ? gHole.y : CY, hr = Math.hypot(d.x - hx, d.y - hy) || 1;
     if (r < avoid) { ax += (d.x - hx) / hr * 700 * U; ay += (d.y - hy) / hr * 700 * U; }
-    if (gmode === 'world') bound(d, d.R, 0.5);
+    if (gmode === 'world') { bound(d, d.R, 0.5); if (ow && (d.kind !== 'drone' || d.mini)) { const zr = Math.hypot(d.x, d.y) || 1; if (zr < owSafeR() + 40 * U) { ax += d.x / zr * 1100 * U; ay += d.y / zr * 1100 * U; } } }
     else if (follow) { if (r > WR * 0.9) { ax -= (d.x - CX) / r * 500 * U; ay -= (d.y - CY) / r * 500 * U; } }
     else { if (d.x < 0) ax += 400 * U; if (d.x > W) ax -= 400 * U; if (d.y < 0) ay += 400 * U; if (d.y > H) ay -= 400 * U; }
     d.vx += ax * edt; d.vy += ay * edt;
