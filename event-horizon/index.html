@@ -502,7 +502,7 @@ body.paused .tbtn{display:none!important}
 <script>
 'use strict';
 // Versioning (renumbered by request): next version -> next whole number (3.00), sub version -> +0.01 (2.01)
-const VERSION = '2.17';
+const VERSION = '2.18';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -1665,7 +1665,7 @@ function carMid(row) {
 function carEquip(el) {
   const id = el.dataset.sel, ship = id.startsWith('ship:'), sid = id.slice(ship ? 5 : 7);
   if ((ship ? save.skin : save.bskin) === sid) return;
-  if (ship) save.skin = sid; else save.bskin = sid;
+  if (ship) save.skin = sid; else { save.bskin = sid; garageShoot(6); }
   persist(); sfx.ui(); buzz(10);
   el.parentElement.querySelectorAll('.skc').forEach(x => x.classList.toggle('eq', x === el));
   shopSel.G = ''; renderPrevInfo();
@@ -1762,7 +1762,7 @@ $('garage').addEventListener('click', e => {
     else { selectShop(k); sfx.ui(); }
     return;
   }
-  if (e.target.closest('#pvCv')) { selectShop(''); sfx.ui(); }
+  if (e.target.closest('#pvCv')) { const r = $('pvCv').getBoundingClientRect(), z = (pv && pv.z) || 1; selectShop(''); audio(); garageShoot(4, (e.clientX - r.left) / z, (e.clientY - r.top) / z); }
 });
 let hovT = 0;
 $('garage').addEventListener('pointerover', e => { if (e.pointerType !== 'mouse') return; const n = e.target.closest('.gnode'); if (n) { clearTimeout(hovT); selectShop(n.dataset.sel); } });
@@ -2110,15 +2110,33 @@ function pvSkin(c, dt) {
   c.globalCompositeOperation = 'source-over';
   drawShipModel(c, sk, x, y, ang, 1.7, t, false);
 }
+let gBurst = 0, gAim = null, gAimT = 0;
+function garageShoot(n, tx, ty) { gBurst = Math.min(12, gBurst + n); gAim = tx != null ? { x: tx, y: ty } : null; gAimT = 1.4; }
 function pvIdle(c, dt) {
   const w = pv.w, h = pv.h, t = pv.t, sk = pv.sk, cx = w / 2, cy = h / 2 - 4, bob = Math.sin(t * 1.6) * 3;
+  // aim at the click (or straight up), fire queued shots with the equipped bullet
+  if (gAimT > 0) gAimT -= dt; else gAim = null;
+  const want = gAim ? Math.atan2(gAim.y - (cy + bob), gAim.x - cx) : -Math.PI / 2 + Math.sin(t * 0.8) * 0.05;
+  if (pv.ang == null) pv.ang = -Math.PI / 2;
+  let da = want - pv.ang; da = Math.atan2(Math.sin(da), Math.cos(da)); pv.ang += da * Math.min(1, dt * 12);
+  pv.shots = pv.shots || []; pv.fcd = (pv.fcd || 0) - dt;
+  if (gBurst > 0 && pv.fcd <= 0 && Math.abs(da) < 0.5) {
+    pv.fcd = 0.085; gBurst--;
+    const a = pv.ang + rand(-0.035, 0.035), sp = 520;
+    pv.shots.push({ x: cx + Math.cos(pv.ang) * 26, y: cy + bob + Math.sin(pv.ang) * 26, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, seed: Math.random() * 1000 });
+    tone(920, 0.05, 'square', 0.02, 460);
+  }
+  c.globalCompositeOperation = 'lighter';
+  for (let i = pv.shots.length - 1; i >= 0; i--) { const b = pv.shots[i]; b.x += b.vx * dt; b.y += b.vy * dt; if (b.x < -30 || b.x > w + 30 || b.y < -30 || b.y > h + 30) { pv.shots.splice(i, 1); continue; } drawBullet(c, BS(), b, t, 1.7); if (BPX[BS().style] && Math.random() < 0.5) pv.parts.push({ x: b.x, y: b.y, vx: -b.vx * 0.05 + rand(-15, 15), vy: -b.vy * 0.05 + rand(-15, 15), life: 0.35, col: Array.isArray(BPX[BS().style]) ? BPX[BS().style][0] : '255,255,255' }); }
+  c.globalCompositeOperation = 'source-over';
   const g = c.createRadialGradient(cx, cy + 40, 0, cx, cy + 40, 70); g.addColorStop(0, 'rgba(120,200,255,.18)'); g.addColorStop(1, 'rgba(120,200,255,0)');
   c.fillStyle = g; c.beginPath(); c.ellipse(cx, cy + 40, 70, 18, 0, 0, TAU); c.fill();
   c.strokeStyle = 'rgba(160,210,255,.25)'; c.lineWidth = 1.2; c.beginPath(); c.ellipse(cx, cy + 40, 56, 13, 0, 0, TAU); c.stroke();
   c.save(); c.strokeStyle = 'rgba(160,210,255,.55)'; c.lineWidth = 2; c.setLineDash([10, 16]); c.lineDashOffset = -t * 30; c.beginPath(); c.ellipse(cx, cy + 40, 66, 16, 0, 0, TAU); c.stroke(); c.restore();
-  if (Math.random() < 0.8) pv.parts.push({ x: cx + rand(-3, 3), y: cy + 20 + bob, vx: rand(-8, 8), vy: rand(50, 90), life: rand(0.3, 0.6), col: rgbOf(sk.trail, (t * 20) | 0, t) });
+  const ba = (pv.ang == null ? -Math.PI / 2 : pv.ang) + Math.PI;
+  if (Math.random() < 0.8) pv.parts.push({ x: cx + Math.cos(ba) * 20 + rand(-3, 3), y: cy + bob + Math.sin(ba) * 20, vx: Math.cos(ba) * rand(50, 90) + rand(-8, 8), vy: Math.sin(ba) * rand(50, 90), life: rand(0.3, 0.6), col: rgbOf(sk.trail, (t * 20) | 0, t) });
   if (sk.px && Math.random() < 0.5) pv.parts.push({ x: cx + rand(-8, 8), y: cy + 18 + bob, vx: rand(-20, 20), vy: rand(30, 70), life: 0.5, col: sk.px[Math.random() * sk.px.length | 0] });
-  drawShipModel(c, sk, cx, cy + bob, -Math.PI / 2 + Math.sin(t * 0.8) * 0.05, 2.7, t, false);
+  drawShipModel(c, sk, cx, cy + bob, pv.ang, 2.7, t, false);
 }
 function pvFrame(dt, t) {
   const cvs = $('pvCv'); if (!cvs) return;
@@ -2226,6 +2244,7 @@ $('crBack').onclick = () => { crate = null; hTab = 'ORB'; openHangar(hangarFrom)
 $('crEquip').onclick = () => { if (!crate) return; const r = crate.res; if (r.type === 'ship') save.skin = r.it.id; else save.bskin = r.it.id; persist(); sfx.ui(); $('crEquip').style.display = 'none'; };
 $('crAgain').onclick = () => { if (crate) openOrb(crate.k); };
 function buyBSkin(id) {
+  if (save.bskin !== id) garageShoot(6);
   const bs = BSKINS.find(x => x.id === id); if (!bs) return;
   save.bskins = save.bskins || ['pellet'];
   if (!save.bskins.includes(id)) { if (save.dust < bs.cost) return; save.dust -= bs.cost; save.bskins.push(id); sfx.buy(); buzz(30); } else sfx.ui();
