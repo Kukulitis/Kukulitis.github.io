@@ -548,8 +548,8 @@ body.paused .tbtn{display:none!important}
 <div id="owPick" class="hidden"><div class="owp"><div class="h3" id="owH" style="font-size:24px">CHOOSE AN ABILITY</div><div class="sub">Your ship holds still and is shielded while you choose. Lose your ship and you lose your abilities and half your upgrades.</div><div class="owt"><i id="owBar"></i></div><div class="owtm" id="owTm"></div><div class="owc" id="owC"></div></div></div>
 
 <div id="mmEd" class="hidden"><canvas id="mmCv"></canvas>
-  <div class="mmp" id="mmP"><div class="mmt">HUD layout</div><div class="mmx" id="mmX"></div><div class="mmsl" id="mmSl"></div>
-    <input type="range" id="mmSz" min="48" max="220" step="1" aria-label="Minimap size">
+  <div class="mmp" id="mmP"><div class="mmt">HUD layout</div><div class="mmx" id="mmX"></div><div class="mmsl hidden" id="mmSl"></div>
+    <input type="range" class="hidden" id="mmSz" min="48" max="220" step="1" aria-label="Minimap size">
     <div class="mmb"><button class="sec" id="mmReset">Reset</button><button class="buy ctr" id="mmDone">Done</button></div></div>
 </div>
 
@@ -619,7 +619,7 @@ body.paused .tbtn{display:none!important}
 <script>
 'use strict';
 // Versioning: next version -> next whole number (4.00), sub version -> +0.01 (3.01)
-const VERSION = '4.16';
+const VERSION = '4.17';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -3672,7 +3672,7 @@ function openMMEd() {
   const st = []; for (let i = 0; i < 160; i++) st.push([Math.random(), Math.random(), Math.random() * 1.4 + 0.3, Math.random()]);
   const [sx0, sy0, , , ssc] = sbBox(w, h, touch, 3);
   mmE = { touch, x: x0 + sz / 2, y: y0 + sz / 2, s: sz, px: px + pw_ / 2, py: py + ph / 2, ps: psc, sx: sx0, sy: sy0, ss: ssc, sel: 'mm', drag: null, demo, img: null, imgS: 0, st };
-  $('mmX').textContent = 'Drag the minimap, upgrade panel or scoreboard to move it. Drag its round handle or use the slider to resize. Saved for ' + (touch ? 'touch screens' : 'mouse and keyboard') + '.';
+  $('mmX').textContent = 'Drag the minimap, upgrade panel or scoreboard to move it. Drag its round handle to resize. Saved for ' + (touch ? 'touch screens' : 'mouse and keyboard') + '.';
   mmSel('mm'); $('mmEd').classList.remove('hidden'); mmPanel(); requestAnimationFrame(mmLoop);
 }
 function mmSel(k) {
@@ -3689,7 +3689,15 @@ function mmClampE() {
   const [pw_, ph] = upDims(mmE.ps); mmE.px = clamp(mmE.px, pw_ / 2 + 6, w - pw_ / 2 - 6); mmE.py = clamp(mmE.py, ph / 2 + 6, h - ph / 2 - 6);
   const [sw, sh] = sbDims(mmE.ss, 3); mmE.sx = clamp(mmE.sx, 6, w - sw - 6); mmE.sy = clamp(mmE.sy, 6, h - sh - 6);
 }
-function mmPanel() { const sy = mmE.sel === 'mm' ? mmE.y : mmE.sel === 'up' ? mmE.py : mmE.sy + 30; $('mmP').classList.toggle('low', sy < innerHeight * 0.45); }
+// park the help panel at the top or bottom, whichever covers less of the minimap, panel and scoreboard
+function mmPanel() {
+  const w = innerWidth, h = innerHeight, pw_ = Math.min(360, w * 0.88), ph = $('mmP').offsetHeight || 150, x0 = w / 2 - pw_ / 2;
+  const r = mmE.s / 2, items = [[mmE.x - r - 10, mmE.y - r - 10, mmE.s + 20, mmE.s + 20], edPBox(), edSBox()];
+  const cover = y0 => items.reduce((t, [ix, iy, iw, ih]) => t + Math.max(0, Math.min(x0 + pw_, ix + iw) - Math.max(x0, ix)) * Math.max(0, Math.min(y0 + ph, iy + ih) - Math.max(y0, iy)), 0);
+  let best = 64, bc = cover(64);
+  for (const y of [Math.round(h / 2 + 50), Math.round(h - 18 - ph)]) { const c = cover(y); if (c < bc - 1) { bc = c; best = y; } }
+  $('mmP').classList.remove('low'); $('mmP').style.top = best + 'px'; $('mmP').style.bottom = 'auto';
+}
 const mmHandle = () => { const r = mmE.s / 2; return [mmE.x + (r + 6) * Math.SQRT1_2, mmE.y + (r + 6) * Math.SQRT1_2]; };
 const upHandle = () => { const [x0, y0, w, h] = edPBox(); return [x0 + w + 2, y0 + h + 2]; };
 const sbHandle = () => { const [x0, y0, w, h] = edSBox(); return [x0 + w + 2, y0 + h + 2]; };
