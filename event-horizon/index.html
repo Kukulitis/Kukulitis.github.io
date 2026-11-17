@@ -130,6 +130,44 @@ svg{stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-l
 .odds{display:grid;gap:5px;font-size:12px}
 .odds div{display:flex;align-items:center;gap:8px}.odds i{width:8px;height:8px;border-radius:50%}.odds span{flex:1;color:var(--dim)}.odds b{color:#fff;font-weight:600}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#hangar .hd,#hangar .seg,#hangar .ft{max-width:1060px}
+#hangar .seg .tab{flex:1}
+.shopb{flex:1;min-height:0;width:100%;max-width:1060px;display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,420px);grid-template-areas:"list prev";gap:14px}
+.slist{grid-area:list;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;touch-action:pan-y;overscroll-behavior:contain;padding:0 4px 12px 2px}
+.sprev{--c:255,255,255;grid-area:prev;align-self:start;display:flex;flex-direction:column;gap:12px;padding:12px;border-radius:16px;background:linear-gradient(180deg,rgba(var(--c),.07),rgba(255,255,255,.02));border:1px solid rgba(var(--c),.35);max-height:100%;overflow-y:auto;transition:border-color .25s}
+.sprev.flash{animation:fl .7s ease}
+#pvCv{display:block;width:100%;height:250px;border-radius:12px;background:radial-gradient(circle at 50% 50%,rgba(var(--c),.09),rgba(0,0,0,.5) 75%);border:1px solid rgba(255,255,255,.06)}
+.pvi{display:flex;flex-direction:column;gap:10px;text-align:left}
+.slist,.sprev{text-align:left}
+.orbc .row2{margin-top:auto}
+.pvh{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.pvn{font-size:19px;font-weight:600;color:#fff}
+.pvd{font-size:13px;line-height:1.5;color:var(--dim)}
+.sprev .lv i{flex:1;max-width:60px}
+.sgh{font-size:11px;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:var(--dim);margin:14px 4px 7px}
+.sgh:first-child{margin-top:2px}.sgh.myth{color:rgb(255,110,150)}
+.srow{--c:255,255,255;width:100%;display:grid;grid-template-columns:40px minmax(0,1fr) auto;align-items:center;gap:12px;padding:8px 12px 8px 8px;margin-bottom:6px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.03);color:#eaf6ff;text-align:left;cursor:pointer;font:inherit;transition:background .15s,border-color .15s,box-shadow .15s}
+.srow:hover{background:rgba(255,255,255,.06)}
+.srow.sel{border-color:rgba(var(--c),.75);background:rgba(var(--c),.1);box-shadow:inset 3px 0 0 rgb(var(--c))}
+.srow canvas{width:40px;height:40px;border-radius:10px;background:rgba(var(--c),.1);border:1px solid rgba(var(--c),.3)}
+.srn{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.srs{display:flex;align-items:center;gap:8px;margin-top:4px;font-size:11px;color:var(--dim)}
+.srs .lv{margin-top:0}.srs .lv i{width:14px}
+.srp{font-size:13px;font-weight:600;color:var(--mint);white-space:nowrap}
+.srp.no{color:var(--dim);opacity:.65}
+.srp.tag{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:rgb(var(--c))}
+.subseg{display:flex;gap:4px;margin:0 0 10px;padding:3px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid var(--line)}
+.subseg button{flex:1;padding:8px;border:0;border-radius:8px;background:transparent;color:var(--dim);font:600 11px var(--f);letter-spacing:.16em;text-transform:uppercase;cursor:pointer}
+.subseg button.on{background:rgba(255,255,255,.1);color:#fff}
+.orbv{flex:1;min-height:0;width:100%;max-width:1060px;overflow-y:auto;-webkit-overflow-scrolling:touch;touch-action:pan-y;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:6px 2px 10px}
+.orbrow{display:flex;justify-content:center;align-items:stretch;gap:14px;flex-wrap:wrap;width:100%}
+.orbc{width:300px;max-width:100%}
+.orbc .skp{height:150px}
+.orbref{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:6px 16px;font-size:11px;color:var(--dim);padding:8px 16px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.03)}
+.orbref>span:first-child{letter-spacing:.16em;text-transform:uppercase;font-weight:600}
+.orbref b{color:#fff;font-weight:600}.orbref i{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;vertical-align:middle}
+@media (max-width:760px) and (min-height:521px){.shopb{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);grid-template-areas:"prev" "list";gap:10px}#pvCv{height:150px}.sprev{padding:10px;gap:8px;max-height:none}.pvi{gap:7px}.pvd{font-size:12px}.pvn{font-size:16px}.orbv{justify-content:flex-start}.orbc .skp{height:110px}.orbref{border-radius:14px}}
+@media (max-height:520px){.shopb{grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);grid-template-areas:"list prev";gap:10px}.sprev{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);align-items:center;gap:10px;padding:9px}#pvCv{height:min(170px,calc(100vh - 210px))}.sprev .pvd,.sprev .lv{display:none}.pvi{gap:7px}.pvn{font-size:15px}.pvh .chip{display:none}.sprev .cs{flex-direction:column;align-items:flex-start;gap:2px;padding:6px 8px}.sprev .buy{padding:9px 10px;font-size:12px}.orbv{justify-content:flex-start}}
 .orbp{height:150px}
 #crate{background:rgba(2,3,10,.88)}
 #crCv{width:min(380px,86vw);height:min(380px,86vw);cursor:pointer;touch-action:manipulation;-webkit-mask-image:radial-gradient(circle at 50% 50%,#000 48%,transparent 70%);mask-image:radial-gradient(circle at 50% 50%,#000 48%,transparent 70%)}
@@ -241,9 +279,13 @@ body.paused .tbtn{display:none!important}
 </div>
 
 <div id="hangar" class="ov scr hidden">
-  <div class="hd a1"><div><div class="h3">SHOP</div><div class="sub">Permanent upgrades. Pay with ◆ stardust collected in battle.</div></div><div class="pill">◆ <span id="hDust">0</span></div></div>
+  <div class="hd a1"><div><div class="h3">SHOP</div><div class="sub" id="hSub"></div></div><div class="pill">◆ <span id="hDust">0</span></div></div>
   <div class="seg a2" id="tabs"></div>
-  <div class="list a3"><div class="grid" id="hList"></div></div>
+  <div class="shopb a3" id="shopB">
+    <div class="sprev" id="hPrev"><canvas id="pvCv"></canvas><div class="pvi" id="pvI"></div></div>
+    <div class="slist" id="hList"></div>
+  </div>
+  <div class="orbv a3 hidden" id="orbV"></div>
   <div class="ft a4"><button class="sec" id="hBack">Back</button><button class="play sm" id="hGo"><span class="pm" id="hGoT">PLAY</span><span class="ps" id="hGoS"></span></button></div>
 </div>
 
@@ -276,7 +318,7 @@ body.paused .tbtn{display:none!important}
 <script>
 'use strict';
 // Versioning (renumbered by request): next version -> next whole number (3.00), sub version -> +0.01 (2.01)
-const VERSION = '2.03';
+const VERSION = '2.04';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -661,8 +703,9 @@ function skinAffordable() { return SKINS.some(x => x.rar !== 'mythic' && !(save.
 const ORBS = {
   void: { name: 'Void Orb', cost: 400, col: '160,120,255', col2: '90,200,255', odds: { common: 50, rare: 28, epic: 14, legendary: 6.5, mythic: 1.5 } },
   stellar: { name: 'Stellar Orb', cost: 1200, col: '255,200,110', col2: '255,110,180', odds: { rare: 45, epic: 32, legendary: 16, mythic: 7 } },
+  quasar: { name: 'Quasar Orb', cost: 3000, col: '70,240,200', col2: '210,255,120', odds: { epic: 55, legendary: 32, mythic: 13 } },
 };
-const orbCount = () => (save.orbs ? (save.orbs.void || 0) + (save.orbs.stellar || 0) : 0);
+const orbCount = () => (save.orbs ? (save.orbs.void || 0) + (save.orbs.stellar || 0) + (save.orbs.quasar || 0) : 0);
 function rollOrb(kind) {
   const od = ORBS[kind].odds; let r = Math.random() * 100, rar = 'common';
   for (const k of RORDER) if (od[k]) { r -= od[k]; if (r <= 0) { rar = k; break; } }
@@ -1278,95 +1321,444 @@ function buildKeysRef() {
     ? '<span>Left thumb</span><span>Move</span><span>Right thumb</span><span>Aim and fire</span><span>Hold still</span><span>Auto-aim</span>'
     : `<span>${k('W')}${k('A')}${k('S')}${k('D')}</span><span>Move</span><span>${k('Mouse')}</span><span>Aim and fire</span><span>${k('Shift')}</span><span>Dash</span><span>${k('E')}</span><span>Gravity bomb</span><span>${k('M')}</span><span>Mute</span>`;
 }
-let hangarFrom = 'menu', hTab = 'SHIP';
+// ================= SHOP (list + live preview) =================
+let hangarFrom = 'menu', hTab = 'UPG', skSub = 'ship';
+const shopSel = { UPG: '', SKIN: '' };
+const STABS = [['UPG', 'Upgrades'], ['SKIN', 'Skins'], ['ORB', 'Orbs']];
 function openHangar(from) {
   hangarFrom = from; hideAll(); show('hangar');
   if (from === 'cleared') { $('hGoT').textContent = 'NEXT'; $('hGoS').textContent = playLabel(sector + 1); }
   else { $('hGoT').textContent = 'PLAY'; $('hGoS').textContent = playLabel(save.sel); }
+  if (hTab !== 'UPG' && hTab !== 'SKIN' && hTab !== 'ORB') hTab = 'UPG';
   renderHangar();
+}
+const upgCan = () => UPG.some(u => tier(u.k) < u.max && save.dust >= u.cost[tier(u.k)]);
+const chipR = r => `<span class="chip" style="background:rgba(${RAR[r].c},.16);color:rgb(${RAR[r].c})">${RAR[r].n}</span>`;
+function defaultSel(tab) {
+  if (tab === 'UPG') { const u = UPG.find(x => tier(x.k) < x.max && save.dust >= x.cost[tier(x.k)]) || UPG.find(x => tier(x.k) < x.max) || UPG[0]; return u.k; }
+  return skSub === 'ship' ? 'ship:' + SK().id : 'bullet:' + BS().id;
 }
 function renderHangar(flashK) {
   $('hDust').textContent = fmt(save.dust);
-  $('tabs').innerHTML = CATS.map(([c, l]) => {
-    const can = c === 'ORB' ? orbCount() > 0 || save.dust >= ORBS.void.cost : c === 'SKIN' ? skinAffordable() : UPG.some(u => u.cat === c && tier(u.k) < u.max && save.dust >= u.cost[tier(u.k)]);
+  $('tabs').innerHTML = STABS.map(([c, l]) => {
+    const can = c === 'ORB' ? orbCount() > 0 || save.dust >= ORBS.void.cost : c === 'SKIN' ? skinAffordable() : upgCan();
     return `<button class="tab ${c === hTab ? 'on' : ''}" data-c="${c}">${l}${can ? '<i></i>' : ''}</button>`;
   }).join('');
-  const chip = r => `<span class="chip" style="background:rgba(${RAR[r].c},.16);color:rgb(${RAR[r].c})">${RAR[r].n}</span>`;
-  if (hTab === 'SKIN') {
-    const card = (it, kind) => {
-      const owned = kind === 'ship' ? (save.skins || ['scrap']) : (save.bskins || ['pellet']), cur = kind === 'ship' ? SK() : BS();
-      const own = owned.includes(it.id), eq = cur.id === it.id, ok = save.dust >= it.cost, myth = it.rar === 'mythic', att = kind === 'ship' ? 'skin' : 'bskin';
-      const btn = eq ? '<button class="buy done" disabled>Equipped</button>' : own ? `<button class="buy ctr" data-${att}="${it.id}">Equip</button>`
-        : myth ? '<button class="buy done" disabled>Found in orbs</button>'
-        : `<button class="buy" data-${att}="${it.id}" ${ok ? '' : 'disabled'}><span>Buy</span><span>◆ ${fmt(it.cost)}</span></button>`;
-      return `<div class="card${flashK === it.id ? ' flash' : ''}${myth ? ' myth' : ''}" style="--c:${RAR[it.rar].c}"><canvas class="skp" data-${kind === 'ship' ? 's' : 'b'}="${it.id}"></canvas><div class="ch2"><span class="cn">${it.name}</span>${chip(it.rar)}</div><div class="cd">${it.info}</div>${btn}</div>`;
-    };
-    const byCost = (a, b) => a.cost - b.cost;
-    $('hList').innerHTML = '<div class="sech">Ships</div>' + SKINS.filter(x => x.rar !== 'mythic').sort(byCost).map(x => card(x, 'ship')).join('') +
-      '<div class="sech">Bullets</div>' + BSKINS.filter(x => x.rar !== 'mythic').sort(byCost).map(x => card(x, 'bullet')).join('') +
-      '<div class="sech myth">Mythic · only from orbs</div>' + SKINS.filter(x => x.rar === 'mythic').map(x => card(x, 'ship')).join('') + BSKINS.filter(x => x.rar === 'mythic').map(x => card(x, 'bullet')).join('');
-    if (!skinAnim) { skinAnim = true; requestAnimationFrame(animSkins); }
-    return;
+  const orb = hTab === 'ORB';
+  $('shopB').classList.toggle('hidden', orb); $('orbV').classList.toggle('hidden', !orb);
+  $('hSub').textContent = orb ? 'Open orbs for random skins. Beat any sector boss for a free Void Orb.' : hTab === 'SKIN' ? 'Tap a skin to see it in action.' : 'Permanent upgrades. Tap one to see what it does.';
+  if (orb) renderOrbs(); else {
+    if (!shopSel[hTab] || (hTab === 'SKIN' && !shopSel.SKIN.startsWith(skSub))) shopSel[hTab] = defaultSel(hTab);
+    renderList(); renderPrevInfo();
+    if (flashK) { const p = $('hPrev'); p.classList.remove('flash'); void p.offsetWidth; p.classList.add('flash'); }
   }
-  if (hTab === 'ORB') {
-    const n = save.orbs || {};
-    $('hList').innerHTML = '<div class="sech">Open orbs for random skins. Rarer skins are harder to get. Duplicates turn into stardust. Beat any sector boss for a free Void Orb.</div>' +
-      Object.entries(ORBS).map(([k, o]) => `<div class="card" style="--c:${o.col}"><canvas class="skp orbp" data-o="${k}"></canvas><div class="ch2"><span class="cn">${o.name}</span><span class="chip" style="background:rgba(${o.col},.16);color:rgb(${o.col})">You have ${n[k] || 0}</span></div>` +
-        `<div class="odds">${RORDER.filter(r => o.odds[r]).map(r => `<div><i style="background:rgb(${RAR[r].c})"></i><span>${RAR[r].n}</span><b>${o.odds[r]}%</b></div>`).join('')}</div>` +
-        `<div class="row2"><button class="buy" data-buyorb="${k}" ${save.dust >= o.cost ? '' : 'disabled'}><span>Buy</span><span>◆ ${fmt(o.cost)}</span></button><button class="buy ctr" data-openorb="${k}" ${n[k] ? '' : 'disabled'}>Open</button></div></div>`).join('') +
-      `<div class="card" style="--c:255,70,120"><div class="cn">Duplicate refunds</div><div class="odds">${RORDER.map(r => `<div><i style="background:rgb(${RAR[r].c})"></i><span>${RAR[r].n}</span><b>◆ ${RAR[r].dup}</b></div>`).join('')}</div></div>`;
-    if (!skinAnim) { skinAnim = true; requestAnimationFrame(animSkins); }
-    return;
-  }
-  $('hList').innerHTML = UPG.filter(u => u.cat === hTab).map(u => {
-    const t = tier(u.k), mx = t >= u.max, cost = mx ? 0 : u.cost[t], ok = save.dust >= cost, unlock = u.cat === 'UNLOCK';
-    const lv = unlock ? '' : `<div class="lv">${Array.from({ length: u.max }, (_, i) => `<i class="${i < t ? 'on' : ''}"></i>`).join('')}</div>`;
-    const stat = unlock ? '' : `<div class="cs"><span>${u.stat}</span><b>${u.val(t)}${mx ? '' : `<em>→ ${u.val(t + 1)}</em>`}</b></div>`;
-    const btn = mx ? `<button class="buy done" disabled>${unlock ? 'Unlocked' : 'Max level'}</button>`
-      : `<button class="buy" data-k="${u.k}" ${ok ? '' : 'disabled'}><span>${unlock ? 'Unlock' : t ? 'Upgrade' : 'Install'}</span><span>◆ ${fmt(cost)}</span></button>`;
-    return `<div class="card${flashK === u.k ? ' flash' : ''}" style="--c:${CATCOL[u.cat]}"><div class="ct"><div class="ico">${svgIcon(u.k)}</div><div class="cn">${u.name}${lv}</div></div><div class="cd">${u.info}</div>${stat}${btn}</div>`;
-  }).join('');
+  startShopAnim();
 }
-let skinAnim = false;
-function animSkins() {
-  if ($('hangar').classList.contains('hidden') || (hTab !== 'SKIN' && hTab !== 'ORB')) { skinAnim = false; return; }
-  const t = performance.now() / 1000;
-  document.querySelectorAll('#hList canvas.skp').forEach(cvs => {
-    const r_ = cvs.getBoundingClientRect(); if (r_.bottom < 0 || r_.top > innerHeight) return;
-    const d = Math.min(2, window.devicePixelRatio || 1), w = cvs.clientWidth, h = cvs.clientHeight;
-    if (cvs.width !== (w * d | 0)) { cvs.width = w * d | 0; cvs.height = h * d | 0; }
-    const c = cvs.getContext('2d'); c.setTransform(d, 0, 0, d, 0, 0); c.clearRect(0, 0, w, h);
-    if (cvs.dataset.o) { const o = ORBS[cvs.dataset.o]; drawOrb(c, w / 2, h / 2, Math.min(w, h) * 0.26, o.col, o.col2, t); return; }
-    if (cvs.dataset.b) {
-      const bs = BSKINS.find(x => x.id === cvs.dataset.b); if (!bs) return;
-      c.globalCompositeOperation = 'lighter';
-      for (let i = 0; i < 3; i++) {
-        const ph = ((t * 0.9 + i / 3) % 1), x = w / 2 + (i - 1) * 26, y = h + 10 - ph * (h + 20);
-        const fake = { x, y, vx: 0, vy: -500, seed: i * 101 + 7 };
-        const L = BPX[bs.style];
-        if (L) for (let j = 1; j <= 4; j++) {
-          c.globalAlpha = 0.5 / j; c.fillStyle = bs.style === 'rainbow' || bs.style === 'aorb' ? `hsl(${(t * 200 + j * 60) % 360},100%,70%)` : `rgb(${L[j % L.length]})`;
-          const sz = bs.style === 'cloud' ? 6 : 3; c.fillRect(x + Math.sin(j * 3 + t * 9 + i) * 3 - sz / 2, y + j * 7, sz, sz);
-        }
-        c.globalAlpha = 1; drawBullet(c, bs, fake, t, 2);
+function renderList() {
+  const sel = shopSel[hTab]; let h = '';
+  if (hTab === 'UPG') {
+    for (const [cat, lab] of CATS) {
+      const items = UPG.filter(u => u.cat === cat); if (!items.length) continue;
+      h += `<div class="sgh">${lab}</div>`;
+      for (const u of items) {
+        const t = tier(u.k), mx = t >= u.max, cost = mx ? 0 : u.cost[t], ok = save.dust >= cost, unlock = cat === 'UNLOCK';
+        const sub = unlock ? `<span>${mx ? 'Unlocked' : 'New power-up drop'}</span>` : `<div class="lv">${Array.from({ length: u.max }, (_, i) => `<i class="${i < t ? 'on' : ''}"></i>`).join('')}</div><span>${mx ? 'Max' : 'Level ' + t + '/' + u.max}</span>`;
+        const price = mx ? `<div class="srp tag">${unlock ? 'Owned' : 'Max'}</div>` : `<div class="srp ${ok ? '' : 'no'}">◆ ${fmt(cost)}</div>`;
+        h += `<button class="srow${sel === u.k ? ' sel' : ''}" data-sel="${u.k}" style="--c:${CATCOL[cat]}"><div class="ico">${svgIcon(u.k)}</div><div style="min-width:0"><div class="srn">${u.name}</div><div class="srs">${sub}</div></div>${price}</button>`;
       }
-      c.globalCompositeOperation = 'source-over';
-      return;
     }
-    const sk = SKINS.find(x => x.id === cvs.dataset.s); if (!sk) return;
-    const cx = w / 2, cy = h / 2 - 4, tc = rgbOf(sk.trail, 0, t);
-    const g = c.createLinearGradient(cx, cy + 10, cx, h);
-    g.addColorStop(0, `rgba(${tc},${sk.fx ? 0.7 : 0.35})`); g.addColorStop(1, `rgba(${tc},0)`);
-    c.strokeStyle = g; c.lineWidth = sk.fx === 'flame' ? 9 : sk.fx === 'cloud' ? 14 : 5; c.lineCap = 'round';
-    c.beginPath(); c.moveTo(cx, cy + 14); c.lineTo(cx + Math.sin(t * 2) * 4, h); c.stroke();
-    if (sk.px || sk.fx === 'rainbow') for (let i = 0; i < 6; i++) { const yy = cy + 20 + ((t * 30 + i * 13) % 40); c.fillStyle = sk.fx === 'rainbow' ? `hsl(${(t * 90 + i * 40) % 360},100%,70%)` : `rgb(${sk.px[i % 2]})`; c.globalAlpha = 1 - (yy - cy - 20) / 40; c.fillRect(cx + Math.sin(i * 7 + t * 3) * 8, yy, 2, 2); }
-    c.globalAlpha = 1;
-    if (sk.fx === 'ghost') for (let i = 1; i <= 2; i++) { c.globalAlpha = 0.3 / i; c.strokeStyle = cssOf(sk.stroke, t); c.save(); c.translate(cx, cy + i * 9); c.rotate(-Math.PI / 2); hullPath(c, sk.shape, 1.9); c.stroke(); c.restore(); }
-    c.globalAlpha = 1;
-    drawShipModel(c, sk, cx, cy, -Math.PI / 2 + Math.sin(t * 1.5) * 0.06, 1.9, t, false);
-  });
-  requestAnimationFrame(animSkins);
+  } else {
+    h += `<div class="subseg"><button data-sub="ship" class="${skSub === 'ship' ? 'on' : ''}">Ships</button><button data-sub="bullet" class="${skSub === 'bullet' ? 'on' : ''}">Bullets</button></div>`;
+    const list = skSub === 'ship' ? SKINS : BSKINS, owned = skSub === 'ship' ? (save.skins || ['scrap']) : (save.bskins || ['pellet']), cur = skSub === 'ship' ? SK() : BS();
+    const row = it => {
+      const own = owned.includes(it.id), eq = cur.id === it.id, myth = it.rar === 'mythic', id = skSub + ':' + it.id;
+      const price = eq ? '<div class="srp tag">Equipped</div>' : own ? '<div class="srp tag" style="opacity:.75">Owned</div>' : myth ? '<div class="srp tag">Orb only</div>' : `<div class="srp ${save.dust >= it.cost ? '' : 'no'}">◆ ${fmt(it.cost)}</div>`;
+      return `<button class="srow${sel === id ? ' sel' : ''}" data-sel="${id}" style="--c:${RAR[it.rar].c}"><canvas class="sth" data-${skSub === 'ship' ? 's' : 'b'}="${it.id}"></canvas><div style="min-width:0"><div class="srn">${it.name}</div><div class="srs">${chipR(it.rar)}</div></div>${price}</button>`;
+    };
+    h += list.filter(x => x.rar !== 'mythic').sort((a, b) => a.cost - b.cost).map(row).join('');
+    h += '<div class="sgh myth">Mythic · only from orbs</div>' + list.filter(x => x.rar === 'mythic').map(row).join('');
+  }
+  const L = $('hList'), st = L.scrollTop; L.innerHTML = h; L.scrollTop = st;
+  drawThumbs();
 }
+function drawThumbs() {
+  const t = performance.now() / 1000;
+  document.querySelectorAll('#hList canvas.sth').forEach(cvs => {
+    const d = Math.min(2, window.devicePixelRatio || 1), w = 40, hh = 40; cvs.width = w * d; cvs.height = hh * d;
+    const c = cvs.getContext('2d'); c.setTransform(d, 0, 0, d, 0, 0);
+    if (cvs.dataset.s) { const sk = SKINS.find(x => x.id === cvs.dataset.s); if (sk) drawShipModel(c, sk, w / 2, hh / 2 + 1, -Math.PI / 2, 0.95, t, false); }
+    else { const bs = BSKINS.find(x => x.id === cvs.dataset.b); if (bs) { c.globalCompositeOperation = 'lighter'; drawBullet(c, bs, { x: w / 2, y: hh / 2 - 2, vx: 0, vy: -500, seed: 7 }, t, 1.6); } }
+  });
+}
+function selInfo() {
+  const id = shopSel[hTab] || '';
+  if (id.startsWith('ship:')) return { type: 'ship', it: SKINS.find(x => x.id === id.slice(5)) || SKINS[0] };
+  if (id.startsWith('bullet:')) return { type: 'bullet', it: BSKINS.find(x => x.id === id.slice(7)) || BSKINS[0] };
+  return { type: 'upg', it: UPG.find(x => x.k === id) || UPG[0] };
+}
+function renderPrevInfo() {
+  const s = selInfo(), it = s.it; let h = '', col;
+  if (s.type === 'upg') {
+    const u = it, t = tier(u.k), mx = t >= u.max, cost = mx ? 0 : u.cost[t], ok = save.dust >= cost, unlock = u.cat === 'UNLOCK';
+    col = CATCOL[u.cat];
+    const catName = (CATS.find(c => c[0] === u.cat) || [0, ''])[1];
+    h += `<div class="pvh"><div class="pvn">${u.name}</div><span class="chip" style="background:rgba(${col},.14);color:rgb(${col})">${catName}</span></div>`;
+    h += `<div class="pvd">${u.info}</div>`;
+    if (!unlock) h += `<div class="lv">${Array.from({ length: u.max }, (_, i) => `<i class="${i < t ? 'on' : ''}"></i>`).join('')}</div><div class="cs"><span>${u.stat}</span><b>${u.val(t)}${mx ? '' : `<em>→ ${u.val(t + 1)}</em>`}</b></div>`;
+    h += mx ? `<button class="buy done" disabled>${unlock ? 'Unlocked' : 'Max level'}</button>`
+      : `<button class="buy" data-k="${u.k}" ${ok ? '' : 'disabled'}><span>${unlock ? 'Unlock' : t ? 'Upgrade' : 'Install'}</span><span>◆ ${fmt(cost)}</span></button>`;
+  } else {
+    const ship = s.type === 'ship', owned = ship ? (save.skins || ['scrap']) : (save.bskins || ['pellet']), cur = ship ? SK() : BS();
+    const own = owned.includes(it.id), eq = cur.id === it.id, myth = it.rar === 'mythic', att = ship ? 'skin' : 'bskin';
+    col = RAR[it.rar].c;
+    h += `<div class="pvh"><div class="pvn">${it.name}</div>${chipR(it.rar)}</div><div class="pvd">${it.info} <span style="opacity:.7">· ${ship ? 'Ship skin' : 'Bullet skin'}</span></div>`;
+    h += eq ? '<button class="buy done" disabled>Equipped</button>' : own ? `<button class="buy ctr" data-${att}="${it.id}">Equip</button>`
+      : myth ? '<button class="buy done" disabled>Found in orbs</button>'
+      : `<button class="buy" data-${att}="${it.id}" ${save.dust >= it.cost ? '' : 'disabled'}><span>Buy and equip</span><span>◆ ${fmt(it.cost)}</span></button>`;
+  }
+  $('hPrev').style.setProperty('--c', col);
+  $('pvI').innerHTML = h;
+}
+function renderOrbs() {
+  const n = save.orbs || {};
+  $('orbV').innerHTML = `<div class="orbrow">${Object.entries(ORBS).map(([k, o]) => `<div class="card orbc" style="--c:${o.col}"><canvas class="skp orbp" data-o="${k}"></canvas><div class="ch2"><span class="cn">${o.name}</span><span class="chip" style="background:rgba(${o.col},.16);color:rgb(${o.col})">You have ${n[k] || 0}</span></div>` +
+    `<div class="odds">${RORDER.filter(r => o.odds[r]).map(r => `<div><i style="background:rgb(${RAR[r].c})"></i><span>${RAR[r].n}</span><b>${o.odds[r]}%</b></div>`).join('')}</div>` +
+    `<div class="row2"><button class="buy" data-buyorb="${k}" ${save.dust >= o.cost ? '' : 'disabled'}><span>Buy</span><span>◆ ${fmt(o.cost)}</span></button><button class="buy ctr" data-openorb="${k}" ${n[k] ? '' : 'disabled'}>Open${n[k] ? ' (' + n[k] + ')' : ''}</button></div></div>`).join('')}</div>` +
+    `<div class="orbref"><span>Duplicates refund</span>${RORDER.map(r => `<span><i style="background:rgb(${RAR[r].c})"></i>${RAR[r].n} <b>◆ ${RAR[r].dup}</b></span>`).join('')}</div>`;
+}
+function selectShop(id) {
+  if (shopSel[hTab] === id) return;
+  shopSel[hTab] = id;
+  document.querySelectorAll('#hList .srow').forEach(r => r.classList.toggle('sel', r.dataset.sel === id));
+  renderPrevInfo();
+}
+$('hList').addEventListener('click', e => {
+  const sb = e.target.closest('.subseg button');
+  if (sb) { if (skSub !== sb.dataset.sub) { skSub = sb.dataset.sub; shopSel.SKIN = defaultSel('SKIN'); sfx.ui(); renderList(); renderPrevInfo(); } return; }
+  const r = e.target.closest('.srow'); if (r) { selectShop(r.dataset.sel); sfx.ui(); }
+});
+$('hList').addEventListener('pointerover', e => { if (e.pointerType !== 'mouse') return; const r = e.target.closest('.srow'); if (r) selectShop(r.dataset.sel); });
+const shopBuyClick = e => { const b = e.target.closest('.buy'); if (!b || b.disabled) return; if (b.dataset.buyorb) buyOrb(b.dataset.buyorb); else if (b.dataset.openorb) openOrb(b.dataset.openorb); else if (b.dataset.skin) buySkin(b.dataset.skin); else if (b.dataset.bskin) buyBSkin(b.dataset.bskin); else if (b.dataset.k) buy(b.dataset.k); };
+$('pvI').addEventListener('click', shopBuyClick);
+$('orbV').addEventListener('click', shopBuyClick);
+
+// ---- live preview simulation ----
+let shopAnim = false, shopLast = 0, pv = null;
+function startShopAnim() { if (!shopAnim) { shopAnim = true; shopLast = performance.now(); requestAnimationFrame(shopLoop); } }
+function shopLoop(now) {
+  if ($('hangar').classList.contains('hidden')) { shopAnim = false; return; }
+  const dt = Math.min(0.05, Math.max(0, (now - shopLast) / 1000)); shopLast = now;
+  const t = now / 1000;
+  if (hTab === 'ORB') {
+    document.querySelectorAll('#orbV canvas.orbp').forEach(cvs => {
+      const d = Math.min(2, window.devicePixelRatio || 1), w = cvs.clientWidth, h = cvs.clientHeight; if (!w) return;
+      if (cvs.width !== (w * d | 0)) { cvs.width = w * d | 0; cvs.height = h * d | 0; }
+      const c = cvs.getContext('2d'); c.setTransform(d, 0, 0, d, 0, 0); c.clearRect(0, 0, w, h);
+      const o = ORBS[cvs.dataset.o]; drawOrb(c, w / 2, h / 2, Math.min(w, h) * 0.27, o.col, o.col2, t);
+    });
+  } else pvFrame(dt, t);
+  requestAnimationFrame(shopLoop);
+}
+function statsWith(k, tv) {
+  const had = Object.prototype.hasOwnProperty.call(save.up, k), old = save.up[k];
+  save.up[k] = tv; calcStats(); const r = Object.assign({}, S);
+  if (had) save.up[k] = old; else delete save.up[k];
+  calcStats(); return r;
+}
+const SPREADS = [[0], [-0.14, 0, 0.14], [-0.2, -0.07, 0.07, 0.2], [-0.26, -0.13, 0, 0.13, 0.26]];
+const laneSt = (s, o) => Object.assign({ iv: 0.12 * s.rate, bs: 820 * 0.45 * s.bspeed, dmg: s.dmg, pierce: s.pierce, hom: s.homing, spread: [0], mis: s.missiles, misT: s.missileT, drop: 0, layout: 'scatter', aim: true }, o || {});
+function pvSig() { const s = selInfo(); return (shopSel[hTab] || '') + '|' + (s.type === 'upg' ? tier(s.it.k) : '') + '|' + save.skin + '|' + save.bskin; }
+function pvSetup(w, h) {
+  const s = selInfo(), it = s.it;
+  pv = { sig: pvSig(), w, h, t: 0, kind: 'lanes', lanes: [], parts: [], cap: '', bs: BS(), sk: SK() };
+  if (s.type === 'ship') { pv.kind = 'skin'; pv.sk = it; pv.trail = []; pv.shots = []; pv.cd = 0; return; }
+  if (s.type === 'bullet') { pv.bs = it; pv.lanes = [mkLane('', laneSt(S))]; return; }
+  const u = it, t = tier(u.k), mx = t >= u.max, nt = mx ? t : t + 1;
+  const A = statsWith(u.k, t), B = statsWith(u.k, nt), la = 'NOW', lb = mx ? 'MAX LEVEL' : 'LEVEL ' + nt;
+  const two = (oa, ob) => { pv.lanes = mx ? [mkLane(lb, laneSt(B, ob))] : [mkLane(la, laneSt(A, oa)), mkLane(lb, laneSt(B, ob))]; };
+  pv.a = A; pv.b = B; pv.la = la; pv.lb = lb; pv.mx = mx;
+  switch (u.k) {
+    case 'velocity': case 'rate': case 'damage': two(); break;
+    case 'homing': two({ layout: 'offset', aim: false }, { layout: 'offset', aim: false }); break;
+    case 'pierce': two({ layout: 'row', aim: false }, { layout: 'row', aim: false }); break;
+    case 'missile': two({ mis: A.missiles }, { mis: B.missiles }); break;
+    case 'luck': two({ drop: 0.2 * A.luck }, { drop: 0.2 * B.luck }); pv.cap = 'Drop chance shown faster than in battle'; break;
+    case 'multi': two({ spread: SPREADS[1 + A.multi] }, { spread: SPREADS[1 + B.multi] }); pv.cap = 'While the spread shot drop is active'; break;
+    case 'rapid': two({ iv: 0.055 * A.rapidRate * A.rate, tag: A.rapidDur + 's' }, { iv: 0.055 * B.rapidRate * B.rate, tag: B.rapidDur + 's' }); pv.cap = 'While the rapid fire drop is active'; break;
+    case 'u_drones': pv.lanes = [mkLane('', laneSt(S, { sats: true }))]; pv.cap = 'Drop: two drones orbit you and shoot'; break;
+    case 'u_beam': pv.lanes = [mkLane('', laneSt(S, { beam: true }))]; pv.cap = 'Drop: a piercing laser for 7 seconds'; break;
+    case 'hull': case 'engine': case 'dash': case 'shieldgen': case 'shieldpk': case 'bombbay': case 'magnet': case 'u_time': case 'u_nova':
+      pv.kind = u.k; pvCustomInit(u.k, A, B, mx); break;
+    default: two();
+  }
+  if (pv.kind === 'lanes') pv.lanes.forEach((L, i) => { L.y0 = h * i / pv.lanes.length; L.y1 = h * (i + 1) / pv.lanes.length; for (let j = 0; j < 3; j++) spawnRock(L, j); });
+}
+function mkLane(lbl, st) { return { lbl, st, b: [], m: [], r: [], drops: [], cd: Math.random() * 0.1, mcd: 0.6, sa: 0, scd: 0.3, y0: 0, y1: 0 }; }
+function mkRockPts(R) { const pts = []; for (let i = 0; i < 9; i++) { const a = i / 9 * TAU; pts.push([Math.cos(a) * R * rand(0.75, 1.08), Math.sin(a) * R * rand(0.75, 1.08)]); } return pts; }
+function spawnRock(L, j) {
+  const w = pv.w, lh = L.y1 - L.y0, R = clamp(lh * 0.11, 8, 14), st = L.st;
+  let x, y, vy;
+  if (st.layout === 'row') { x = w * (0.5 + 0.15 * j); y = (L.y0 + L.y1) / 2; vy = 0; }
+  else if (st.layout === 'offset') { x = w * rand(0.55, 0.9); y = L.y0 + lh * (Math.random() < 0.5 ? rand(0.12, 0.3) : rand(0.7, 0.88)); vy = rand(-8, 8); }
+  else { x = w * rand(0.52, 0.9); y = L.y0 + lh * rand(0.22, 0.78); vy = rand(-18, 18); }
+  const r = { x, y, vy, R, hp: 3, max: 3, hit: 0, pts: mkRockPts(R), dead: 0, ph: rand(0, TAU), j };
+  const k = L.r.findIndex(o => o.j === j); if (k >= 0) L.r[k] = r; else L.r.push(r);
+}
+function pvSpark(x, y, col, n, sp) { for (let i = 0; i < n; i++) { const a = rand(0, TAU), s = rand(20, sp); pv.parts.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: rand(0.25, 0.6), col }); } }
+function pvHitRock(L, r, dmg) {
+  r.hp -= dmg; r.hit = 0.08;
+  if (r.hp <= 0 && !r.dead) {
+    r.dead = 0.7; pvSpark(r.x, r.y, '170,180,200', 14, 120);
+    if (L.st.drop && Math.random() < L.st.drop) { const ks = ['multi', 'rapid', 'shield']; L.drops.push({ x: r.x, y: r.y, t: 0, k: ks[Math.random() * 3 | 0] }); }
+  }
+}
+function laneUpdate(L, dt) {
+  const st = L.st, sx = 30, sy = (L.y0 + L.y1) / 2, live = L.r.filter(r => !r.dead);
+  for (const r of L.r) {
+    if (r.dead) { r.dead -= dt; if (r.dead <= 0) spawnRock(L, r.j); continue; }
+    if (st.layout === 'row') r.y = sy + Math.sin(pv.t * 0.9) * (L.y1 - L.y0) * 0.22;
+    else { r.y += r.vy * dt; if (r.y < L.y0 + r.R + 4 || r.y > L.y1 - r.R - 4) r.vy *= -1; }
+    if (r.hit > 0) r.hit -= dt;
+  }
+  let tgt = null; if (st.aim) { let bd = 1e9; for (const r of live) { const d = Math.abs(r.y - sy) + r.x * 0.2; if (d < bd) { bd = d; tgt = r; } } }
+  L.ang = tgt ? clamp(Math.atan2(tgt.y - sy, tgt.x - sx), -0.6, 0.6) : 0;
+  if (st.beam) {
+    L.beamOn = true; const ux = Math.cos(L.ang), uy = Math.sin(L.ang);
+    for (const r of live) { const rx = r.x - sx, ry = r.y - sy, al = rx * ux + ry * uy; if (al > 0 && Math.abs(rx * uy - ry * ux) < r.R + 3) { pvHitRock(L, r, 7 * dt); if (Math.random() < 0.4) pvSpark(r.x - ux * r.R, r.y - uy * r.R, '235,245,255', 1, 90); } }
+  } else {
+    L.cd -= dt;
+    if (L.cd <= 0) {
+      L.cd += st.iv;
+      for (const da of st.spread) { const a = L.ang + da; L.b.push({ x: sx + Math.cos(a) * 14, y: sy + Math.sin(a) * 14, vx: Math.cos(a) * st.bs, vy: Math.sin(a) * st.bs, pl: st.pierce, hits: [], seed: Math.random() * 1000 }); }
+    }
+  }
+  if (st.mis) {
+    L.mcd -= dt;
+    if (L.mcd <= 0) { L.mcd = st.misT; for (let i = 0; i < st.mis; i++) { const a = (i - (st.mis - 1) / 2) * 0.7 + rand(-0.1, 0.1); L.m.push({ x: sx, y: sy, vx: Math.cos(a) * 140, vy: Math.sin(a) * 140, life: 3 }); } }
+  }
+  if (st.sats) {
+    L.sa += dt * 3; L.scd -= dt;
+    if (L.scd <= 0 && live.length) {
+      L.scd = 0.45;
+      for (let k = 0; k < 2; k++) { const a = L.sa + k * Math.PI, px = sx + Math.cos(a) * 22, py = sy + Math.sin(a) * 22, r = live[(Math.random() * live.length) | 0], an = Math.atan2(r.y - py, r.x - px); L.b.push({ x: px, y: py, vx: Math.cos(an) * 320, vy: Math.sin(an) * 320, pl: 0, hits: [], sat: true, seed: 1 }); }
+    }
+  }
+  for (let i = L.b.length - 1; i >= 0; i--) {
+    const b = L.b[i];
+    if (st.hom && !b.sat) {
+      let best = null, bd = 1e9; for (const r of live) { if (r.x < b.x) continue; const d = (r.x - b.x) ** 2 + (r.y - b.y) ** 2; if (d < bd) { bd = d; best = r; } }
+      if (best) { const cur = Math.atan2(b.vy, b.vx), want = Math.atan2(best.y - b.y, best.x - b.x); let da = Math.atan2(Math.sin(want - cur), Math.cos(want - cur)); const na = cur + clamp(da, -st.hom * dt, st.hom * dt), sp = Math.hypot(b.vx, b.vy); b.vx = Math.cos(na) * sp; b.vy = Math.sin(na) * sp; }
+    }
+    b.x += b.vx * dt; b.y += b.vy * dt;
+    if (b.x > pv.w + 20 || b.y < L.y0 - 10 || b.y > L.y1 + 10) { L.b.splice(i, 1); continue; }
+    for (const r of live) {
+      if (r.dead || b.hits.includes(r)) continue;
+      if ((r.x - b.x) ** 2 + (r.y - b.y) ** 2 < (r.R + 3) ** 2) {
+        pvHitRock(L, r, b.sat ? 0.6 : st.dmg); pvSpark(b.x, b.y, b.sat ? '120,200,255' : '255,230,190', 3, 70);
+        if (b.pl > 0) { b.pl--; b.hits.push(r); } else { L.b.splice(i, 1); }
+        break;
+      }
+    }
+  }
+  for (let i = L.m.length - 1; i >= 0; i--) {
+    const m = L.m[i]; m.life -= dt;
+    let best = null, bd = 1e9; for (const r of live) { const d = (r.x - m.x) ** 2 + (r.y - m.y) ** 2; if (d < bd) { bd = d; best = r; } }
+    if (best) { const cur = Math.atan2(m.vy, m.vx), want = Math.atan2(best.y - m.y, best.x - m.x), da = Math.atan2(Math.sin(want - cur), Math.cos(want - cur)), na = cur + clamp(da, -5 * dt, 5 * dt), sp = Math.min(330, Math.hypot(m.vx, m.vy) + 300 * dt); m.vx = Math.cos(na) * sp; m.vy = Math.sin(na) * sp; }
+    m.x += m.vx * dt; m.y += m.vy * dt;
+    if (Math.random() < 0.7) pv.parts.push({ x: m.x, y: m.y, vx: -m.vx * 0.1, vy: -m.vy * 0.1, life: 0.3, col: '255,170,80' });
+    if (best && bd < (best.R + 4) ** 2) { pvHitRock(L, best, 3); pvSpark(m.x, m.y, '255,170,80', 12, 140); L.m.splice(i, 1); continue; }
+    if (m.life <= 0) L.m.splice(i, 1);
+  }
+  for (let i = L.drops.length - 1; i >= 0; i--) { const d = L.drops[i]; d.t += dt; d.x += (sx - d.x) * dt * 1.2; d.y += (sy - d.y) * dt * 1.2; if (d.t > 1.4) { pvSpark(sx, sy, PICK[d.k].c, 10, 90); L.drops.splice(i, 1); } }
+}
+function pvRock(c, r) {
+  c.save(); c.translate(r.x, r.y); c.rotate(pv.t * 0.4 + r.ph);
+  c.fillStyle = r.hit > 0 ? '#fff' : '#272c38'; c.strokeStyle = '#6f7d93'; c.lineWidth = 1.5;
+  c.beginPath(); r.pts.forEach((p, i) => i ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1])); c.closePath(); c.fill(); c.stroke(); c.restore();
+  if (r.hp < r.max) { const w_ = r.R * 2; c.fillStyle = 'rgba(255,255,255,.15)'; c.fillRect(r.x - r.R, r.y + r.R + 4, w_, 2.5); c.fillStyle = 'rgb(143,255,214)'; c.fillRect(r.x - r.R, r.y + r.R + 4, w_ * Math.max(0, r.hp / r.max), 2.5); }
+}
+function pvLabel(c, txt, x, y, col, align) { if (!txt) return; c.save(); c.font = `700 10px ${FONT}`; c.textAlign = align || 'left'; c.textBaseline = 'top'; try { c.letterSpacing = '2px'; } catch (e) {} c.fillStyle = col || 'rgba(233,238,247,.7)'; c.fillText(txt, x, y); c.restore(); }
+function laneDraw(c, L) {
+  const sx = 30, sy = (L.y0 + L.y1) / 2;
+  c.save(); c.beginPath(); c.rect(0, L.y0, pv.w, L.y1 - L.y0); c.clip();
+  for (const r of L.r) if (!r.dead) pvRock(c, r);
+  if (L.beamOn) {
+    const ux = Math.cos(L.ang), uy = Math.sin(L.ang), ex = sx + ux * pv.w * 1.2, ey = sy + uy * pv.w * 1.2, fl = 0.8 + 0.2 * Math.sin(pv.t * 40);
+    c.globalCompositeOperation = 'lighter'; c.lineCap = 'round';
+    c.strokeStyle = `rgba(150,200,255,${0.3 * fl})`; c.lineWidth = 12; c.beginPath(); c.moveTo(sx + ux * 12, sy + uy * 12); c.lineTo(ex, ey); c.stroke();
+    c.strokeStyle = `rgba(240,248,255,${fl})`; c.lineWidth = 3; c.beginPath(); c.moveTo(sx + ux * 12, sy + uy * 12); c.lineTo(ex, ey); c.stroke();
+    c.globalCompositeOperation = 'source-over';
+  }
+  c.globalCompositeOperation = 'lighter';
+  for (const b of L.b) { if (b.sat) { c.fillStyle = 'rgb(120,200,255)'; c.beginPath(); c.arc(b.x, b.y, 2.2, 0, TAU); c.fill(); } else drawBullet(c, pv.bs, b, pv.t, 1.25); }
+  c.globalCompositeOperation = 'source-over';
+  for (const m of L.m) { c.save(); c.translate(m.x, m.y); c.rotate(Math.atan2(m.vy, m.vx)); c.fillStyle = '#ffb060'; c.beginPath(); c.moveTo(6, 0); c.lineTo(-4, 3.5); c.lineTo(-4, -3.5); c.closePath(); c.fill(); c.restore(); }
+  for (const d of L.drops) { const P = PICK[d.k], a = Math.min(1, 1.4 - d.t); c.save(); c.globalAlpha = a; c.strokeStyle = `rgb(${P.c})`; c.fillStyle = `rgba(${P.c},.2)`; c.lineWidth = 2; c.beginPath(); c.arc(d.x, d.y, 7, 0, TAU); c.fill(); c.stroke(); c.restore(); }
+  if (L.st.sats) for (let k = 0; k < 2; k++) { const a = L.sa + k * Math.PI; c.fillStyle = '#9fd4ff'; c.beginPath(); c.arc(sx + Math.cos(a) * 22, sy + Math.sin(a) * 22, 3.5, 0, TAU); c.fill(); }
+  drawShipModel(c, pv.sk, sx, sy, L.ang || 0, 1.05, pv.t, false);
+  c.restore();
+  pvLabel(c, L.lbl, 10, L.y0 + 9, L.lbl === 'NOW' ? 'rgba(233,238,247,.55)' : `rgb(${CATCOL.WEAPON})`);
+  if (L.st.tag) pvLabel(c, L.st.tag, pv.w - 10, L.y0 + 9, 'rgba(233,238,247,.6)', 'right');
+  if (L.y0 > 0) { c.fillStyle = 'rgba(255,255,255,.08)'; c.fillRect(0, L.y0, pv.w, 1); }
+}
+function pvCustomInit(k, A, B, mx) {
+  const w = pv.w, h = pv.h;
+  pv.ships = []; pv.dust = []; pv.shots = []; pv.rocks = [];
+  if (k === 'engine') pv.ships = mx ? [{ th: 0, sp: B.thrust, a: 1, trail: [] }] : [{ th: 0, sp: A.thrust, a: 0.4, trail: [] }, { th: 0, sp: B.thrust, a: 1, trail: [] }];
+  if (k === 'dash') { const L = (lbl, cd, y0, y1) => ({ lbl, cd, x: 40, t: rand(0, cd), dash: 0, y0, y1, ghosts: [] }); pv.lanes = mx ? [L(pv.lb, B.dashCD, 0, h)] : [L('NOW', A.dashCD, 0, h / 2), L(pv.lb, B.dashCD, h / 2, h)]; }
+  if (k === 'shieldgen' || k === 'shieldpk') {
+    pv.hitsMax = k === 'shieldpk' ? B.shieldHits : 1; pv.hits = pv.hitsMax; pv.re = 0; pv.ecd = 1;
+    pv.cap = k === 'shieldpk' ? `Shield drops block ${B.shieldHits} hit${B.shieldHits > 1 ? 's' : ''}` : ['No shield', 'Start every sector with a shield', 'Shield recharges every 40s', 'Shield recharges every 22s'][B.shieldGen] + (B.shieldGen > 1 ? ' (sped up here)' : '');
+    if (k === 'shieldgen' && B.shieldGen === 1) pv.noRe = true;
+  }
+  if (k === 'bombbay' || k === 'u_nova') { for (let i = 0; i < 6; i++) pv.rocks.push({ th: i / 6 * TAU, rr: rand(0.28, 0.42) * Math.min(w, h * 1.6), R: rand(8, 12), pts: null, dead: 0, ph: rand(0, TAU) }); pv.rocks.forEach(r => r.pts = mkRockPts(r.R)); pv.wcd = 1.2; pv.wave = null; pv.bolts = []; }
+  if (k === 'bombbay') pv.cap = mx ? `${B.bombs} bombs at start` : `Start with ${B.bombs} bombs (was ${A.bombs}) · carry up to ${B.maxBombs}`;
+  if (k === 'u_nova') pv.cap = 'Drop: free gravity bomb plus homing bolts';
+  if (k === 'magnet') { pv.rA = 46 * A.magnet; pv.rB = 46 * B.magnet; pv.cap = mx ? 'Max pull range' : 'Dashed ring: now · Solid ring: ' + pv.lb.toLowerCase(); }
+  if (k === 'u_time') { pv.cap = 'Drop: slows enemies and their bullets for 7s'; pv.ecd = 0; pv.slow = 0; pv.cyc = 0; }
+}
+function pvShip(c, x, y, ang, k, a) { c.save(); if (a != null) c.globalAlpha = a; drawShipModel(c, pv.sk, x, y, ang, k, pv.t, false); c.restore(); }
+function pvCustom(c, dt) {
+  const w = pv.w, h = pv.h, cx = w / 2, cy = h / 2, k = pv.kind;
+  if (k === 'hull') {
+    const rowsN = pv.mx ? [[pv.lb, pv.b.lives]] : [['NOW', pv.a.lives], [pv.lb, pv.b.lives]];
+    rowsN.forEach(([lbl, n], ri) => {
+      const y = h * (rowsN.length === 1 ? 0.5 : 0.33 + ri * 0.36);
+      pvLabel(c, lbl, 14, y - 5, ri ? `rgb(${CATCOL.SHIP})` : 'rgba(233,238,247,.55)');
+      for (let i = 0; i < n; i++) { const isNew = ri === 1 && i === n - 1, x = 120 + i * 44, s = isNew ? 1 + 0.12 * Math.sin(pv.t * 5) : 1; if (isNew) { c.fillStyle = `rgba(${CATCOL.SHIP},.18)`; c.beginPath(); c.arc(x, y, 18, 0, TAU); c.fill(); } pvShip(c, x, y, -Math.PI / 2, 1.05 * s, ri || rowsN.length === 1 ? 1 : 0.6); }
+    });
+    pv.cap = 'Ships at the start of every run';
+  } else if (k === 'engine') {
+    const rx = w * 0.36, ry = h * 0.3;
+    c.strokeStyle = 'rgba(255,255,255,.07)'; c.lineWidth = 18; c.beginPath(); c.ellipse(cx, cy, rx, ry, 0, 0, TAU); c.stroke();
+    pv.ships.forEach((s, i) => {
+      s.th += dt * 1.15 * s.sp; const x = cx + Math.cos(s.th) * rx, y = cy + Math.sin(s.th) * ry, ang = Math.atan2(Math.cos(s.th) * ry, -Math.sin(s.th) * rx);
+      s.trail.push([x, y]); if (s.trail.length > 26) s.trail.shift();
+      c.strokeStyle = `rgba(${rgbOf(pv.sk.trail, 0, pv.t)},${0.5 * s.a})`; c.lineWidth = 3; c.lineCap = 'round'; c.beginPath(); s.trail.forEach((p, j) => j ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1])); c.stroke();
+      pvShip(c, x, y, ang, 1.1, s.a);
+    });
+    pv.cap = pv.mx ? 'Max engine power' : 'Faded ship: now · Bright ship: ' + pv.lb.toLowerCase();
+  } else if (k === 'dash') {
+    for (const L of pv.lanes) {
+      const y = (L.y0 + L.y1) / 2; L.t -= dt;
+      if (L.dash > 0) { L.dash -= dt; L.x += 520 * dt; L.ghosts.push({ x: L.x, a: 0.6 }); }
+      else { L.x += 45 * dt; if (L.t <= 0) { L.t = L.cd; L.dash = 0.13; } }
+      if (L.x > w - 30) { L.x = 40; L.ghosts = []; }
+      for (const g of L.ghosts) { g.a -= dt * 1.6; if (g.a > 0) pvShip(c, g.x, y, 0, 1.05, g.a * 0.5); }
+      L.ghosts = L.ghosts.filter(g => g.a > 0);
+      const f = L.dash > 0 ? 1 : 1 - L.t / L.cd;
+      c.strokeStyle = 'rgba(255,255,255,.12)'; c.lineWidth = 2.5; c.beginPath(); c.arc(L.x, y, 17, 0, TAU); c.stroke();
+      c.strokeStyle = f >= 0.999 ? 'rgb(120,235,255)' : 'rgba(120,235,255,.8)'; c.beginPath(); c.arc(L.x, y, 17, -Math.PI / 2, -Math.PI / 2 + TAU * f); c.stroke();
+      pvShip(c, L.x, y, 0, 1.05);
+      pvLabel(c, L.lbl, 10, L.y0 + 9, L.lbl === 'NOW' ? 'rgba(233,238,247,.55)' : `rgb(${CATCOL.SHIP})`);
+      pvLabel(c, 'every ' + L.cd.toFixed(1) + 's', w - 10, L.y0 + 9, 'rgba(233,238,247,.6)', 'right');
+      if (L.y0 > 0) { c.fillStyle = 'rgba(255,255,255,.08)'; c.fillRect(0, L.y0, w, 1); }
+    }
+  } else if (k === 'shieldgen' || k === 'shieldpk') {
+    const sx = w * 0.3, sy = cy;
+    pv.ecd -= dt; if (pv.ecd <= 0) { pv.ecd = 0.9; pv.shots.push({ x: w + 6, y: sy + rand(-30, 30), vx: -170, vy: 0 }); }
+    for (let i = pv.shots.length - 1; i >= 0; i--) {
+      const s = pv.shots[i]; s.vy += (sy - s.y) * dt * 3; s.x += s.vx * dt; s.y += s.vy * dt;
+      if (Math.hypot(s.x - sx, s.y - sy) < (pv.hits > 0 ? 26 : 10)) {
+        pv.shots.splice(i, 1);
+        if (pv.hits > 0) { pv.hits--; pvSpark(s.x, s.y, '100,255,160', 16, 140); if (!pv.hits) pv.re = 0; } else pvSpark(sx, sy, '255,120,120', 10, 100);
+        continue;
+      }
+      c.fillStyle = 'rgba(255,80,120,.25)'; c.beginPath(); c.arc(s.x, s.y, 7, 0, TAU); c.fill(); c.fillStyle = '#ff5078'; c.beginPath(); c.arc(s.x, s.y, 3.5, 0, TAU); c.fill();
+    }
+    if (pv.hits <= 0) { pv.re += dt; if (pv.re > (pv.noRe ? 3.2 : 2.4)) { pv.hits = pv.hitsMax; pvSpark(sx, sy, '100,255,160', 20, 80); } }
+    if (pv.hits > 0) {
+      const R = 26 + (pv.hitsMax - 1) * 3; c.fillStyle = 'rgba(100,255,160,.08)'; c.beginPath(); c.arc(sx, sy, R, 0, TAU); c.fill();
+      for (let i = 0; i < pv.hits; i++) { c.strokeStyle = `rgba(100,255,160,${0.85 - i * 0.2})`; c.lineWidth = 2; c.beginPath(); c.arc(sx, sy, R - i * 4, 0, TAU); c.stroke(); }
+    } else if (!pv.noRe || true) {
+      const f = pv.re / (pv.noRe ? 3.2 : 2.4); c.strokeStyle = 'rgba(100,255,160,.5)'; c.lineWidth = 2; c.beginPath(); c.arc(sx, sy, 26, -Math.PI / 2, -Math.PI / 2 + TAU * f); c.stroke();
+      if (pv.noRe) pvLabel(c, 'NEXT SECTOR', sx, sy + 34, 'rgba(100,255,160,.7)', 'center');
+    }
+    pvShip(c, sx, sy, 0, 1.15);
+  } else if (k === 'bombbay' || k === 'u_nova') {
+    const sx = cx, sy = cy;
+    pv.wcd -= dt;
+    if (pv.wcd <= 0) { pv.wcd = 2.6; pv.wave = { r: 0 }; if (k === 'u_nova') for (const r of pv.rocks) if (!r.dead) pv.bolts.push({ x: sx, y: sy, vx: rand(-120, 120), vy: rand(-120, 120), tg: r, life: 1.5 }); }
+    for (const r of pv.rocks) {
+      if (r.dead) { r.dead -= dt; if (r.dead <= 0) { r.th = rand(0, TAU); r.rr = rand(0.28, 0.42) * Math.min(w, h * 1.6); } continue; }
+      r.th += dt * 0.35; r.x = sx + Math.cos(r.th) * r.rr; r.y = sy + Math.sin(r.th) * r.rr * 0.62;
+      r.hp = 1; r.max = 1; r.hit = 0; pvRock(c, r);
+    }
+    if (pv.wave) {
+      pv.wave.r += dt * 260; const wr = pv.wave.r, mxr = Math.min(w, h * 1.6) * 0.5;
+      c.strokeStyle = k === 'u_nova' ? `rgba(255,165,70,${1 - wr / mxr})` : `rgba(210,150,255,${1 - wr / mxr})`; c.lineWidth = 5; c.beginPath(); c.arc(sx, sy, wr, 0, TAU); c.stroke();
+      if (k === 'bombbay') for (const r of pv.rocks) if (!r.dead && Math.hypot(r.x - sx, r.y - sy) < wr) { r.dead = 1; pvSpark(r.x, r.y, '210,150,255', 12, 120); }
+      if (wr > mxr) pv.wave = null;
+    }
+    for (let i = pv.bolts.length - 1; i >= 0; i--) {
+      const b = pv.bolts[i]; b.life -= dt; const tg = b.tg, dx = tg.x - b.x, dy = tg.y - b.y, d = Math.hypot(dx, dy) || 1;
+      b.vx += dx / d * 900 * dt; b.vy += dy / d * 900 * dt; b.vx *= 0.97; b.vy *= 0.97; b.x += b.vx * dt; b.y += b.vy * dt;
+      c.fillStyle = '#ffc070'; c.beginPath(); c.arc(b.x, b.y, 3, 0, TAU); c.fill();
+      if (tg.dead || d < tg.R || b.life <= 0) { if (!tg.dead && d < tg.R + 2) { tg.dead = 1; pvSpark(tg.x, tg.y, '255,165,70', 12, 120); } pv.bolts.splice(i, 1); }
+    }
+    pvShip(c, sx, sy, -Math.PI / 2, 1.15);
+    if (k === 'bombbay') {
+      const rows = pv.mx ? [[pv.lb, pv.b.bombs]] : [['NOW', pv.a.bombs], [pv.lb, pv.b.bombs]];
+      rows.forEach(([lbl, n], ri) => { const y = 12 + ri * 18; pvLabel(c, lbl, 10, y - 4, ri ? `rgb(${CATCOL.SHIP})` : 'rgba(233,238,247,.55)'); for (let i = 0; i < n; i++) { c.fillStyle = 'rgba(200,150,255,.9)'; c.beginPath(); c.arc(92 + i * 14, y + 2, 4.5, 0, TAU); c.fill(); } });
+    }
+  } else if (k === 'magnet') {
+    const sx = cx + Math.sin(pv.t * 0.7) * 20, sy = cy;
+    if (pv.dust.length < 26 && Math.random() < 0.4) pv.dust.push({ x: rand(10, w - 10), y: rand(10, h - 10), vx: 0, vy: 0, rot: rand(0, TAU) });
+    c.setLineDash([5, 6]); c.strokeStyle = 'rgba(143,255,214,.35)'; c.lineWidth = 1.5; c.beginPath(); c.arc(sx, sy, pv.rA, 0, TAU); c.stroke(); c.setLineDash([]);
+    if (!pv.mx) { c.strokeStyle = 'rgba(143,255,214,.8)'; c.beginPath(); c.arc(sx, sy, pv.rB, 0, TAU); c.stroke(); }
+    for (let i = pv.dust.length - 1; i >= 0; i--) {
+      const d = pv.dust[i], dx = sx - d.x, dy = sy - d.y, dd = Math.hypot(dx, dy) || 1;
+      if (dd < pv.rB) { d.vx += dx / dd * 700 * dt; d.vy += dy / dd * 700 * dt; }
+      d.vx *= 0.94; d.vy *= 0.94; d.x += d.vx * dt; d.y += d.vy * dt; d.rot += dt * 2;
+      if (dd < 10) { pv.dust.splice(i, 1); pvSpark(sx, sy, '143,255,214', 3, 60); continue; }
+      c.save(); c.translate(d.x, d.y); c.rotate(d.rot); c.fillStyle = 'rgb(140,255,210)'; c.beginPath(); c.moveTo(0, -4); c.lineTo(2.6, 0); c.lineTo(0, 4); c.lineTo(-2.6, 0); c.closePath(); c.fill(); c.restore();
+    }
+    pvShip(c, sx, sy, -Math.PI / 2, 1.15);
+  } else if (k === 'u_time') {
+    const sx = w * 0.25, sy = cy;
+    pv.cyc += dt; const slow = (pv.cyc % 6) > 3, ts = slow ? 0.2 : 1;
+    pv.slow += ((slow ? 1 : 0) - pv.slow) * Math.min(1, dt * 5);
+    pv.ecd -= dt * ts; if (pv.ecd <= 0) { pv.ecd = 0.35; pv.shots.push({ x: w + 6, y: rand(12, h - 12), vx: -rand(150, 220) }); }
+    if (pv.slow > 0.02) { c.fillStyle = `rgba(150,165,255,${0.13 * pv.slow})`; c.fillRect(0, 0, w, h); }
+    for (let i = pv.shots.length - 1; i >= 0; i--) { const s = pv.shots[i]; s.x += s.vx * dt * ts; if (s.x < -10) { pv.shots.splice(i, 1); continue; } c.fillStyle = slow ? '#a8b2ff' : '#ff5078'; c.beginPath(); c.arc(s.x, s.y, 3.5, 0, TAU); c.fill(); }
+    pvShip(c, sx, sy + Math.sin(pv.t * 2) * 20, 0, 1.15);
+    if (pv.slow > 0.5) pvLabel(c, 'SLOW TIME', w - 10, 10, 'rgb(150,165,255)', 'right');
+  }
+}
+function pvSkin(c, dt) {
+  const w = pv.w, h = pv.h, t = pv.t, sk = pv.sk;
+  const x = w / 2 + Math.cos(t * 0.8) * w * 0.32, y = h / 2 + Math.sin(t * 1.6) * h * 0.26;
+  const vx = -Math.sin(t * 0.8) * w * 0.32 * 0.8, vy = Math.cos(t * 1.6) * h * 0.26 * 1.6, ang = Math.atan2(vy, vx);
+  pv.trail.push([x, y]); if (pv.trail.length > 34) pv.trail.shift();
+  c.lineCap = 'round';
+  for (let i = 1; i < pv.trail.length; i++) {
+    const f = i / pv.trail.length, p0 = pv.trail[i - 1], p1 = pv.trail[i];
+    c.strokeStyle = `rgba(${rgbOf(sk.trail, i, t)},${f * (sk.fx ? 0.75 : 0.45)})`; c.lineWidth = (sk.fx === 'flame' ? 7 : sk.fx === 'cloud' ? 10 : 4) * f;
+    c.beginPath(); c.moveTo(p0[0], p0[1]); c.lineTo(p1[0], p1[1]); c.stroke();
+  }
+  if (sk.px && Math.random() < 0.7) pv.parts.push({ x: x - Math.cos(ang) * 12, y: y - Math.sin(ang) * 12, vx: -Math.cos(ang) * 40 + rand(-20, 20), vy: -Math.sin(ang) * 40 + rand(-20, 20), life: 0.5, col: sk.px[Math.random() * sk.px.length | 0] });
+  pv.cd -= dt; if (pv.cd <= 0) { pv.cd = 0.32; pv.shots.push({ x: x + Math.cos(ang) * 16, y: y + Math.sin(ang) * 16, vx: Math.cos(ang) * 380 + vx * 0.3, vy: Math.sin(ang) * 380 + vy * 0.3, seed: Math.random() * 1000 }); }
+  c.globalCompositeOperation = 'lighter';
+  for (let i = pv.shots.length - 1; i >= 0; i--) { const b = pv.shots[i]; b.x += b.vx * dt; b.y += b.vy * dt; if (b.x < -20 || b.x > w + 20 || b.y < -20 || b.y > h + 20) { pv.shots.splice(i, 1); continue; } drawBullet(c, pv.bs, b, t, 1.2); }
+  c.globalCompositeOperation = 'source-over';
+  drawShipModel(c, sk, x, y, ang, 1.7, t, false);
+}
+function pvFrame(dt, t) {
+  const cvs = $('pvCv'); if (!cvs) return;
+  const d = Math.min(2, window.devicePixelRatio || 1), w = cvs.clientWidth, h = cvs.clientHeight; if (!w || !h) return;
+  if (cvs.width !== (w * d | 0) || cvs.height !== (h * d | 0)) { cvs.width = w * d | 0; cvs.height = h * d | 0; pv = null; }
+  if (!pv || pv.sig !== pvSig()) pvSetup(w, h);
+  pv.t += dt;
+  const c = cvs.getContext('2d'); c.setTransform(d, 0, 0, d, 0, 0); c.clearRect(0, 0, w, h);
+  if (pv.kind === 'skin') pvSkin(c, dt);
+  else if (pv.kind === 'lanes') for (const L of pv.lanes) { laneUpdate(L, dt); laneDraw(c, L); }
+  else pvCustom(c, dt);
+  c.globalCompositeOperation = 'lighter';
+  for (let i = pv.parts.length - 1; i >= 0; i--) { const p = pv.parts[i]; p.life -= dt; if (p.life <= 0) { pv.parts.splice(i, 1); continue; } p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= 0.95; p.vy *= 0.95; c.fillStyle = `rgba(${p.col},${Math.min(1, p.life * 2)})`; c.fillRect(p.x - 1.2, p.y - 1.2, 2.4, 2.4); }
+  c.globalCompositeOperation = 'source-over';
+  if (pv.cap) { c.save(); c.font = `500 11px ${FONT}`; c.textAlign = 'center'; c.textBaseline = 'bottom'; c.fillStyle = 'rgba(233,238,247,.6)'; if (c.measureText(pv.cap).width < w - 16) c.fillText(pv.cap, w / 2, h - 7); c.restore(); }
+}
+
 function buyOrb(k) {
   const o = ORBS[k]; if (save.dust < o.cost) return;
   save.dust -= o.cost; save.orbs = save.orbs || { void: 0, stellar: 0 }; save.orbs[k] = (save.orbs[k] || 0) + 1;
@@ -1525,7 +1917,7 @@ function unpackSave(o) {
   const unlocked = num(o.k, 1, 9);
   const bsk_ = ['pellet'].concat(Array.isArray(o.bk) ? o.bk.filter(id => id !== 'pellet' && BSKINS.some(x => x.id === id)) : []);
   const skins = ['scrap'].concat(Array.isArray(o.sk) ? o.sk.filter(id => id !== 'scrap' && SKINS.some(x => x.id === id)) : []);
-  return { name: String(o.n || '').slice(0, 16), dust: num(o.d, 0, 1e9), up, unlocked, sel: num(o.s, 1, unlocked), best: num(o.b, 0, 1e12), sbest: sb, deep: num(o.dp, 0, 1e6), skins, skin: skins.includes(o.ss) ? o.ss : 'scrap', bskins: bsk_, bskin: bsk_.includes(o.bs) ? o.bs : 'pellet', orbs: { void: num((o.ob || {}).void, 0, 999), stellar: num((o.ob || {}).stellar, 0, 999) } };
+  return { name: String(o.n || '').slice(0, 16), dust: num(o.d, 0, 1e9), up, unlocked, sel: num(o.s, 1, unlocked), best: num(o.b, 0, 1e12), sbest: sb, deep: num(o.dp, 0, 1e6), skins, skin: skins.includes(o.ss) ? o.ss : 'scrap', bskins: bsk_, bskin: bsk_.includes(o.bs) ? o.bs : 'pellet', orbs: { void: num((o.ob || {}).void, 0, 999), stellar: num((o.ob || {}).stellar, 0, 999), quasar: num((o.ob || {}).quasar, 0, 999) } };
 }
 let loadArmed = null;
 function openProfile() {
@@ -1801,7 +2193,7 @@ $('hBack').onclick = () => {
 };
 $('hGo').onclick = () => { audio(); goFull(); if (hangarFrom === 'cleared') warpTo(sector + 1); else startRun(save.sel); };
 $('tabs').addEventListener('click', e => { const b = e.target.closest('.tab'); if (b) { hTab = b.dataset.c; sfx.ui(); renderHangar(); } });
-$('hList').addEventListener('click', e => { const b = e.target.closest('.buy'); if (!b || b.disabled) return; if (b.dataset.buyorb) buyOrb(b.dataset.buyorb); else if (b.dataset.openorb) openOrb(b.dataset.openorb); else if (b.dataset.skin) buySkin(b.dataset.skin); else if (b.dataset.bskin) buyBSkin(b.dataset.bskin); else if (b.dataset.k) buy(b.dataset.k); });
+
 $('rBack').onclick = () => goMenu();
 $('rGo').onclick = () => { audio(); goFull(); startRun(save.sel); };
 $('rList').addEventListener('click', e => {
