@@ -147,6 +147,51 @@ svg{stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-l
 .pvi{display:flex;flex-direction:column;gap:10px;text-align:left}
 .slist,.sprev{text-align:left}
 .orbc .row2{margin-top:auto}
+.hdr{display:flex;gap:10px;align-items:center;flex:none}
+.gorb{position:relative;padding:7px 14px;border-radius:999px;border:1px solid rgba(180,140,255,.45);background:rgba(180,140,255,.1);color:#e3d6ff;font:600 13px var(--f);letter-spacing:.06em;cursor:pointer;white-space:nowrap}
+.gorb:hover{background:rgba(180,140,255,.18)}
+.gorb i{position:absolute;top:-2px;right:-2px;width:8px;height:8px;border-radius:50%;background:var(--mint);box-shadow:0 0 6px var(--mint)}
+.skbar{width:100%;max-width:1060px;display:flex;gap:10px;align-items:center;margin:12px 0 8px;flex:none}
+.skbar .subseg{flex:none;flex-direction:column;margin:0;width:96px}
+.skbar .subseg button{padding:9px 6px}
+.skscroll{flex:1;min-width:0;display:flex;gap:8px;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;touch-action:pan-x;padding:2px 2px 6px;scroll-snap-type:x proximity}
+.skc{--c:255,255,255;flex:none;width:92px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 6px 7px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.03);color:#eaf6ff;cursor:pointer;font:inherit;scroll-snap-align:start;transition:border-color .15s,background .15s}
+.skc:hover{background:rgba(255,255,255,.06)}
+.skc canvas{width:40px;height:40px;border-radius:10px;background:radial-gradient(circle,rgba(var(--c),.18),rgba(var(--c),.04) 70%);border:1px solid rgba(var(--c),.3)}
+.skc.lock canvas{opacity:.75}
+.skn{font-size:11px;font-weight:600;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.skt{font-size:10px;letter-spacing:.06em;color:var(--dim)}.skt.can{color:var(--mint)}
+.skc.eq{border-color:rgba(143,255,214,.55);background:rgba(143,255,214,.07)}.skc.eq .skt{color:var(--mint)}
+.skc.sel{border-color:rgba(var(--c),.9);box-shadow:0 0 0 1px rgba(var(--c),.5),0 0 14px rgba(var(--c),.25)}
+.garage{--c:143,200,255;position:relative;flex:1;min-height:0;width:100%;max-width:1060px;display:grid;grid-template-columns:minmax(200px,250px) minmax(0,1fr) minmax(200px,250px);grid-template-rows:minmax(0,1fr) auto auto;grid-template-areas:"l c r" "l d r" "b b b";gap:10px 22px}
+#gLines{position:absolute;left:0;top:0;pointer-events:none;z-index:0}
+.gcol{display:flex;flex-direction:column;gap:7px;justify-content:center;min-height:0;z-index:1}
+.gl{grid-area:l}.gr{grid-area:r}
+.gbay{grid-area:c;min-height:0;display:flex;z-index:1;position:relative}
+#pvCv{display:block;width:100%;height:100%;min-height:200px;border-radius:50% / 46%;background:radial-gradient(ellipse at 50% 50%,rgba(var(--c),.12),rgba(0,0,0,.25) 60%,rgba(0,0,0,0) 72%);cursor:pointer}
+.gdet{grid-area:d;z-index:1;display:flex;align-items:center;gap:14px;padding:12px 14px;border-radius:14px;background:rgba(10,12,24,.75);border:1px solid rgba(var(--c),.4);height:104px;box-sizing:border-box;overflow:hidden;text-align:left;transition:border-color .25s}
+.gdet.flash{animation:fl .7s ease}
+.gdt{flex:1;min-width:0}.gda{flex:none;display:flex;flex-direction:column;gap:7px;width:220px}
+.gdet .pvn{font-size:17px}.gdet .pvd{font-size:12.5px;margin-top:3px}
+.gdet .cs{padding:6px 10px}
+.gbot{grid-area:b;z-index:1;display:flex;gap:18px;justify-content:center}
+.gbg{display:flex;flex-direction:column;gap:6px;min-width:0}
+.gbr{display:flex;gap:7px}
+.ghd{font-size:10px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--dim);padding:0 4px}
+.gl .ghd{text-align:right}
+.gnode{--c:255,255,255;display:grid;grid-template-columns:36px minmax(0,1fr) auto;align-items:center;gap:10px;padding:7px 10px 7px 7px;border-radius:12px;border:1px solid var(--line);background:rgba(12,14,26,.82);color:#eaf6ff;text-align:left;cursor:pointer;font:inherit;transition:background .15s,border-color .15s,box-shadow .15s,transform .15s}
+.gnode .ico{width:36px;height:36px;border-radius:10px}.gnode .ico svg{width:19px;height:19px}
+.gnode:hover{background:rgba(30,34,52,.9);transform:translateY(-1px)}
+.gnode.sel{border-color:rgba(var(--c),.85);background:rgba(var(--c),.12);box-shadow:0 0 16px rgba(var(--c),.22)}
+.gnode.can{border-color:rgba(var(--c),.4)}
+.gnode .srn{font-size:13px}
+.gnode .srs{margin-top:3px}.gnode .srs .lv i{width:12px}
+.gp{font-size:12px;font-weight:600;color:var(--mint);white-space:nowrap}.gp.no{color:var(--dim);opacity:.6}.gp.tag{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:rgb(var(--c))}
+.gnode.mx{opacity:.8}
+.gnode.cmp{width:150px;grid-template-columns:32px minmax(0,1fr);row-gap:2px}
+.gnode.cmp .ico{width:32px;height:32px;grid-row:span 2}.gnode.cmp .srs{display:none}.gnode.cmp .gp{grid-column:2;font-size:11px}
+@media (max-width:900px) and (min-height:521px){.garage{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:repeat(4,max-content);grid-template-areas:"c c" "d d" "l r" "b b";overflow-y:auto;-webkit-overflow-scrolling:touch;touch-action:pan-y;gap:10px;padding-bottom:10px;align-content:start}#gLines{display:none}.gbay #pvCv{height:200px;min-height:0}.gcol{justify-content:flex-start}.gl .ghd{text-align:left}.gbot{flex-direction:column;gap:10px}.gbr{display:grid;grid-template-columns:1fr 1fr}.gnode.cmp{width:auto}.gdet{flex-direction:column;align-items:stretch;height:auto}.gda{width:auto}.skbar{flex-direction:column;align-items:stretch;gap:6px}.skbar .subseg{flex-direction:row;width:auto}.gnode .srn{font-size:12px}.gnode{gap:8px;padding:6px 8px 6px 6px}}
+@media (max-height:520px){.skbar{margin:6px 0 4px}.skc{width:64px;padding:4px}.skc canvas{width:28px;height:28px}.skt{font-size:9px}.skn{display:none}.skbar .subseg button{padding:6px}.garage{grid-template-rows:max-content max-content 1fr;grid-template-areas:"l c r" "l d r" "l b r";overflow-y:auto;-webkit-overflow-scrolling:touch;touch-action:pan-y;grid-template-columns:minmax(150px,200px) minmax(0,1fr) minmax(150px,200px);gap:8px 12px;align-content:start}.gbay #pvCv{height:90px;min-height:0}.gdet .cs{display:none}.gdet .pvn{font-size:14px}.gdet .buy{padding:7px 10px}.gdet{gap:6px}.gnode .srs,.gnode .gp{display:none}.gnode{grid-template-columns:30px minmax(0,1fr);padding:5px 8px 5px 5px}.gnode .ico{width:30px;height:30px}.gnode.cmp{width:auto}.gbr{flex-wrap:wrap}.gbot{flex-direction:column;gap:6px;align-items:stretch}.gbr{display:grid;grid-template-columns:1fr 1fr}#gLines{display:none}.gdet{flex-direction:column;align-items:stretch;padding:8px 10px;min-height:0;height:auto}.gdet .pvd{display:none}.gda{width:auto}.gdet .pvh .chip{display:none}.gcol{justify-content:flex-start}}
 #tutAsk{background:rgba(2,4,12,.9);z-index:20}
 .tpanel{width:min(420px,90vw);display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;padding:26px 22px 20px;border-radius:20px;background:linear-gradient(180deg,#1a1430,#0b0d1a);border:1px solid rgba(200,150,255,.4);box-shadow:0 20px 60px rgba(0,0,0,.5)}
 .tico{width:54px;height:54px;border-radius:16px;display:grid;place-items:center;background:rgba(200,150,255,.14);border:1px solid rgba(200,150,255,.45);color:rgb(200,150,255)}
@@ -334,11 +379,15 @@ body.paused .tbtn{display:none!important}
 </div>
 
 <div id="hangar" class="ov scr hidden">
-  <div class="hd a1"><div><div class="h3">SHOP</div><div class="sub" id="hSub"></div></div><div class="pill">◆ <span id="hDust">0</span></div></div>
-  <div class="seg a2" id="tabs"></div>
-  <div class="shopb a3" id="shopB">
-    <div class="sprev" id="hPrev"><canvas id="pvCv"></canvas><div class="pvi" id="pvI"></div></div>
-    <div class="slist" id="hList"></div>
+  <div class="hd a1"><div><div class="h3" id="hTitle">GARAGE</div><div class="sub" id="hSub"></div></div><div class="hdr"><button class="gorb" id="gOrbBtn"><span id="gOrbT">Orbs</span><i class="hidden" id="gOrbDot"></i></button><div class="pill">◆ <span id="hDust">0</span></div></div></div>
+  <div class="skbar a2" id="skBar"><div class="subseg" id="skSeg"><button data-sub="ship">Ships</button><button data-sub="bullet">Bullets</button></div><div class="skscroll" id="skList"></div></div>
+  <div class="garage a3" id="garage">
+    <canvas id="gLines"></canvas>
+    <div class="gcol gl" id="gL"></div>
+    <div class="gbay"><canvas id="pvCv"></canvas></div>
+    <div class="gcol gr" id="gR"></div>
+    <div class="gdet" id="pvI"></div>
+    <div class="gbot" id="gB"></div>
   </div>
   <div class="orbv a3 hidden" id="orbV"></div>
   <div class="ft a4"><button class="sec" id="hBack">Back</button><button class="play sm" id="hGo"><span class="pm" id="hGoT">PLAY</span><span class="ps" id="hGoS"></span></button></div>
@@ -373,7 +422,7 @@ body.paused .tbtn{display:none!important}
 <script>
 'use strict';
 // Versioning (renumbered by request): next version -> next whole number (3.00), sub version -> +0.01 (2.01)
-const VERSION = '2.09';
+const VERSION = '2.10';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -1397,69 +1446,61 @@ function buildKeysRef() {
     ? '<span>Left thumb</span><span>Move</span><span>Right thumb</span><span>Aim and fire</span><span>Hold still</span><span>Auto-aim</span>'
     : `<span>${k('W')}${k('A')}${k('S')}${k('D')}</span><span>Move</span><span>${k('Mouse')}</span><span>Aim and fire</span><span>${k('Shift')}</span><span>Dash</span><span>${k('E')}</span><span>Gravity bomb</span><span>${k('M')}</span><span>Mute</span>`;
 }
-// ================= SHOP (list + live preview) =================
-let hangarFrom = 'menu', hTab = 'UPG', skSub = 'ship';
-const shopSel = { UPG: '', SKIN: '' };
-const STABS = [['UPG', 'Upgrades'], ['SKIN', 'Skins'], ['ORB', 'Orbs']];
+// ================= GARAGE (ship in the middle, upgrades around it) =================
+let hangarFrom = 'menu', hTab = 'G', skSub = 'ship';
+const shopSel = { G: '' };
 function openHangar(from) {
   hangarFrom = from; hideAll(); show('hangar');
   if (from === 'cleared') { $('hGoT').textContent = 'NEXT'; $('hGoS').textContent = playLabel(sector + 1); }
   else { $('hGoT').textContent = 'PLAY'; $('hGoS').textContent = playLabel(save.sel); }
-  if (hTab !== 'UPG' && hTab !== 'SKIN' && hTab !== 'ORB') hTab = 'UPG';
+  if (hTab !== 'ORB') hTab = 'G';
+  shopSel.G = '';
   renderHangar();
 }
 const upgCan = () => UPG.some(u => tier(u.k) < u.max && save.dust >= u.cost[tier(u.k)]);
 const chipR = r => `<span class="chip" style="background:rgba(${RAR[r].c},.16);color:rgb(${RAR[r].c})">${RAR[r].n}</span>`;
-function defaultSel(tab) {
-  if (tab === 'UPG') { const u = UPG.find(x => tier(x.k) < x.max && save.dust >= x.cost[tier(x.k)]) || UPG.find(x => tier(x.k) < x.max) || UPG[0]; return u.k; }
-  return skSub === 'ship' ? 'ship:' + SK().id : 'bullet:' + BS().id;
-}
 function renderHangar(flashK) {
   $('hDust').textContent = fmt(save.dust);
-  $('tabs').innerHTML = STABS.map(([c, l]) => {
-    const can = c === 'ORB' ? orbCount() > 0 || save.dust >= ORBS.void.cost : c === 'SKIN' ? skinAffordable() : upgCan();
-    return `<button class="tab ${c === hTab ? 'on' : ''}" data-c="${c}">${l}${can ? '<i></i>' : ''}</button>`;
-  }).join('');
   const orb = hTab === 'ORB';
-  $('shopB').classList.toggle('hidden', orb); $('orbV').classList.toggle('hidden', !orb);
-  $('hSub').textContent = orb ? 'Open orbs for random skins. Beat any sector boss for a free Void Orb.' : hTab === 'SKIN' ? 'Tap a skin to see it in action.' : 'Permanent upgrades. Tap one to see what it does.';
+  $('garage').classList.toggle('hidden', orb); $('skBar').classList.toggle('hidden', orb); $('orbV').classList.toggle('hidden', !orb);
+  $('gOrbT').textContent = orb ? 'Back to garage' : 'Orbs' + (orbCount() ? ' (' + orbCount() + ')' : '');
+  $('gOrbDot').classList.toggle('hidden', orb || !(orbCount() > 0 || save.dust >= ORBS.void.cost));
+  $('hTitle').textContent = orb ? 'ORBS' : 'GARAGE';
+  $('hSub').textContent = orb ? 'Open orbs for random skins. Beat any sector boss for a free Void Orb.' : 'Pick an upgrade around your ship to see it in action. Choose your look at the top.';
   if (orb) renderOrbs(); else {
-    if (!shopSel[hTab] || (hTab === 'SKIN' && !shopSel.SKIN.startsWith(skSub))) shopSel[hTab] = defaultSel(hTab);
-    renderList(); renderPrevInfo();
-    if (flashK) { const p = $('hPrev'); p.classList.remove('flash'); void p.offsetWidth; p.classList.add('flash'); }
+    renderSkins(); renderNodes(); renderPrevInfo();
+    if (flashK) { const p = $('pvI'); p.classList.remove('flash'); void p.offsetWidth; p.classList.add('flash'); }
   }
   startShopAnim();
 }
-function renderList() {
-  const sel = shopSel[hTab]; let h = '';
-  if (hTab === 'UPG') {
-    for (const [cat, lab] of CATS) {
-      const items = UPG.filter(u => u.cat === cat); if (!items.length) continue;
-      h += `<div class="sgh">${lab}</div>`;
-      for (const u of items) {
-        const t = tier(u.k), mx = t >= u.max, cost = mx ? 0 : u.cost[t], ok = save.dust >= cost, unlock = cat === 'UNLOCK';
-        const sub = unlock ? `<span>${mx ? 'Unlocked' : 'New power-up drop'}</span>` : `<div class="lv">${Array.from({ length: u.max }, (_, i) => `<i class="${i < t ? 'on' : ''}"></i>`).join('')}</div><span>${mx ? 'Max' : 'Level ' + t + '/' + u.max}</span>`;
-        const price = mx ? `<div class="srp tag">${unlock ? 'Owned' : 'Max'}</div>` : `<div class="srp ${ok ? '' : 'no'}">◆ ${fmt(cost)}</div>`;
-        h += `<button class="srow${sel === u.k ? ' sel' : ''}" data-sel="${u.k}" style="--c:${CATCOL[cat]}"><div class="ico">${svgIcon(u.k)}</div><div style="min-width:0"><div class="srn">${u.name}</div><div class="srs">${sub}</div></div>${price}</button>`;
-      }
-    }
-  } else {
-    h += `<div class="subseg"><button data-sub="ship" class="${skSub === 'ship' ? 'on' : ''}">Ships</button><button data-sub="bullet" class="${skSub === 'bullet' ? 'on' : ''}">Bullets</button></div>`;
-    const list = skSub === 'ship' ? SKINS : BSKINS, owned = skSub === 'ship' ? (save.skins || ['scrap']) : (save.bskins || ['pellet']), cur = skSub === 'ship' ? SK() : BS();
-    const row = it => {
-      const own = owned.includes(it.id), eq = cur.id === it.id, myth = it.rar === 'mythic', id = skSub + ':' + it.id;
-      const price = eq ? '<div class="srp tag">Equipped</div>' : own ? '<div class="srp tag" style="opacity:.75">Owned</div>' : myth ? '<div class="srp tag">Orb only</div>' : `<div class="srp ${save.dust >= it.cost ? '' : 'no'}">◆ ${fmt(it.cost)}</div>`;
-      return `<button class="srow${sel === id ? ' sel' : ''}" data-sel="${id}" style="--c:${RAR[it.rar].c}"><canvas class="sth" data-${skSub === 'ship' ? 's' : 'b'}="${it.id}"></canvas><div style="min-width:0"><div class="srn">${it.name}</div><div class="srs">${chipR(it.rar)}</div></div>${price}</button>`;
-    };
-    h += list.filter(x => x.rar !== 'mythic').sort((a, b) => a.cost - b.cost).map(row).join('');
-    h += '<div class="sgh myth">Mythic · only from orbs</div>' + list.filter(x => x.rar === 'mythic').map(row).join('');
-  }
-  const L = $('hList'), st = L.scrollTop; L.innerHTML = h; L.scrollTop = st;
-  drawThumbs();
+function nodeHTML(u, compact) {
+  const t = tier(u.k), mx = t >= u.max, cost = mx ? 0 : u.cost[t], ok = save.dust >= cost, unlock = u.cat === 'UNLOCK', sel = shopSel.G === u.k;
+  const sub = unlock ? `<span>${mx ? 'Unlocked' : 'New drop'}</span>` : `<div class="lv">${Array.from({ length: u.max }, (_, i) => `<i class="${i < t ? 'on' : ''}"></i>`).join('')}</div>`;
+  const price = mx ? `<div class="gp tag">${unlock ? 'Owned' : 'Max'}</div>` : `<div class="gp ${ok ? '' : 'no'}">◆ ${fmt(cost)}</div>`;
+  return `<button class="gnode${compact ? ' cmp' : ''}${sel ? ' sel' : ''}${mx ? ' mx' : ''}${!mx && ok ? ' can' : ''}" data-sel="${u.k}" style="--c:${CATCOL[u.cat]}"><div class="ico">${svgIcon(u.k)}</div><div class="gn"><div class="srn">${u.name}</div><div class="srs">${sub}</div></div>${price}</button>`;
 }
-function drawThumbs() {
+function renderNodes() {
+  const by = c => UPG.filter(u => u.cat === c);
+  $('gL').innerHTML = '<div class="ghd">Ship</div>' + by('SHIP').map(u => nodeHTML(u)).join('');
+  $('gR').innerHTML = '<div class="ghd">Weapons</div>' + by('WEAPON').map(u => nodeHTML(u)).join('');
+  $('gB').innerHTML = `<div class="gbg"><div class="ghd">Power-ups</div><div class="gbr">${by('POWER').map(u => nodeHTML(u, true)).join('')}</div></div><div class="gbg"><div class="ghd">Unlocks</div><div class="gbr">${by('UNLOCK').map(u => nodeHTML(u, true)).join('')}</div></div>`;
+}
+function renderSkins() {
+  document.querySelectorAll('#skSeg button').forEach(b => b.classList.toggle('on', b.dataset.sub === skSub));
+  const ship = skSub === 'ship', list = ship ? SKINS : BSKINS, owned = ship ? (save.skins || ['scrap']) : (save.bskins || ['pellet']), cur = ship ? SK() : BS();
+  const items = list.filter(x => x.rar !== 'mythic').sort((a, b) => a.cost - b.cost).concat(list.filter(x => x.rar === 'mythic'));
+  const L = $('skList'), sl = L.scrollLeft;
+  L.innerHTML = items.map(it => {
+    const own = owned.includes(it.id), eq = cur.id === it.id, myth = it.rar === 'mythic', id = skSub + ':' + it.id;
+    const tag = eq ? 'Equipped' : own ? 'Owned' : myth ? 'Orb only' : '◆ ' + fmt(it.cost);
+    return `<button class="skc${shopSel.G === id ? ' sel' : ''}${eq ? ' eq' : ''}${!own ? ' lock' : ''}" data-sel="${id}" style="--c:${RAR[it.rar].c}" title="${it.name}"><canvas class="sth" data-${ship ? 's' : 'b'}="${it.id}"></canvas><span class="skn">${it.name}</span><span class="skt${!own && !myth && save.dust >= it.cost ? ' can' : ''}">${tag}</span></button>`;
+  }).join('');
+  L.scrollLeft = sl;
+  drawThumbs('#skList');
+}
+function drawThumbs(root) {
   const t = performance.now() / 1000;
-  document.querySelectorAll('#hList canvas.sth').forEach(cvs => {
+  document.querySelectorAll(root + ' canvas.sth').forEach(cvs => {
     const d = Math.min(2, window.devicePixelRatio || 1), w = 40, hh = 40; cvs.width = w * d; cvs.height = hh * d;
     const c = cvs.getContext('2d'); c.setTransform(d, 0, 0, d, 0, 0);
     if (cvs.dataset.s) { const sk = SKINS.find(x => x.id === cvs.dataset.s); if (sk) drawShipModel(c, sk, w / 2, hh / 2 + 1, -Math.PI / 2, 0.95, t, false); }
@@ -1467,32 +1508,34 @@ function drawThumbs() {
   });
 }
 function selInfo() {
-  const id = shopSel[hTab] || '';
+  const id = shopSel.G || '';
+  if (!id) return { type: 'idle', it: SK() };
   if (id.startsWith('ship:')) return { type: 'ship', it: SKINS.find(x => x.id === id.slice(5)) || SKINS[0] };
   if (id.startsWith('bullet:')) return { type: 'bullet', it: BSKINS.find(x => x.id === id.slice(7)) || BSKINS[0] };
   return { type: 'upg', it: UPG.find(x => x.k === id) || UPG[0] };
 }
 function renderPrevInfo() {
-  const s = selInfo(), it = s.it; let h = '', col;
-  if (s.type === 'upg') {
+  const s = selInfo(), it = s.it; let h = '', col = '143,200,255';
+  if (s.type === 'idle') {
+    h = `<div class="gdt"><div class="pvh"><div class="pvn">${it.name}</div>${chipR(it.rar)}</div><div class="pvd">Your ship, ready for upgrades. Tap anything around it to see what it does.</div></div>`;
+  } else if (s.type === 'upg') {
     const u = it, t = tier(u.k), mx = t >= u.max, cost = mx ? 0 : u.cost[t], ok = save.dust >= cost, unlock = u.cat === 'UNLOCK';
     col = CATCOL[u.cat];
     const catName = (CATS.find(c => c[0] === u.cat) || [0, ''])[1];
-    h += `<div class="pvh"><div class="pvn">${u.name}</div><span class="chip" style="background:rgba(${col},.14);color:rgb(${col})">${catName}</span></div>`;
-    h += `<div class="pvd">${u.info}</div>`;
-    if (!unlock) h += `<div class="lv">${Array.from({ length: u.max }, (_, i) => `<i class="${i < t ? 'on' : ''}"></i>`).join('')}</div><div class="cs"><span>${u.stat}</span><b>${u.val(t)}${mx ? '' : `<em>→ ${u.val(t + 1)}</em>`}</b></div>`;
-    h += mx ? `<button class="buy done" disabled>${unlock ? 'Unlocked' : 'Max level'}</button>`
+    const stat = unlock ? '' : `<div class="cs"><span>${u.stat}</span><b>${u.val(t)}${mx ? '' : `<em>→ ${u.val(t + 1)}</em>`}</b></div>`;
+    const btn = mx ? `<button class="buy done" disabled>${unlock ? 'Unlocked' : 'Max level'}</button>`
       : `<button class="buy" data-k="${u.k}" ${ok ? '' : 'disabled'}><span>${unlock ? 'Unlock' : t ? 'Upgrade' : 'Install'}</span><span>◆ ${fmt(cost)}</span></button>`;
+    h = `<div class="gdt"><div class="pvh"><div class="pvn">${u.name}</div><span class="chip" style="background:rgba(${col},.14);color:rgb(${col})">${catName}</span></div><div class="pvd">${u.info}</div></div><div class="gda">${stat}${btn}</div>`;
   } else {
     const ship = s.type === 'ship', owned = ship ? (save.skins || ['scrap']) : (save.bskins || ['pellet']), cur = ship ? SK() : BS();
     const own = owned.includes(it.id), eq = cur.id === it.id, myth = it.rar === 'mythic', att = ship ? 'skin' : 'bskin';
     col = RAR[it.rar].c;
-    h += `<div class="pvh"><div class="pvn">${it.name}</div>${chipR(it.rar)}</div><div class="pvd">${it.info} <span style="opacity:.7">· ${ship ? 'Ship skin' : 'Bullet skin'}</span></div>`;
-    h += eq ? '<button class="buy done" disabled>Equipped</button>' : own ? `<button class="buy ctr" data-${att}="${it.id}">Equip</button>`
+    const btn = eq ? '<button class="buy done" disabled>Equipped</button>' : own ? `<button class="buy ctr" data-${att}="${it.id}">Equip</button>`
       : myth ? '<button class="buy done" disabled>Found in orbs</button>'
       : `<button class="buy" data-${att}="${it.id}" ${save.dust >= it.cost ? '' : 'disabled'}><span>Buy and equip</span><span>◆ ${fmt(it.cost)}</span></button>`;
+    h = `<div class="gdt"><div class="pvh"><div class="pvn">${it.name}</div>${chipR(it.rar)}</div><div class="pvd">${it.info} <span style="opacity:.7">· ${ship ? 'Ship skin' : 'Bullet skin'}</span></div></div><div class="gda">${btn}</div>`;
   }
-  $('hPrev').style.setProperty('--c', col);
+  $('garage').style.setProperty('--c', col);
   $('pvI').innerHTML = h;
 }
 function renderOrbs() {
@@ -1503,20 +1546,57 @@ function renderOrbs() {
     `<div class="orbref"><span>Duplicates refund</span>${RORDER.map(r => `<span><i style="background:rgb(${RAR[r].c})"></i>${RAR[r].n} <b>◆ ${RAR[r].dup}</b></span>`).join('')}</div>`;
 }
 function selectShop(id) {
-  if (shopSel[hTab] === id) return;
-  shopSel[hTab] = id;
-  document.querySelectorAll('#hList .srow').forEach(r => r.classList.toggle('sel', r.dataset.sel === id));
+  if (shopSel.G === id) return;
+  shopSel.G = id;
+  document.querySelectorAll('#garage .gnode, #skList .skc').forEach(r => r.classList.toggle('sel', r.dataset.sel === id));
   renderPrevInfo();
 }
-$('hList').addEventListener('click', e => {
-  const sb = e.target.closest('.subseg button');
-  if (sb) { if (skSub !== sb.dataset.sub) { skSub = sb.dataset.sub; shopSel.SKIN = defaultSel('SKIN'); sfx.ui(); renderList(); renderPrevInfo(); } return; }
-  const r = e.target.closest('.srow'); if (r) { selectShop(r.dataset.sel); sfx.ui(); }
+$('garage').addEventListener('click', e => {
+  const n = e.target.closest('.gnode');
+  if (n) { selectShop(shopSel.G === n.dataset.sel && e.pointerType !== 'mouse' ? n.dataset.sel : n.dataset.sel); sfx.ui(); return; }
+  if (e.target.closest('#pvCv')) { selectShop(''); sfx.ui(); }
 });
-$('hList').addEventListener('pointerover', e => { if (e.pointerType !== 'mouse') return; const r = e.target.closest('.srow'); if (r) selectShop(r.dataset.sel); });
+$('garage').addEventListener('pointerover', e => { if (e.pointerType !== 'mouse') return; const n = e.target.closest('.gnode'); if (n) selectShop(n.dataset.sel); });
+$('skList').addEventListener('click', e => {
+  const b = e.target.closest('.skc'); if (!b) return;
+  const id = b.dataset.sel, ship = id.startsWith('ship:'), sid = id.slice(ship ? 5 : 7), owned = ship ? (save.skins || ['scrap']) : (save.bskins || ['pellet']);
+  shopSel.G = id;
+  if (owned.includes(sid)) { if (ship) buySkin(sid); else buyBSkin(sid); }
+  else { sfx.ui(); renderSkins(); renderPrevInfo(); }
+  document.querySelectorAll('#garage .gnode').forEach(r => r.classList.remove('sel'));
+});
+$('skSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b || b.dataset.sub === skSub) return; skSub = b.dataset.sub; sfx.ui(); renderSkins(); });
+$('gOrbBtn').onclick = () => { sfx.ui(); hTab = hTab === 'ORB' ? 'G' : 'ORB'; renderHangar(); };
 const shopBuyClick = e => { const b = e.target.closest('.buy'); if (!b || b.disabled) return; if (b.dataset.buyorb) buyOrb(b.dataset.buyorb); else if (b.dataset.openorb) openOrb(b.dataset.openorb); else if (b.dataset.skin) buySkin(b.dataset.skin); else if (b.dataset.bskin) buyBSkin(b.dataset.bskin); else if (b.dataset.k) buy(b.dataset.k); };
 $('pvI').addEventListener('click', shopBuyClick);
 $('orbV').addEventListener('click', shopBuyClick);
+function drawLines(t) {
+  const cv_ = $('gLines'), G = $('garage');
+  if (!cv_ || !cv_.offsetParent || getComputedStyle(cv_).display === 'none') return;
+  const gr = G.getBoundingClientRect(), d = Math.min(2, window.devicePixelRatio || 1), w = G.clientWidth, h = G.scrollHeight;
+  if (cv_.width !== (w * d | 0) || cv_.height !== (h * d | 0)) { cv_.width = w * d | 0; cv_.height = h * d | 0; cv_.style.width = w + 'px'; cv_.style.height = h + 'px'; }
+  const c = cv_.getContext('2d'); c.setTransform(d, 0, 0, d, 0, 0); c.clearRect(0, 0, w, h);
+  const br = $('pvCv').getBoundingClientRect(), ox = gr.left, oy = gr.top - G.scrollTop;
+  const cx = br.left + br.width / 2 - ox, cy = br.top + br.height / 2 - oy, rx = br.width * 0.36, ry = br.height * 0.36;
+  document.querySelectorAll('#garage .gnode').forEach(n => {
+    const r = n.getBoundingClientRect(), col = n.style.getPropertyValue('--c'), sel = n.classList.contains('sel');
+    let ax, ay;
+    if (n.closest('#gL')) { ax = r.right - ox; ay = r.top + r.height / 2 - oy; }
+    else if (n.closest('#gR')) { ax = r.left - ox; ay = r.top + r.height / 2 - oy; }
+    else { ax = r.left + r.width / 2 - ox; ay = r.top - oy; }
+    const an = Math.atan2(ay - cy, ax - cx), ex = cx + Math.cos(an) * rx, ey = cy + Math.sin(an) * ry;
+    const mx = (ax + ex) / 2, my = (ay + ey) / 2, hor = !n.closest('#gB');
+    const c1x = hor ? mx : ax, c1y = hor ? ay : my, c2x = hor ? mx : ex, c2y = hor ? ey : my;
+    c.strokeStyle = `rgba(${col},${sel ? 0.75 : 0.16})`; c.lineWidth = sel ? 2 : 1.2;
+    c.beginPath(); c.moveTo(ax, ay); c.bezierCurveTo(c1x, c1y, c2x, c2y, ex, ey); c.stroke();
+    c.fillStyle = `rgba(${col},${sel ? 1 : 0.35})`; c.beginPath(); c.arc(ex, ey, sel ? 3.5 : 2, 0, TAU); c.fill();
+    if (sel || n.classList.contains('can')) {
+      const f = ((t * (sel ? 0.9 : 0.35)) + (ax + ay) * 0.001) % 1, u = f, iu = 1 - u;
+      const px = iu * iu * iu * ax + 3 * iu * iu * u * c1x + 3 * iu * u * u * c2x + u * u * u * ex, py = iu * iu * iu * ay + 3 * iu * iu * u * c1y + 3 * iu * u * u * c2y + u * u * u * ey;
+      c.fillStyle = `rgba(${col},${sel ? 0.95 : 0.5})`; c.beginPath(); c.arc(px, py, sel ? 2.6 : 1.8, 0, TAU); c.fill();
+    }
+  });
+}
 
 // ---- live preview simulation ----
 let shopAnim = false, shopLast = 0, pv = null;
@@ -1532,7 +1612,7 @@ function shopLoop(now) {
       const c = cvs.getContext('2d'); c.setTransform(d, 0, 0, d, 0, 0); c.clearRect(0, 0, w, h);
       const o = ORBS[cvs.dataset.o]; drawOrb(c, w / 2, h / 2, Math.min(w, h) * 0.27, o.col, o.col2, t);
     });
-  } else pvFrame(dt, t);
+  } else { pvFrame(dt, t); drawLines(t); }
   requestAnimationFrame(shopLoop);
 }
 function statsWith(k, tv) {
@@ -1543,10 +1623,11 @@ function statsWith(k, tv) {
 }
 const SPREADS = [[0], [-0.14, 0, 0.14], [-0.2, -0.07, 0.07, 0.2], [-0.26, -0.13, 0, 0.13, 0.26]];
 const laneSt = (s, o) => Object.assign({ iv: 0.12 * s.rate, bs: 820 * 0.45 * s.bspeed, dmg: s.dmg, pierce: s.pierce, hom: s.homing, spread: [0], mis: s.missiles, misT: s.missileT, drop: 0, layout: 'scatter', aim: true }, o || {});
-function pvSig() { const s = selInfo(); return (shopSel[hTab] || '') + '|' + (s.type === 'upg' ? tier(s.it.k) : '') + '|' + save.skin + '|' + save.bskin; }
+function pvSig() { const s = selInfo(); return (shopSel.G || '') + '|' + (s.type === 'upg' ? tier(s.it.k) : '') + '|' + save.skin + '|' + save.bskin; }
 function pvSetup(w, h) {
   const s = selInfo(), it = s.it;
   pv = { sig: pvSig(), w, h, t: 0, kind: 'lanes', lanes: [], parts: [], cap: '', bs: BS(), sk: SK() };
+  if (s.type === 'idle') { pv.kind = 'idle'; return; }
   if (s.type === 'ship') { pv.kind = 'skin'; pv.sk = it; pv.trail = []; pv.shots = []; pv.cd = 0; return; }
   if (s.type === 'bullet') { pv.bs = it; pv.lanes = [mkLane('', laneSt(S))]; return; }
   const u = it, t = tier(u.k), mx = t >= u.max, nt = mx ? t : t + 1;
@@ -1815,20 +1896,32 @@ function pvSkin(c, dt) {
   c.globalCompositeOperation = 'source-over';
   drawShipModel(c, sk, x, y, ang, 1.7, t, false);
 }
+function pvIdle(c, dt) {
+  const w = pv.w, h = pv.h, t = pv.t, sk = pv.sk, cx = w / 2, cy = h / 2 - 4, bob = Math.sin(t * 1.6) * 3;
+  const g = c.createRadialGradient(cx, cy + 40, 0, cx, cy + 40, 70); g.addColorStop(0, 'rgba(120,200,255,.18)'); g.addColorStop(1, 'rgba(120,200,255,0)');
+  c.fillStyle = g; c.beginPath(); c.ellipse(cx, cy + 40, 70, 18, 0, 0, TAU); c.fill();
+  c.strokeStyle = 'rgba(160,210,255,.25)'; c.lineWidth = 1.2; c.beginPath(); c.ellipse(cx, cy + 40, 56, 13, 0, 0, TAU); c.stroke();
+  c.save(); c.strokeStyle = 'rgba(160,210,255,.55)'; c.lineWidth = 2; c.setLineDash([10, 16]); c.lineDashOffset = -t * 30; c.beginPath(); c.ellipse(cx, cy + 40, 66, 16, 0, 0, TAU); c.stroke(); c.restore();
+  if (Math.random() < 0.8) pv.parts.push({ x: cx + rand(-3, 3), y: cy + 20 + bob, vx: rand(-8, 8), vy: rand(50, 90), life: rand(0.3, 0.6), col: rgbOf(sk.trail, (t * 20) | 0, t) });
+  if (sk.px && Math.random() < 0.5) pv.parts.push({ x: cx + rand(-8, 8), y: cy + 18 + bob, vx: rand(-20, 20), vy: rand(30, 70), life: 0.5, col: sk.px[Math.random() * sk.px.length | 0] });
+  drawShipModel(c, sk, cx, cy + bob, -Math.PI / 2 + Math.sin(t * 0.8) * 0.05, 2.7, t, false);
+}
 function pvFrame(dt, t) {
   const cvs = $('pvCv'); if (!cvs) return;
   const d = Math.min(2, window.devicePixelRatio || 1), w = cvs.clientWidth, h = cvs.clientHeight; if (!w || !h) return;
   if (cvs.width !== (w * d | 0) || cvs.height !== (h * d | 0)) { cvs.width = w * d | 0; cvs.height = h * d | 0; pv = null; }
-  if (!pv || pv.sig !== pvSig()) pvSetup(w, h);
+  const z = clamp(Math.min(w, h) / 230, 1, 2.3);
+  if (!pv || pv.sig !== pvSig() || pv.z !== z) { pvSetup(w / z, h / z); pv.z = z; }
   pv.t += dt;
-  const c = cvs.getContext('2d'); c.setTransform(d, 0, 0, d, 0, 0); c.clearRect(0, 0, w, h);
-  if (pv.kind === 'skin') pvSkin(c, dt);
+  const c = cvs.getContext('2d'); c.setTransform(d, 0, 0, d, 0, 0); c.clearRect(0, 0, w, h); c.setTransform(d * z, 0, 0, d * z, 0, 0);
+  if (pv.kind === 'idle') pvIdle(c, dt);
+  else if (pv.kind === 'skin') pvSkin(c, dt);
   else if (pv.kind === 'lanes') for (const L of pv.lanes) { laneUpdate(L, dt); laneDraw(c, L); }
   else pvCustom(c, dt);
   c.globalCompositeOperation = 'lighter';
   for (let i = pv.parts.length - 1; i >= 0; i--) { const p = pv.parts[i]; p.life -= dt; if (p.life <= 0) { pv.parts.splice(i, 1); continue; } p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= 0.95; p.vy *= 0.95; c.fillStyle = `rgba(${p.col},${Math.min(1, p.life * 2)})`; c.fillRect(p.x - 1.2, p.y - 1.2, 2.4, 2.4); }
   c.globalCompositeOperation = 'source-over';
-  if (pv.cap) { c.save(); c.font = `500 11px ${FONT}`; c.textAlign = 'center'; c.textBaseline = 'bottom'; c.fillStyle = 'rgba(233,238,247,.6)'; if (c.measureText(pv.cap).width < w - 16) c.fillText(pv.cap, w / 2, h - 7); c.restore(); }
+  if (pv.cap) { c.save(); c.font = `500 11px ${FONT}`; c.textAlign = 'center'; c.textBaseline = 'bottom'; c.fillStyle = 'rgba(233,238,247,.6)'; if (c.measureText(pv.cap).width < pv.w - 16) c.fillText(pv.cap, pv.w / 2, pv.h - 7); c.restore(); }
 }
 
 function buyOrb(k) {
@@ -2406,7 +2499,6 @@ $('hBack').onclick = () => {
   else { $('clDot').classList.toggle('hidden', !affordable()); $('clTiles').children[2].querySelector('b').textContent = lives; show('cleared'); }
 };
 $('hGo').onclick = () => { audio(); goFull(); if (hangarFrom === 'cleared') warpTo(sector + 1); else startRun(save.sel); };
-$('tabs').addEventListener('click', e => { const b = e.target.closest('.tab'); if (b) { hTab = b.dataset.c; sfx.ui(); renderHangar(); } });
 
 $('rBack').onclick = () => goMenu();
 $('rGo').onclick = () => { audio(); goFull(); startRun(save.sel); };
