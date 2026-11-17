@@ -373,7 +373,7 @@ body.paused .tbtn{display:none!important}
 <script>
 'use strict';
 // Versioning (renumbered by request): next version -> next whole number (3.00), sub version -> +0.01 (2.01)
-const VERSION = '2.08';
+const VERSION = '2.09';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -484,6 +484,7 @@ function loadSave() {
   try {
     const s = JSON.parse(localStorage.getItem('eh_save2') || 'null');
     if (s && typeof s === 'object') Object.assign(save, s);
+    if (save.up && save.up.homing) { save.dust = (save.dust || 0) + [0, 220, 640][Math.min(2, save.up.homing)]; delete save.up.homing; save.homRefund = true; }
     else save.best = +localStorage.getItem('eh_best') || 0;
   } catch (e) {}
 }
@@ -507,7 +508,6 @@ const UPG = [
   { k: 'velocity', cat: 'WEAPON', name: 'Rail accelerator', info: 'Faster bullets that bend less near the black hole.', stat: 'Bullet speed', val: t => t ? '+' + t * 15 + '%' : 'Base', max: 3, cost: [60, 130, 260] },
   { k: 'rate', cat: 'WEAPON', name: 'Autoloader', info: 'Shoot faster.', stat: 'Fire rate', val: t => t ? '+' + [0, 11, 25, 43][t] + '%' : 'Base', max: 3, cost: [90, 200, 400] },
   { k: 'damage', cat: 'WEAPON', name: 'Plasma rounds', info: 'Every shot hits harder.', stat: 'Damage', val: t => '×' + [1, 1.35, 1.7, 2.1][t], max: 3, cost: [100, 220, 450] },
-  { k: 'homing', cat: 'WEAPON', name: 'Seeker rounds', info: 'Bullets gently curve toward enemies just ahead of them.', stat: 'Homing', val: t => ['Off', 'Slight', 'Light'][t], max: 2, cost: [220, 420] },
   { k: 'pierce', cat: 'WEAPON', name: 'Neutron core', info: 'Bullets punch through enemies.', stat: 'Pierce', val: t => t ? '+' + t + ' target' + (t > 1 ? 's' : '') : 'Off', max: 2, cost: [180, 380] },
   { k: 'missile', cat: 'WEAPON', name: 'Missile pods', info: 'Homing missiles fire on their own.', stat: 'Missiles', val: t => ['None', '1 every 3s', '2 every 2.6s', '3 every 2.2s'][t], max: 3, cost: [250, 420, 680] },
   { k: 'multi', cat: 'POWER', name: 'Multishot', info: 'Upgrades the spread shot drop.', stat: 'Spread shot', val: t => ['Triple', 'Quad', 'Penta'][t], max: 2, cost: [150, 350] },
@@ -826,7 +826,7 @@ const neb = document.createElement('canvas');
 const bA = document.createElement('canvas'), bB = document.createElement('canvas'), bC = document.createElement('canvas');
 const bxA = bA.getContext('2d'), bxB = bB.getContext('2d'), bxC = bC.getContext('2d');
 let vigGrad = null;
-function freshPw() { return { multi: 0, rapid: 0, shield: 0, sats: 0, beam: 0, slow: 0 }; }
+function freshPw() { return { multi: 0, rapid: 0, shield: 0, sats: 0, beam: 0, slow: 0, seek: 0 }; }
 
 // ================= SETUP =================
 function resize() {
@@ -1088,6 +1088,7 @@ function eShot(x, y, vx, vy, life, k, R, col, mine) { ebullets.push({ x, y, vx, 
 const PICK = {
   multi: { c: '90,230,255', ic: 'multi', name: () => ['Triple shot', 'Quad shot', 'Penta shot'][S.multi] },
   rapid: { c: '255,214,90', ic: 'rapid', name: () => 'Rapid fire' },
+  seek: { c: '255,120,210', ic: 'homing', name: () => 'Seeker rounds' },
   shield: { c: '100,255,160', ic: 'shieldpk', name: () => S.shieldHits > 1 ? 'Shield ×' + S.shieldHits : 'Shield' },
   bomb: { c: '200,150,255', ic: 'bombbay', name: () => '+1 bomb' },
   life: { c: '255,120,150', ic: 'hull', name: () => '+1 ship' },
@@ -1096,8 +1097,18 @@ const PICK = {
   slow: { c: '150,165,255', ic: 'u_time', name: () => 'Slow time' },
   nova: { c: '255,165,70', ic: 'u_nova', name: () => 'Supernova' },
 };
+let lastDropT = -9;
+function dropRoll(p) {
+  const ew = (sector - 1) * 2 + Math.max(1, wave);
+  let f = ew <= 3 ? 1 : Math.max(0.4, 1 - (ew - 3) * 0.06);
+  const busy = drones.length + pickups.length * 2;
+  if (busy > 6) f *= Math.max(0.45, 1 - (busy - 6) * 0.06);
+  if (time - lastDropT < 2.5) f *= 0.25;
+  if (Math.random() < p * f) { lastDropT = time; return true; }
+  return false;
+}
 function dropPickup(x, y) {
-  const w = [['multi', 26], ['rapid', 24], ['shield', 20], ['bomb', 10], ['life', 4]];
+  const w = [['multi', 24], ['rapid', 22], ['seek', 16], ['shield', 20], ['bomb', 10], ['life', 4]];
   if (S.sats) w.push(['sats', 12]); if (S.beam) w.push(['beam', 11]); if (S.slow) w.push(['slow', 10]); if (S.nova) w.push(['nova', 8]);
   let tot = 0; for (const e of w) tot += e[1];
   let r = Math.random() * tot, type = 'multi';
@@ -1292,7 +1303,7 @@ function breakAst(j, scored) {
       asts.push(mkAst(a.x, a.y, a.vx + Math.cos(ang) * sp, a.vy + Math.sin(ang) * sp, a.size - 1));
     }
   }
-  if (scored && Math.random() < 0.06 * S.luck && !tut) dropPickup(a.x, a.y);
+  if (scored && !tut && dropRoll(0.06 * S.luck)) dropPickup(a.x, a.y);
   if (scored) tutEv('rock');
 }
 function killDrone(i, scored) {
@@ -1303,7 +1314,7 @@ function killDrone(i, scored) {
   burst(d.x, d.y, 20, '255,220,180', 120, 0.6, 2);
   ring(d.x, d.y, 70, K.c, 0.45, 3);
   sfx.boom(0.8); shake = Math.min(25, shake + 6);
-  if (scored && Math.random() < K.pk * S.luck && !tut) dropPickup(d.x, d.y);
+  if (scored && !tut && dropRoll(K.pk * S.luck)) dropPickup(d.x, d.y);
   if (scored) tutEv('drone');
 }
 function killBoss() {
@@ -1971,14 +1982,14 @@ function decodeSave(code) {
 }
 function unpackSave(o) {
   const num = (v, lo, hi) => clamp(Math.floor(+v || 0), lo, hi);
-  const up = {};
+  const up = {}, homRef = o.u && o.u.homing ? [0, 220, 640][Math.min(2, Math.floor(+o.u.homing || 0))] : 0;
   for (const u of UPG) if (o.u && o.u[u.k]) up[u.k] = num(o.u[u.k], 0, u.max);
   const sb = {};
   if (o.sb && typeof o.sb === 'object') for (const k in o.sb) if (/^\d+$/.test(k)) sb[k] = num(o.sb[k], 0, 1e12);
   const unlocked = num(o.k, 1, 9);
   const bsk_ = ['pellet'].concat(Array.isArray(o.bk) ? o.bk.filter(id => id !== 'pellet' && BSKINS.some(x => x.id === id)) : []);
   const skins = ['scrap'].concat(Array.isArray(o.sk) ? o.sk.filter(id => id !== 'scrap' && SKINS.some(x => x.id === id)) : []);
-  return { name: String(o.n || '').slice(0, 16), dust: num(o.d, 0, 1e9), up, unlocked, sel: num(o.s, 1, unlocked), best: num(o.b, 0, 1e12), sbest: sb, deep: num(o.dp, 0, 1e6), skins, skin: skins.includes(o.ss) ? o.ss : 'scrap', bskins: bsk_, bskin: bsk_.includes(o.bs) ? o.bs : 'pellet', orbs: { void: num((o.ob || {}).void, 0, 999), stellar: num((o.ob || {}).stellar, 0, 999), quasar: num((o.ob || {}).quasar, 0, 999) } };
+  return { name: String(o.n || '').slice(0, 16), dust: num(o.d, 0, 1e9) + homRef, up, unlocked, sel: num(o.s, 1, unlocked), best: num(o.b, 0, 1e12), sbest: sb, deep: num(o.dp, 0, 1e6), skins, skin: skins.includes(o.ss) ? o.ss : 'scrap', bskins: bsk_, bskin: bsk_.includes(o.bs) ? o.bs : 'pellet', orbs: { void: num((o.ob || {}).void, 0, 999), stellar: num((o.ob || {}).stellar, 0, 999), quasar: num((o.ob || {}).quasar, 0, 999) } };
 }
 let loadArmed = null;
 function openProfile() {
@@ -2536,7 +2547,7 @@ function update(dt, rdt) {
   wantDash = false;
   if (!ship && AC) { droneF.frequency.setTargetAtTime(90, AC.currentTime, 0.3); droneG.gain.setTargetAtTime(0.05, AC.currentTime, 0.3); }
 
-  for (const k of ['multi', 'rapid', 'sats', 'beam', 'slow']) if (pw[k] > 0) pw[k] -= dt;
+  for (const k of ['multi', 'rapid', 'sats', 'beam', 'slow', 'seek']) if (pw[k] > 0) pw[k] -= dt;
   if (S.shieldRe && ship && pw.shield === 0) {
     shieldReT += dt;
     if (shieldReT >= S.shieldRe) { pw.shield = 1; shieldReT = 0; ring(ship.x, ship.y, 60, '100,255,160', 0.5, 3); sfx.shield(); }
@@ -2557,7 +2568,7 @@ function update(dt, rdt) {
       const angs = pw.multi > 0 ? spreads[1 + S.multi] : spreads[0];
       for (const da of angs) {
         const a = ship.ang + da, s = 820 * U * S.bspeed;
-        bullets.push({ x: ship.x + Math.cos(a) * 16 * U, y: ship.y + Math.sin(a) * 16 * U, vx: ship.vx * 0.3 + Math.cos(a) * s, vy: ship.vy * 0.3 + Math.sin(a) * s, life: 1.4, dmg: S.dmg, pierce: S.pierce, hits: null, hom: S.homing });
+        bullets.push({ x: ship.x + Math.cos(a) * 16 * U, y: ship.y + Math.sin(a) * 16 * U, vx: ship.vx * 0.3 + Math.cos(a) * s, vy: ship.vy * 0.3 + Math.sin(a) * s, life: 1.4, dmg: S.dmg, pierce: S.pierce, hits: null, hom: pw.seek > 0 ? 1.6 : 0 });
       }
       sfx.shoot();
     }
@@ -2793,6 +2804,7 @@ function update(dt, rdt) {
       const P = PICK[p.type];
       switch (p.type) {
         case 'multi': pw.multi = 12; break;
+        case 'seek': pw.seek = 10; break;
         case 'rapid': pw.rapid = S.rapidDur; break;
         case 'shield': pw.shield = Math.max(pw.shield, S.shieldHits); shieldReT = 0; break;
         case 'bomb': bombs = Math.min(S.maxBombs, bombs + 1); break;
@@ -3347,7 +3359,7 @@ function drawHUDi(W, H) {
   let bx = 34;
   if (pw.shield > 0) { badge(bx, by, 14, 'shieldpk', PICK.shield.c, 1, pw.shield > 1 ? '×' + pw.shield : '', false); bx += 38; }
   else if (S.shieldRe && ship) { ctx.save(); ctx.globalAlpha *= 0.55; badge(bx, by, 14, 'shieldpk', PICK.shield.c, shieldReT / S.shieldRe, '', false); ctx.restore(); bx += 38; }
-  const timers = [['multi', PICK.multi.c, pw.multi, 12], ['rapid', PICK.rapid.c, pw.rapid, S.rapidDur], ['u_drones', PICK.sats.c, pw.sats, 15], ['u_beam', PICK.beam.c, pw.beam, 7], ['u_time', PICK.slow.c, pw.slow, 7]];
+  const timers = [['multi', PICK.multi.c, pw.multi, 12], ['rapid', PICK.rapid.c, pw.rapid, S.rapidDur], ['homing', PICK.seek.c, pw.seek, 10], ['u_drones', PICK.sats.c, pw.sats, 15], ['u_beam', PICK.beam.c, pw.beam, 7], ['u_time', PICK.slow.c, pw.slow, 7]];
   for (const [ic, c, t, mxT] of timers) if (t > 0) { badge(bx, by, 14, ic, c, t / mxT, '', t < 2.5); bx += 38; }
   // desktop: dash + bomb
   if (!touch && ship) {
