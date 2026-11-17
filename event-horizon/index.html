@@ -240,7 +240,8 @@ svg{stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-l
 .gdet{grid-area:d;z-index:1;display:flex;align-items:center;gap:14px;padding:12px 14px;border-radius:14px;background:rgba(10,12,24,.75);border:1px solid rgba(var(--c),.4);height:104px;box-sizing:border-box;overflow:hidden;text-align:left;transition:border-color .25s}
 .gdet.flash{animation:fl .7s ease}
 .gdt{flex:1;min-width:0}.gda{flex:none;display:flex;flex-direction:column;gap:7px;width:220px}
-.gdet .pvn{font-size:17px}.gdet .pvd{font-size:12.5px;margin-top:3px}
+.gdet .pvn{font-size:17px}.gdet .pvd{font-size:12.5px;margin-top:3px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.gda .buy span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.gda .cs{white-space:nowrap}.gda .cs span{overflow:hidden;text-overflow:ellipsis}
 .gdet .cs{padding:6px 10px}
 .gbot{grid-area:b;z-index:1;display:flex;gap:24px;justify-content:space-between}
 .gbot .gbg{flex:1}
@@ -505,7 +506,7 @@ body.paused .tbtn{display:none!important}
 <script>
 'use strict';
 // Versioning (renumbered by request): next version -> next whole number (3.00), sub version -> +0.01 (2.01)
-const VERSION = '2.22';
+const VERSION = '2.23';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -547,6 +548,7 @@ const ICONS = {
   seekpk: ['M4 19c2-8 7-12 14-13', 'M14.5 3.5L18 6l-2.6 3.6'],
   deflpk: ['M12 4a8 8 0 0 1 8 8', 'M12 20a8 8 0 0 1-8-8', C(12, 12, 3)],
   barrpk: ['M5 19l5-5', 'M19 5l-7 2-3 3 5 5 3-3z', 'M3 13l4-1M11 21l1-4'],
+  vacpk: ['M6 4v8a6 6 0 0 0 12 0V4', 'M6 8h3M15 8h3', 'M12 21v-3'],
   wellpk: [C(12, 12, 2.5), 'M12 4a8 8 0 1 1-8 8', 'M12 8a4 4 0 1 1-4 4'],
   u_nova: [C(12, 12, 3), 'M12 2v4M12 18v4M2 12h4M18 12h4M5 5l3 3M16 16l3 3M19 5l-3 3M8 16l-3 3'],
   map: ['M9 4L3 6v14l6-2 6 2 6-2V4l-6 2z', 'M9 4v14M15 6v14'],
@@ -643,6 +645,7 @@ function loadSave() {
     if (s && typeof s === 'object') Object.assign(save, s);
     if (s && typeof s === 'object' && (s.upv || 0) < 2 && save.up) { for (const k in save.up) save.up[k] = migTier(k, save.up[k]); }
     if (s && typeof s === 'object' && (s.upv || 0) < 3) migAbil(save, s.unlocked);
+    if (save.up && save.up.luck) { let r = 0; for (let i = 0; i < Math.min(6, save.up.luck); i++) r += LUCKC[i]; save.dust = (save.dust || 0) + r; delete save.up.luck; }
     save.upv = 3;
     if (s && typeof s === 'object' && !s.seen) { save.seen = { k: {}, b: {} }; const cl = Math.min(NS, (save.unlocked || 1) - 1); for (let i = 1; i <= cl; i++) { save.seen.k[KINDS[i - 1]] = 1; save.seen.b[i] = 1; } if (save.best) save.seen.k.drone = 1; }
     if (save.up && save.up.homing) { save.dust = (save.dust || 0) + [0, 220, 640][Math.min(2, save.up.homing)]; delete save.up.homing; save.homRefund = true; }
@@ -673,9 +676,10 @@ function migAbil(o, unlocked) {
 function gcost(a, b, n) { const r = n > 1 ? Math.pow(b / a, 1 / (n - 1)) : 1; return Array.from({ length: n }, (_, i) => Math.round(a * Math.pow(r, i) / 10) * 10); }
 const UPMIG = { shieldgen: [0, 1, 3, 5] };
 // power-up abilities: only the shield is known at the start, each boss can teach you one more
-const ABN = { shield: 'Shield', multi: 'Spread shot', seek: 'Seeker rounds', beam: 'Photon beam', rapid: 'Rapid fire', nova: 'Supernova', sats: 'Orbital drones', defl: 'Deflector', barr: 'Missile barrage', slow: 'Slow time', well: 'Gravity well' };
-const UPAB = { shieldpk: 'shield', multi: 'multi', seekpk: 'seek', u_beam: 'beam', rapid: 'rapid', u_nova: 'nova', u_drones: 'sats', deflpk: 'defl', barrpk: 'barr', u_time: 'slow', wellpk: 'well' };
-const hasAb = id => id === 'shield' || !!(save.abil && save.abil[id]);
+const ABN = { shield: 'Shield', vac: 'Vacuum', multi: 'Spread shot', seek: 'Seeker rounds', beam: 'Photon beam', rapid: 'Rapid fire', nova: 'Supernova', sats: 'Orbital drones', defl: 'Deflector', barr: 'Missile barrage', slow: 'Slow time', well: 'Gravity well' };
+const UPAB = { shieldpk: 'shield', multi: 'multi', seekpk: 'seek', u_beam: 'beam', rapid: 'rapid', u_nova: 'nova', u_drones: 'sats', deflpk: 'defl', barrpk: 'barr', u_time: 'slow', wellpk: 'well', vacpk: 'vac' };
+const LUCKC = [60, 80, 120, 170, 250, 360];
+const hasAb = id => id === 'shield' || id === 'vac' || !!(save.abil && save.abil[id]);
 const migTier = (k, v) => UPMIG[k] ? UPMIG[k][Math.min(3, v)] : /^u_/.test(k) ? v : v * 2;
 const UPG = [
   { k: 'hull', cat: 'SHIP', name: 'Reinforced hull', info: 'Odd levels add a starting ship, even levels raise the ship limit.', stat: 'Ships', val: t => `${3 + Math.ceil(t / 2)} start / ${5 + Math.floor(t / 2)} max`, max: 6, cost: gcost(60, 520, 6) },
@@ -692,7 +696,7 @@ const UPG = [
   { k: 'multi', cat: 'POWER', name: 'Multishot', info: 'Upgrades the spread shot drop.', stat: 'Spread shot', val: t => ['Triple 12s', 'Triple 15s', 'Quad 15s', 'Quad 18s', 'Penta 18s'][t], max: 4, cost: gcost(100, 420, 4) },
   { k: 'rapid', cat: 'POWER', name: 'Overclock', info: 'Rapid fire lasts longer and shoots faster.', stat: 'Rapid fire', val: t => (12 + 2.5 * t) + 's', max: 4, cost: gcost(60, 260, 4) },
   { k: 'shieldpk', cat: 'POWER', name: 'Hardlight shield', info: 'Shield drops absorb more hits and keep you safe longer when they break.', stat: 'Shield hits', val: t => (1 + Math.floor(t / 2)) + (t % 2 ? ' + longer safety' : ''), max: 4, cost: gcost(70, 300, 4) },
-  { k: 'luck', cat: 'POWER', name: 'Salvager', info: 'Enemies drop power-ups more often.', stat: 'Drop chance', val: t => t ? '+' + (t * 17.5) + '%' : 'Base', max: 6, cost: gcost(55, 360, 6) },
+  { k: 'vacpk', cat: 'POWER', name: 'Vacuum', info: 'A power-up that pulls every bit of stardust and every power-up around you straight into your ship.', stat: 'Pull range', val: t => ['Large', 'Huge', 'Massive', 'Whole map'][t], max: 3, cost: gcost(60, 260, 3) },
   { k: 'seekpk', cat: 'POWER', name: 'Seeker rounds', info: 'Bullets gently curve toward enemies ahead of them.', stat: 'Duration', val: t => (10 + 2 * t) + 's', max: 3, cost: gcost(90, 300, 3) },
   { k: 'u_beam', cat: 'POWER', name: 'Photon beam', info: 'A piercing laser that bends around the black hole.', stat: 'Duration', val: t => (7 + 1.5 * t) + 's', max: 3, cost: gcost(140, 420, 3) },
   { k: 'u_nova', cat: 'POWER', name: 'Supernova', info: 'A free gravity bomb plus a ring of homing bolts.', stat: 'Bolts', val: t => 20 + 6 * t, max: 3, cost: gcost(120, 380, 3) },
@@ -985,7 +989,7 @@ function calcStats() {
     dmg: [1, 1.17, 1.35, 1.52, 1.7, 1.9, 2.1][t('damage')], homing: 0, pierce: t('pierce') * 0.5,
     missiles: [0, 1, 1, 2, 2, 3, 3][t('missile')], missileT: [0, 3.6, 3, 3, 2.6, 2.6, 2.2][t('missile')],
     multi: [0, 0, 1, 1, 2][t('multi')], multiDur: [12, 15, 15, 18, 18][t('multi')], rapidDur: 12 + 2.5 * t('rapid'), rapidRate: 1 - 0.06 * t('rapid'),
-    shieldHits: 1 + Math.floor(t('shieldpk') / 2), shieldInv: 1.2 + 0.5 * Math.ceil(t('shieldpk') / 2), luck: 1 + 0.175 * t('luck'),
+    shieldHits: 1 + Math.floor(t('shieldpk') / 2), shieldInv: 1.2 + 0.5 * Math.ceil(t('shieldpk') / 2), luck: 1, vacR: [450, 650, 900, 99999][t('vacpk')],
     satsDur: 15 + 3 * t('u_drones'), beamDur: 7 + 1.5 * t('u_beam'), slowDur: 7 + 1.5 * t('u_time'), novaN: 20 + 6 * t('u_nova'), seekDur: 10 + 2 * t('seekpk'), deflDur: 9 + 2 * t('deflpk'), barrDur: 7 + 1.5 * t('barrpk'), wellDur: 6 + 1.5 * t('wellpk'),
   };
 }
@@ -1011,7 +1015,7 @@ const neb = document.createElement('canvas');
 const bA = document.createElement('canvas'), bB = document.createElement('canvas'), bC = document.createElement('canvas');
 const bxA = bA.getContext('2d'), bxB = bB.getContext('2d'), bxC = bC.getContext('2d');
 let vigGrad = null;
-function freshPw() { return { multi: 0, rapid: 0, shield: 0, sats: 0, beam: 0, slow: 0, seek: 0, defl: 0, barr: 0, well: 0, wx: 0, wy: 0 }; }
+function freshPw() { return { multi: 0, rapid: 0, shield: 0, sats: 0, beam: 0, slow: 0, seek: 0, defl: 0, barr: 0, well: 0, vac: 0, wx: 0, wy: 0 }; }
 
 // ================= SETUP =================
 function resize() {
@@ -1312,6 +1316,7 @@ const PICK = {
   defl: { c: '120,220,255', ic: 'deflpk', name: () => 'Deflector' },
   barr: { c: '255,150,90', ic: 'barrpk', name: () => 'Missile barrage' },
   well: { c: '200,120,255', ic: 'wellpk', name: () => 'Gravity well' },
+  vac: { c: '143,255,214', ic: 'vacpk', name: () => 'Vacuum' },
 };
 let lastDropT = -9;
 function dropRoll(p) {
@@ -1324,7 +1329,7 @@ function dropRoll(p) {
   return false;
 }
 function dropPickup(x, y) {
-  const w = [['shield', 20], ['bomb', 10], ['life', 4]];
+  const w = [['shield', 20], ['vac', 12], ['bomb', 10], ['life', 4]];
   for (const [k, wt] of [['multi', 24], ['rapid', 22], ['seek', 16], ['sats', 12], ['beam', 11], ['slow', 10], ['nova', 8], ['defl', 11], ['barr', 10], ['well', 8]]) if (hasAb(k)) w.push([k, wt]);
   let tot = 0; for (const e of w) tot += e[1];
   let r = Math.random() * tot, type = 'multi';
@@ -1752,11 +1757,11 @@ function renderPrevInfo() {
     col = upCol(u);
     const catName = lk ? 'Locked' : (CATS.find(c => c[0] === u.cat) || [0, ''])[1];
     const bi = lk ? BOSSES.findIndex(B => B.ab === UPAB[u.k]) : -1, bName = bi >= 0 && save.seen && save.seen.b && save.seen.b[bi + 1] ? BOSSES[bi].name : 'the sector ' + (bi + 1) + ' boss';
-    const stat = lk ? `<div class="cs"><span>How to get it</span><b>Beat ${bName} · 50% per win</b></div>` : `<div class="cs"><span>${u.stat}</span><b>${u.val(t)}${mx ? '' : `<em>→ ${u.val(t + 1)}</em>`}</b></div>`;
-    const btn = lk ? `<button class="buy done" disabled>Beat ${bName} to unlock</button>` : mx ? `<button class="buy done" disabled>Max level</button>`
+    const stat = lk ? '' : `<div class="cs"><span>${u.stat}</span><b>${u.val(t)}${mx ? '' : `<em>→ ${u.val(t + 1)}</em>`}</b></div>`;
+    const btn = lk ? `<button class="buy done" disabled>Locked</button>` : mx ? `<button class="buy done" disabled>Max level</button>`
       : `<button class="buy" data-k="${u.k}" ${ok ? '' : 'disabled'}><span>${ok ? (gPT === 'mouse' ? 'Click to ' : 'Tap again to ') + (unlock ? 'unlock' : t ? 'upgrade' : 'install') : 'Need more ◆'}</span><span>◆ ${fmt(cost)}</span></button>`;
     const btnFix = 0;
-    h = `<div class="gdt"><div class="pvh"><div class="pvn">${u.name}</div><span class="chip" style="background:rgba(${col},.14);color:rgb(${col})">${catName}</span></div><div class="pvd">${u.info}</div></div><div class="gda">${stat}${btn}</div>`;
+    h = `<div class="gdt"><div class="pvh"><div class="pvn">${u.name}</div><span class="chip" style="background:rgba(${col},.14);color:rgb(${col})">${catName}</span></div><div class="pvd">${lk ? `<b style="color:#e3d6ff">Beat ${bName} for a 50% chance to unlock.</b> ` : ''}${u.info}</div></div><div class="gda">${stat}${btn}</div>`;
   } else {
     const ship = s.type === 'ship', owned = ship ? (save.skins || ['scrap']) : (save.bskins || ['pellet']), cur = ship ? SK() : BS();
     const own = owned.includes(it.id), eq = cur.id === it.id, myth = it.rar === 'mythic', att = ship ? 'skin' : 'bskin';
@@ -1892,12 +1897,13 @@ function pvSetup(w, h) {
     case 'homing': two({ layout: 'offset', aim: false }, { layout: 'offset', aim: false }); break;
     case 'pierce': two({ layout: 'row', aim: false }, { layout: 'row', aim: false }); break;
     case 'missile': two({ mis: A.missiles }, { mis: B.missiles }); break;
-    case 'luck': two({ drop: 0.2 * A.luck }, { drop: 0.2 * B.luck });  break;
+    case 'luck':  break;
     case 'multi': two({ spread: SPREADS[1 + A.multi] }, { spread: SPREADS[1 + B.multi] }); pv.cap = 'While the spread shot drop is active'; break;
     case 'rapid': two({ iv: 0.055 * A.rapidRate * A.rate }, { iv: 0.055 * B.rapidRate * B.rate }); pv.cap = 'While the rapid fire drop is active'; break;
     case 'seekpk': two({ layout: 'offset', aim: false, hom: 1.6 }, { layout: 'offset', aim: false, hom: 1.6 }); pv.cap = 'Bullets curve toward targets'; break;
     case 'barrpk': two({ mis: 2, misT: 0.45 }, { mis: 2, misT: 0.45 }); pv.cap = 'A stream of homing missiles'; break;
     case 'deflpk': pv.kind = 'shieldpk'; pvCustomInit('shieldpk', A, B, true); pv.hitsMax = 9; pv.hits = 9; pv.cap = 'Rotating arcs destroy enemy shots'; break;
+    case 'vacpk': pv.kind = 'magnet'; pvCustomInit('magnet', A, A, true); pv.rB = [90, 130, 170, 400][Math.min(3, tier('vacpk') + 1)]; pv.cap = ''; break;
     case 'wellpk': pv.kind = 'magnet'; pvCustomInit('magnet', A, A, true); pv.rB = 70; pv.cap = 'A small black hole pulls everything in'; break;
     case 'u_drones': pv.lanes = [mkLane('', laneSt(S, { sats: true }))]; pv.cap = 'Drop: two drones orbit you and shoot'; break;
     case 'u_beam': pv.lanes = [mkLane('', laneSt(S, { beam: true }))]; pv.cap = 'Drop: a piercing laser for 7 seconds'; break;
@@ -2196,7 +2202,7 @@ function pvFrame(dt, t) {
   c.globalCompositeOperation = 'lighter';
   for (let i = pv.parts.length - 1; i >= 0; i--) { const p = pv.parts[i]; p.life -= dt; if (p.life <= 0) { pv.parts.splice(i, 1); continue; } p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= 0.95; p.vy *= 0.95; c.fillStyle = `rgba(${p.col},${Math.min(1, p.life * 2)})`; c.fillRect(p.x - 1.2, p.y - 1.2, 2.4, 2.4); }
   c.globalCompositeOperation = 'source-over';
-  if (pv.cap) { c.save(); c.font = `500 11px ${FONT}`; c.textAlign = 'center'; c.textBaseline = 'bottom'; c.fillStyle = 'rgba(233,238,247,.6)'; if (c.measureText(pv.cap).width < pv.w - 16) c.fillText(pv.cap, pv.w / 2, pv.h - 7); c.restore(); }
+  if (pv.cap && pv.kind === '__none__') { c.save(); c.font = `500 11px ${FONT}`; c.textAlign = 'center'; c.textBaseline = 'bottom'; c.fillStyle = 'rgba(233,238,247,.6)'; if (c.measureText(pv.cap).width < pv.w - 16) c.fillText(pv.cap, pv.w / 2, pv.h - 7); c.restore(); }
 }
 
 function buyOrb(k) {
@@ -2406,6 +2412,7 @@ function unpackSave(o) {
   const num = (v, lo, hi) => clamp(Math.floor(+v || 0), lo, hi);
   const up = {}, homRef = o.u && o.u.homing ? [0, 220, 640][Math.min(2, Math.floor(+o.u.homing || 0))] : 0;
   const ou = {}; if (o.u && typeof o.u === 'object') for (const k in o.u) ou[k] = (o.uv || 0) >= 2 ? Math.floor(+o.u[k] || 0) : migTier(k, Math.floor(+o.u[k] || 0));
+  let lref = 0; if (ou.luck) { for (let i = 0; i < Math.min(6, ou.luck); i++) lref += LUCKC[i]; }
   const abil = {}; if (o.ab && typeof o.ab === 'object') for (const k in ABN) if (o.ab[k]) abil[k] = 1;
   if ((o.uv || 0) < 3) { const tmp = { up: ou, abil }; migAbil(tmp, Math.floor(+o.k || 1)); }
   for (const u of UPG) if (ou[u.k]) up[u.k] = num(ou[u.k], 0, u.max);
@@ -2414,7 +2421,7 @@ function unpackSave(o) {
   const unlocked = num(o.k, 1, NS + 1);
   const bsk_ = ['pellet'].concat(Array.isArray(o.bk) ? o.bk.filter(id => id !== 'pellet' && BSKINS.some(x => x.id === id)) : []);
   const skins = ['scrap'].concat(Array.isArray(o.sk) ? o.sk.filter(id => id !== 'scrap' && SKINS.some(x => x.id === id)) : []);
-  return { name: String(o.n || '').slice(0, 16), dust: num(o.d, 0, 1e9) + homRef, up, unlocked, sel: num(o.s, 1, unlocked), best: Math.max(num(o.b, 0, 1e12), ...Object.values(sb), 0), sbest: sb, deep: num(o.dp, 0, 1e6), skins, skin: skins.includes(o.ss) ? o.ss : 'scrap', bskins: bsk_, bskin: bsk_.includes(o.bs) ? o.bs : 'pellet', abil, seen: (() => { const sn = o.sn && typeof o.sn === 'object' ? o.sn : {}, r = { k: {}, b: {} }; for (const k of KINDS) if (sn.k && sn.k[k]) r.k[k] = 1; for (let i = 1; i <= NS; i++) if (sn.b && sn.b[i]) r.b[i] = 1; return r; })(), orbs: { void: num((o.ob || {}).void, 0, 999), stellar: num((o.ob || {}).stellar, 0, 999), quasar: num((o.ob || {}).quasar, 0, 999) } };
+  return { name: String(o.n || '').slice(0, 16), dust: num(o.d, 0, 1e9) + homRef + lref, up, unlocked, sel: num(o.s, 1, unlocked), best: Math.max(num(o.b, 0, 1e12), ...Object.values(sb), 0), sbest: sb, deep: num(o.dp, 0, 1e6), skins, skin: skins.includes(o.ss) ? o.ss : 'scrap', bskins: bsk_, bskin: bsk_.includes(o.bs) ? o.bs : 'pellet', abil, seen: (() => { const sn = o.sn && typeof o.sn === 'object' ? o.sn : {}, r = { k: {}, b: {} }; for (const k of KINDS) if (sn.k && sn.k[k]) r.k[k] = 1; for (let i = 1; i <= NS; i++) if (sn.b && sn.b[i]) r.b[i] = 1; return r; })(), orbs: { void: num((o.ob || {}).void, 0, 999), stellar: num((o.ob || {}).stellar, 0, 999), quasar: num((o.ob || {}).quasar, 0, 999) } };
 }
 let loadArmed = null;
 function openProfile() {
@@ -3181,7 +3188,7 @@ function update(dt, rdt) {
   wantDash = false;
   if (!ship && AC) { droneF.frequency.setTargetAtTime(90, AC.currentTime, 0.3); droneG.gain.setTargetAtTime(0.05, AC.currentTime, 0.3); }
 
-  for (const k of ['multi', 'rapid', 'sats', 'beam', 'slow', 'seek', 'defl', 'barr', 'well']) if (pw[k] > 0) pw[k] -= dt;
+  for (const k of ['multi', 'rapid', 'sats', 'beam', 'slow', 'seek', 'defl', 'barr', 'well', 'vac']) if (pw[k] > 0) pw[k] -= dt;
   // missile barrage
   if (pw.barr > 0 && ship && mode === 'play') { barrCD -= dt; if (barrCD <= 0) { barrCD = 0.42; for (const s2 of [-1, 1]) { const a = ship.ang + s2 * 1.2; missiles.push({ x: ship.x, y: ship.y, vx: ship.vx * 0.5 + Math.cos(a) * 200 * U, vy: ship.vy * 0.5 + Math.sin(a) * 200 * U, life: 4.5, tgt: null }); } } }
   // gravity well: pulls enemies in and grinds them down
@@ -3500,7 +3507,7 @@ function update(dt, rdt) {
     const p = pickups[i];
     const r = gravity(p, 0.3, dt);
     const dr = Math.pow(0.99, dt * 60); p.vx *= dr; p.vy *= dr;
-    if (ship) { const mdx = ship.x - p.x, mdy = ship.y - p.y, md = Math.hypot(mdx, mdy); if (md < 150 * U * S.magnet) { p.vx += mdx / md * 900 * U * dt; p.vy += mdy / md * 900 * U * dt; } }
+    if (ship) { const mdx = ship.x - p.x, mdy = ship.y - p.y, md = Math.hypot(mdx, mdy); if (md < 150 * U * S.magnet) { p.vx += mdx / md * 900 * U * dt; p.vy += mdy / md * 900 * U * dt; } if (pw.vac > 0 && md < S.vacR * U) { p.vx = mdx / md * 900 * U; p.vy = mdy / md * 900 * U; } }
     p.x += p.vx * dt; p.y += p.vy * dt; p.life -= dt; p.age += dt; p.rot += dt * 1.5; bound(p, 10, 0.5);
     if (r < rh || p.life <= 0) { pickups.splice(i, 1); continue; }
     if (ship && dist2(p, ship) < (22 * U) ** 2) {
@@ -3509,6 +3516,7 @@ function update(dt, rdt) {
         case 'multi': pw.multi = S.multiDur; break;
         case 'seek': pw.seek = S.seekDur; break;
         case 'defl': pw.defl = S.deflDur; break;
+        case 'vac': pw.vac = 2.2; ring(ship.x, ship.y, Math.min(S.vacR, 1400) * U, PICK.vac.c, 0.7, 3); tone(500, 0.6, 'sine', 0.1, 1200); break;
         case 'barr': pw.barr = S.barrDur; break;
         case 'well': pw.well = S.wellDur; pw.wx = ship.x; pw.wy = ship.y; ring(ship.x, ship.y, 160, PICK.well.c, 0.6, 4); tone(70, 1.2, 'sine', 0.15, 30); break;
         case 'rapid': pw.rapid = S.rapidDur; break;
@@ -3536,6 +3544,7 @@ function update(dt, rdt) {
     if (ship) {
       const mdx = ship.x - d.x, mdy = ship.y - d.y, md = Math.hypot(mdx, mdy);
       if (md < 120 * U * S.magnet) { d.vx += mdx / md * 1500 * U * dt; d.vy += mdy / md * 1500 * U * dt; }
+      if (pw.vac > 0 && md < S.vacR * U) { d.vx = mdx / md * 1100 * U; d.vy = mdy / md * 1100 * U; }
       if (md < 16 * U) {
         save.dust += d.v; runDust += d.v; secDust += d.v; saveDirty = true; tutEv('dust'); sfx.dust(); dustPop = 1;
         part(d.x, d.y, 0, 0, 0.3, '140,255,210', 3 * Math.max(1, U), 0);
