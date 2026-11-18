@@ -733,7 +733,7 @@ body.touch .srow2.nt{display:none}
 <script>
 'use strict';
 // Versioning: next version -> next whole number (4.00), sub version -> +0.01 (3.01)
-const VERSION = '4.45';
+const VERSION = '4.46';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -1743,7 +1743,7 @@ function dropDust(x, y, n, v = 1) {
     dust.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, v, life: 16, rot: rand(0, TAU) });
   }
 }
-function targets() { const a = drones.slice(); if (boss) a.push(boss); if (gmode === 'world' && ow && ow.wb) a.push(ow.wb.o); for (const o of asts) a.push(o); return a; }
+function targets() { const a = drones.slice(); if (boss) a.push(boss); if (gmode === 'world' && ow && ow.wb && !ow.wb.out) a.push(ow.wb.o); for (const o of asts) a.push(o); return a; }
 function nearestTo(p, list, maxD) {
   let best = null, bd = maxD * maxD;
   for (const o of list) { if (o.dead || !onScreen(o)) continue; const d = dist2(o, p); if (d < bd) { bd = d; best = o; } }
@@ -3924,7 +3924,7 @@ function worldGravity(o, k, dt) {
     if (h.big && ow.wb) continue;
     const dx = h.x - o.x, dy = h.y - o.y, r2 = dx * dx + dy * dy;
     if (r2 > ((h.big ? 2600 : 1300) * U) ** 2) continue;
-    const r = Math.sqrt(r2) + 1e-6, a = GMv * h.m * k / (r2 + 36 * U * U) * (ow && ow.gs ? 2 : 1);
+    const r = Math.sqrt(r2) + 1e-6, a = GMv * h.m * k / (r2 + 36 * U * U) * (ow && ow.gs ? 2 : 1) * (h.big && ow && ow.holeIn ? clamp((performance.now() - ow.holeIn) / 2500, 0, 1) : 1);
     if (h.white) { o.vx -= dx / r * a * 1.3 * dt; o.vy -= dy / r * a * 1.3 * dt; continue; }
     o.vx += dx / r * a * dt; o.vy += dy / r * a * dt;
     const eff = r / h.rh * rh; if (eff < best) { best = eff; gHole = h; }
@@ -4232,23 +4232,76 @@ function owWbBegin(k, rem, hp, max, el) {
   (k === 'm' ? [262, 330, 392, 523] : [196, 185, 147, 98]).forEach((f, i) => setTimeout(() => tone(f, 0.7, k === 'm' ? 'triangle' : 'sawtooth', 0.07, f * (k === 'm' ? 1.5 : 0.5)), i * 220));
   shake = Math.min(30, shake + 14); flash = 0.8; flashCol = k === 'm' ? '255,245,220' : '60,0,90'; buzz([60, 40, 120]);
 }
+// the boss doesn't just vanish: it dies (or leaves) on screen, then the galaxy fades back and the black hole reforms
+const WB_DIE = 2.4, WB_GOT = 5.8, WB_REST_D = 12.5, WB_REST_L = 3.3;
 function owWbEnd(dead) {
-  const B = ow.wb; if (!B) return;
-  ow.wb = null;
-  if (!mp || mp.host) drones = [];
-  ebullets = []; TH = SECTORS[BIOMES[Math.max(0, ow.biome)].th]; buildNebula(); buildStars(); owWbRegen();
+  const B = ow.wb; if (!B || B.out) return;
+  B.out = { t0: performance.now(), dead, k: '', did: {} };
+  ebullets = []; if (!mp || mp.host) drones = [];
   if (dead) {
-    if (Math.hypot(camX, camY) < Math.max(W, H) * 1.5) { burst(0, 0, 220, B.col, 700, 2, 3); burst(0, 0, 120, '255,255,255', 900, 1.2, 2.6); ring(0, 0, 400, '255,255,255', 0.8, 8); ring(0, 0, 800, B.col, 1.6, 6); ring(0, 0, 1300, B.col, 2.4, 3); }
-    flash = 1; flashCol = B.k === 'm' ? '255,250,230' : '200,150,255'; shake = Math.min(30, shake + 24); sfx.boom(1.6);
-    const k = Math.random() < 0.2 ? 'holy' : 'quasar';
+    // the reward is yours right away - the show just catches up
+    const k = Math.random() < 0.2 ? 'holy' : 'quasar'; B.out.k = k;
     save.orbs = save.orbs || { void: 0, stellar: 0 }; save.orbs[k] = (save.orbs[k] || 0) + 1; persist();
     if (ship) addScore(20000, ship.x, ship.y);
-    [523, 659, 784, 1046, 1318, 1568].forEach((f, i) => setTimeout(() => tone(f, 0.5, 'triangle', 0.08), i * 100)); buzz([60, 40, 60, 40, 200]);
-    announce(B.name + ' destroyed', { big: true, kick: 'World boss', sub: 'Everyone earns a ' + ORBS[k].name + (k === 'holy' ? ' - a guaranteed mythic skin!' : ' - open it in the garage'), col: ORBS[k].col, dur: 5, now: true });
-  } else announce(B.name + ' left', { kick: 'World boss', sub: 'Time ran out - the galaxy returns to normal', col: B.col, dur: 3.5, now: true });
+    announce(B.name + ' is breaking apart', { big: true, kick: 'World boss', col: B.col, dur: 2.2, now: true });
+    tone(160, WB_DIE, 'sawtooth', 0.05, 1100); buzz([30, 60, 30, 60, 30]);
+  } else {
+    announce(B.name + ' is leaving', { kick: 'World boss', sub: 'Time ran out', col: B.col, dur: 2.6, now: true });
+    tone(500, 3, 'sine', 0.06, 70);
+  }
+}
+function owWbFinish() {
+  const B = ow.wb; ow.wb = null;
+  TH = SECTORS[BIOMES[Math.max(0, ow.biome)].th]; buildNebula(); buildStars(); owWbRegen();
+  ow.holeIn = performance.now();
+  // anyone hanging around the middle gets eased out of the way of the returning black hole
+  if (ship) { const d = Math.hypot(ship.x, ship.y) || 1; if (d < 900 * U) { ship.vx += ship.x / d * 650 * U; ship.vy += ship.y / d * 650 * U; ship.inv = Math.max(ship.inv, 3); } }
+  if (B && B.out.dead) announce('The galaxy is back', { kick: 'World boss', sub: 'The black hole has reformed', col: TH.ring, dur: 2.6 });
+}
+// runs every frame while the outro plays (instead of the boss's attacks)
+function owWbOutro(B, now) {
+  const O = B.out, e = (now - O.t0) / 1000, once = (k, fn) => { if (!O.did[k]) { O.did[k] = 1; fn(); } }, vis = Math.hypot(camX, camY) < Math.max(W, H) * 1.6, R = B.o.R;
+  if (O.dead) {
+    if (e < WB_DIE) {
+      // cracking apart: little blasts all over it, harder and faster toward the end
+      if (vis) shake = Math.max(shake, 3 + e * 5);
+      if (vis && Math.random() < 0.15 + e * 0.25) { const a = rand(0, TAU), r = rand(0.4, 1.1) * R; burst(Math.cos(a) * r, Math.sin(a) * r, 10, Math.random() < 0.5 ? '255,255,255' : B.col, 260, 0.6, 2.2); if (Math.random() < 0.3) sfx.boom(0.3); }
+    }
+    if (e >= WB_DIE) once('blast', () => {
+      if (vis) { burst(0, 0, 240, B.col, 760, 2, 3); burst(0, 0, 140, '255,255,255', 950, 1.2, 2.6); ring(0, 0, 420, '255,255,255', 0.8, 9); ring(0, 0, 820, B.col, 1.6, 6); ring(0, 0, 1400, B.col, 2.6, 3); shake = Math.min(30, shake + 26); }
+      flash = 1; flashCol = B.k === 'm' ? '255,250,230' : '210,160,255'; sfx.boom(1.7); tone(70, 1.4, 'sine', 0.2, 30); buzz([80, 40, 160]);
+    });
+    // the orb takes shape: light streams in from all around
+    if (e > WB_DIE + 0.3 && e < WB_GOT && vis && Math.random() < 0.85) { const a = rand(0, TAU), r = rand(260, 420) * U, c = ORBS[O.k].col; part(Math.cos(a) * r, Math.sin(a) * r, -Math.cos(a) * r * 1.6, -Math.sin(a) * r * 1.6, 0.6, Math.random() < 0.4 ? '255,255,255' : c, rand(2, 3.5) * Math.max(1, U), 0, 1); }
+    if (e >= WB_DIE + 0.6) once('chime', () => [392, 523, 659, 784].forEach((f, i) => setTimeout(() => tone(f, 0.6, 'triangle', 0.06), i * 160)));
+    if (e >= WB_GOT) once('got', () => {
+      const O_ = ORBS[O.k];
+      if (vis) { burst(0, 0, 90, O_.col, 380, 1.2, 2.6); ring(0, 0, 260, O_.col, 0.8, 5); ring(0, 0, 160, '255,255,255', 0.5, 3); }
+      [523, 659, 784, 1046, 1318].forEach((f, i) => setTimeout(() => tone(f, 0.5, 'triangle', 0.08), i * 90)); buzz([40, 30, 90]);
+      announce('You earned a ' + O_.name, { big: true, kick: 'Reward', sub: O.k === 'holy' ? 'A guaranteed mythic skin - open it in the garage' : 'Open it in the garage after the match', col: O_.col, dur: 3.4, now: true });
+    });
+    if (e >= WB_GOT + 3.6) once('peace', () => announce('A moment of peace', { kick: 'World boss', sub: 'The black hole returns soon - move away from the centre', col: B.col, dur: 3 }));
+  } else {
+    // leaving: it pulls itself in, spins up and blinks out
+    if (e < 3 && vis && Math.random() < 0.7) { const a = rand(0, TAU), r = R * rand(1.5, 3); part(Math.cos(a) * r, Math.sin(a) * r, -Math.cos(a) * r * 1.4, -Math.sin(a) * r * 1.4, 0.6, B.col, 3 * Math.max(1, U), 0, 1); }
+    if (e >= 3) once('gone', () => { if (vis) { ring(0, 0, 600, B.col, 0.9, 6); burst(0, 0, 80, '255,255,255', 500, 0.8, 2.4); } flash = 0.7; flashCol = B.k === 'm' ? '255,245,220' : '120,60,200'; sfx.boom(0.9); });
+  }
+  const tR = O.dead ? WB_REST_D : WB_REST_L;
+  if (e >= tR) once('fade', () => { ow.wbFade = { t0: now, col: B.k === 'm' ? '255,246,225' : '14,4,26' }; noise(1.4, 0.18, 2500, 200); tone(90, 1.6, 'sine', 0.12, 45); });
+  if (e >= tR + 0.6) owWbFinish();
+}
+// the reward orb hanging where the boss was
+function drawWbOrb(B, e) {
+  const O = B.out, k = O.k, col = ORBS[k].col, f = clamp((e - WB_DIE - 0.3) / 1.3, 0, 1), g = clamp((e - WB_GOT) / 0.45, 0, 1);
+  if (f <= 0 || g >= 1) return;
+  const r = 46 * U * Math.max(0.01, easeOutBack(f)) * (1 - g), y = Math.sin(time * 2) * 6 * U - g * 40 * U;
+  ctx.save(); ctx.globalCompositeOperation = 'lighter';
+  for (let i = 0; i < 12; i++) { const a = time * 0.3 + i / 12 * TAU, L = r * (4 + Math.sin(time * 2 + i)); const rg = ctx.createRadialGradient(0, y, r * 0.6, 0, y, L); rg.addColorStop(0, `rgba(${col},0.45)`); rg.addColorStop(1, `rgba(${col},0)`); ctx.fillStyle = rg; ctx.beginPath(); ctx.moveTo(0, y); ctx.arc(0, y, L, a - 0.08, a + 0.08); ctx.closePath(); ctx.fill(); }
+  ctx.restore();
+  drawOrbK(ctx, 0, y, r, k, time);
 }
 function owWbDamage(dmg) {
-  const B = ow.wb; if (!B || B.o.dead) return;
+  const B = ow.wb; if (!B || B.o.dead || B.out) return;
   B.o.hit = 0.08;
   if (mp && !mp.host) { B.o.hp = Math.max(1, B.o.hp - dmg); mp.wbHit = (mp.wbHit || 0) + dmg; }
   else owWbHit(dmg);
@@ -4259,6 +4312,7 @@ function owWbHit(dmg) {
   if (B.o.hp <= 0) { B.o.hp = 0; if (mp) mp.ev.push(['wbd']); owWbEnd(true); }
 }
 function owWbHost(dt, pl) {
+  if (ow.wb && ow.wb.out) return;
   if (!ow.wb) {
     ow.wbT -= dt;
     if (ow.wbT <= 0) {
@@ -4285,6 +4339,7 @@ function owWbHost(dt, pl) {
 function owWbTick(dt) {
   const B = ow.wb; if (!B) return;
   const now = performance.now(), o = B.o;
+  if (B.out) { owWbOutro(B, now); return; }
   o.hit = Math.max(0, o.hit - dt); B.inv = Math.max(0, B.inv - dt);
   if (now >= B.end) { owWbEnd(false); return; }
   const f = o.hp / o.max, st = f > 0.66 ? 1 : f > 0.33 ? 2 : 3;
@@ -4370,6 +4425,25 @@ function drawWbDrone(d, c) {
   c.restore();
 }
 function drawWb() {
+  const B = ow.wb, O = B.out;
+  if (!O) { drawWbBody(); return; }
+  const e = (performance.now() - O.t0) / 1000;
+  if (O.dead) {
+    if (e >= WB_DIE) { drawWbOrb(B, e); return; }
+    const f = e / WB_DIE, j = (2 + f * 9) * U;
+    ctx.save(); ctx.translate(rand(-j, j), rand(-j, j)); const sc = 1 + 0.05 * Math.sin(e * 40) + f * 0.18; ctx.scale(sc, sc); drawWbBody(); ctx.restore();
+    // light (or darkness) splitting out of the cracks
+    ctx.save(); ctx.globalCompositeOperation = 'lighter';
+    for (let i = 0; i < 4 + f * 10; i++) { const a = i * 2.39996 + e * 0.6, L = B.o.R * (2 + f * 5) * (0.6 + 0.4 * Math.sin(e * 9 + i)); const rg = ctx.createRadialGradient(0, 0, B.o.R * 0.5, 0, 0, L); rg.addColorStop(0, `rgba(${B.k === 'm' ? '255,255,240' : '200,140,255'},${0.5 * f + 0.15})`); rg.addColorStop(1, 'rgba(255,255,255,0)'); ctx.fillStyle = rg; ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, L, a - 0.05, a + 0.05); ctx.closePath(); ctx.fill(); }
+    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, B.o.R * 1.4); g.addColorStop(0, `rgba(255,255,255,${f * 0.7 * (0.6 + 0.4 * Math.sin(e * 30))})`); g.addColorStop(1, 'rgba(255,255,255,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, B.o.R * 1.4, 0, TAU); ctx.fill();
+    ctx.restore();
+    return;
+  }
+  if (e >= 3) return;
+  const f = e / 3, sc = Math.max(0.01, 1 - f * f);
+  ctx.save(); ctx.rotate(f * f * 9); ctx.scale(sc, sc); drawWbBody(); ctx.restore();
+}
+function drawWbBody() {
   const B = ow.wb, o = B.o, R = o.R, t = time, L = B.k === 'm', st = B.stage;
   if (Math.abs(camX) > W / 2 + R * 6 || Math.abs(camY) > H / 2 + R * 6) return;
   ctx.save();
@@ -4678,6 +4752,11 @@ function drawHoles() {
     if (Math.abs(h.x - camX) > W / 2 + 400 * U || Math.abs(h.y - camY) > H / 2 + 400 * U) continue;
     const R = h.rh, t = time + h.ph, evh = ow.bh && ow.bh.h === h;
     if (evh) { const j = (1 - Math.max(0, ow.bh.end - performance.now()) / BHEV) * 6 * U; ctx.save(); ctx.translate(rand(-j, j), rand(-j, j)); }
+    const rf = h.big && ow.holeIn ? (performance.now() - ow.holeIn) / 2500 : 1, ref = rf < 1;
+    if (ref) {
+      const sc = Math.max(0.02, easeOutBack(clamp(rf, 0, 1))); ctx.save(); ctx.translate(h.x, h.y); ctx.scale(sc, sc); ctx.translate(-h.x, -h.y);
+      if (Math.random() < 0.9) { const a = rand(0, TAU), d = rand(500, 800) * U; part(h.x + Math.cos(a) * d, h.y + Math.sin(a) * d, -Math.cos(a) * d * 1.5, -Math.sin(a) * d * 1.5, 0.6, Math.random() < 0.5 ? TH.ring : TH.glow[0], 2.6 * Math.max(1, U), 0, 1); }
+    }
     if (h.born && performance.now() - h.born < 3000) { const f = (performance.now() - h.born) / 3000; ctx.save(); ctx.globalAlpha = f; }
     if (h.white) {
       const g = ctx.createRadialGradient(h.x, h.y, 0, h.x, h.y, R * 7); g.addColorStop(0, 'rgba(255,255,255,0.95)'); g.addColorStop(0.15, 'rgba(220,240,255,0.6)'); g.addColorStop(1, 'rgba(180,220,255,0)');
@@ -4697,6 +4776,7 @@ function drawHoles() {
       ctx.strokeStyle = `rgba(${TH.ring},0.9)`; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(h.x, h.y, R * 1.05, 0, TAU); ctx.stroke();
     }
     if (h.born && performance.now() - h.born < 3000) ctx.restore();
+    if (ref) ctx.restore();
     if (evh) ctx.restore();
   }
   owEvDraw(); owEvDraw2();
@@ -5229,7 +5309,7 @@ function mpSend() {
   if (mp.host) {
     for (const d of drones) if (d.nid == null) d.nid = ++mp.nid;
     pk.e = drones.map(d => [d.nid, Math.max(0, KALL.indexOf(d.kind)), R(d.x / U), R(d.y / U), R(d.vx / U), R(d.vy / U), R(d.hp * 10), R(d.max * 10), Math.max(0, MPST.indexOf(d.st)), R((d.stT || 0) * 100), R((d.la || 0) * 100), R((d.cd || 0) * 100), d.mini ? 1 : 0, R((d.ax || 0) / U), R((d.ay || 0) / U)]);
-    if (ow && ow.wb) { const B = ow.wb; pk.wb = [B.k, R(Math.max(0, B.end - performance.now())), R(B.o.hp * 10) / 10, B.o.max, R(performance.now() - B.t0)]; }
+    if (ow && ow.wb && !ow.wb.out) { const B = ow.wb; pk.wb = [B.k, R(Math.max(0, B.end - performance.now())), R(B.o.hp * 10) / 10, B.o.max, R(performance.now() - B.t0)]; }
     if (++mp.tkT % 10 === 0 && ow) { pk.tk = Object.keys(ow.taken); ow.hm.so = ow.sk.map(o => [o.ck, o.k, R(o.x / U), R(o.y / U)]); const nw = performance.now(); pk.wv = [ow.bh ? [ow.bh.id, R(Math.max(0, ow.bh.end - nw))] : null, ow.hm, ow.cm ? ow.cm.e.slice(0, 6).concat([R(Math.max(0, ow.cm.end - nw))]) : null, ow.gs ? R(Math.max(0, ow.gs.end - nw)) : 0, ow.mt ? [ow.mt.e.slice(0, 5).concat([R(Math.max(0, ow.mt.end - nw))]), [...ow.mt.gone]] : null]; }
   }
   mp.ch.send('p', pk);
@@ -6648,7 +6728,12 @@ function drawHUDi(W, H) {
   if (gmode === 'world' && ow && !paused) {
     if (mp) drawScoreboard(W, H, touch);
     // one pill per thing going on: what it is, how long it lasts and how far away it is
-    const pTop = ow.wb ? drawWbBar(W, H, touch) : (touch ? 54 : 16);
+    const pTop = ow.wb && !ow.wb.out ? drawWbBar(W, H, touch) : (touch ? 54 : 16);
+    // the galaxy fading back to normal after a boss
+    if (ow.wbFade) {
+      const f = (performance.now() - ow.wbFade.t0) / 1000, al = f < 0.6 ? f / 0.6 : Math.max(0, 1 - (f - 0.6) / 1.1);
+      if (f > 1.7) ow.wbFade = null; else { ctx.save(); ctx.fillStyle = `rgba(${ow.wbFade.col},${0.92 * al})`; ctx.fillRect(-SAL, -SAT, W + SAL + 400, H + SAT + 400); ctx.restore(); }
+    }
     if (ship && mmBigA < 0.5) {
       const nw = performance.now(), far = o => (Math.hypot(o.x - ship.x, o.y - ship.y) / U / 1000).toFixed(1) + 'K AWAY', pills = [];
       if (ow.bh) { const rem = Math.max(0, (ow.bh.end - nw) / 1000); pills.push([(ow.bh.h.white ? 'WHITE' : 'BLACK') + ' HOLE COLLAPSING  ' + mmss(rem) + '  ·  ' + far(ow.bh.h), '255,110,200', rem < 10]); }
@@ -6948,7 +7033,7 @@ function drawIndicators() {
   if (tut && tut.bc) list.push([tut.bc, '200,150,255', 7]);
   if (gmode === 'world') { for (const o of owOrbs.concat(ow.drops)) { if (ow.taken[o.ck]) continue; if (o.t === 'a' && Math.hypot(o.x - camX, o.y - camY) < 2600 * U) list.push([o, OTYPE.a.ring, 8]); } for (const d of drones) if (d.mini && Math.hypot(d.x - camX, d.y - camY) < 3200 * U) list.push([d, '255,90,90', 10]); }
   else list.push([{ x: CX, y: CY, bh: true }, TH.ring, 7]);
-  if (gmode === 'world' && ow) { if (ow.wb) list.push([ow.wb.o, ow.wb.col, 13]); if (ow.bh) list.push([ow.bh.h, '255,110,200', 11]); if (ow.cm) list.push([owCometPos(performance.now()), '150,230,255', 11]); if (ow.mt) list.push([ow.mt, '255,150,80', 11]); for (const o of ow.sk) if (!ow.taken[o.ck]) list.push([o, ORBS[o.k].col, 11]); }
+  if (gmode === 'world' && ow) { if (ow.wb && !ow.wb.out) list.push([ow.wb.o, ow.wb.col, 13]); if (ow.bh) list.push([ow.bh.h, '255,110,200', 11]); if (ow.cm) list.push([owCometPos(performance.now()), '150,230,255', 11]); if (ow.mt) list.push([ow.mt, '255,150,80', 11]); for (const o of ow.sk) if (!ow.taken[o.ck]) list.push([o, ORBS[o.k].col, 11]); }
   const m = 26, l = SAL + m + (gmode === 'world' && ow && !isTouch() ? upBox(W, H, false)[2] + 20 : 0), r_ = W - SAR - m, t = SAT + m + 70, b = H - SAB - m - (isTouch() ? 0 : 40);
   ctx.save(); ctx.globalAlpha = hudA;
   for (const [o, col, sz] of list) {
