@@ -626,7 +626,7 @@ body.paused .tbtn{display:none!important}
 <script>
 'use strict';
 // Versioning: next version -> next whole number (4.00), sub version -> +0.01 (3.01)
-const VERSION = '4.36';
+const VERSION = '4.37';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -1795,14 +1795,26 @@ function killShip() {
     ow.ab = {}; ow.timers = {}; for (const k in ow.bs) ow.bs[k] = Math.floor(ow.bs[k] / 2); owApply();
     if (hadA || hadB) queue.push({ t: pk ? 2.4 : 0.6, f: () => announce(hadA ? 'Abilities lost' : 'Upgrades halved', { sub: hadA ? 'Basic upgrades were halved too' : 'Grab basic orbs to build them back up', col: '200,150,255', dur: 2.4 }) });
   }
-  burst(ship.x, ship.y, 90, '120,240,255', 320, 1.6, 2.6);
-  burst(ship.x, ship.y, 60, '255,255,255', 200, 1.0, 2);
-  ring(ship.x, ship.y, 220, '120,240,255', 0.9, 5);
-  sfx.hurt(); buzz(180); shake = 22; flash = 0.6; flashCol = '255,80,80'; slowmo(0.25, 1.2); freeze = 0.08;
+  shipBoom(ship.x, ship.y, SK(), true);
+  sfx.hurt(); buzz(180); shake = 22; flash = 0.6; flashCol = '255,80,80';
+  if (gmode !== 'world') { slowmo(0.25, 1.2); freeze = 0.08; } // no slow-mo in multiplayer: your world keeps pace with everyone else
   ship = null; lives--; pw = freshPw(); chain = 0; chainT = 0; shieldReT = 0; beamSound(false);
   if (lives > 0) { deadTimer = 2.2; announce('Ship lost', { sub: lives === 1 ? 'Last ship' : lives + ' ships left', col: '255,110,110', dur: 2, now: true }); }
   else overTimer = 2.2;
 }
+// a proper ship explosion: white core, hull shards in the skin's colour, embers and staggered shockwaves
+function shipBoom(x, y, sk, mine) {
+  const col = rgbOf(sk && sk.trail ? sk.trail : '120,240,255', 0, time), st = sk && sk.stroke && !String(sk.stroke).startsWith('hue') && sk.stroke !== 'rainbow' ? hexRgb(sk.stroke) : col;
+  burst(x, y, 50, '255,255,255', 420, 0.5, 2.4, 0);
+  burst(x, y, 110, col, 330, 1.7, 2.6);
+  burst(x, y, 50, '255,170,70', 160, 1.4, 2.2, 0.15);
+  for (let i = 0; i < 14; i++) { const a = rand(0, TAU), s_ = rand(160, 460) * U; part(x, y, Math.cos(a) * s_, Math.sin(a) * s_, rand(1.2, 2.2), st, rand(3, 5.5) * Math.max(1, U), 0, 0.975); }
+  ring(x, y, 170, '255,255,255', 0.45, 6);
+  ring(x, y, 280, col, 1.0, 5);
+  ring(x, y, 420, col, 1.7, 2);
+  if (!mine && onScreen({ x, y })) { shake = Math.min(25, shake + 9); sfx.boom(0.9); }
+}
+function hexRgb(h) { const m = /^#?([0-9a-f]{6})$/i.exec(h || ''); if (!m) return '255,255,255'; const n = parseInt(m[1], 16); return (n >> 16 & 255) + ',' + (n >> 8 & 255) + ',' + (n & 255); }
 function hitObj(o, dmg) {
   if (o.dead) return false;
   if (o.nid != null && mp && !mp.host && gmode === 'world') { o.hp = Math.max(0.01, o.hp - dmg); o.hit = 0.08; mp.hits[o.nid] = (mp.hits[o.nid] || 0) + dmg; return false; }
@@ -3584,6 +3596,7 @@ function owSpawnPos() {
 }
 function owOut() {
   if (!ow || ow.out) return;
+  if (paused) { setPause(false); $('pause').classList.add('hidden'); }
   ow.out = true; overTimer = 1e9; owChoosing = false; $('owPick').classList.add('hidden');
   document.body.classList.remove('playing');
   $('mpOutSub').textContent = 'Final score ' + fmt(score) + '  ·  ' + kills + ' kills  ·  ◆ ' + fmt(runDust) + ' stardust this session';
@@ -4112,7 +4125,7 @@ function mpOn(ev, p) {
   if (fresh) { announce(P.n + ' joined', { kick: 'Pilot', col: P.col, dur: 1.8 }); tone(520, 0.2, 'triangle', 0.05, 780); }
   if (p.sd != null && p.sd !== mp.seed && p.j < mp.j) { mpClash(); return; }
   if (s) { if (!P.alive) { P.x = P.sx; P.y = P.sy; P.ang = P.sa; if (P.seen) ring(P.x, P.y, 80, P.col, 0.6, 3); } P.alive = true; P.seen = true; }
-  else if (P.alive) { P.alive = false; burst(P.x, P.y, 60, P.col, 260, 1.2, 2.4); ring(P.x, P.y, 160, P.col, 0.8, 4); if (onScreen(P)) sfx.boom(0.6); }
+  else if (P.alive) { P.alive = false; shipBoom(P.x, P.y, P.sk || SKINS[0], false); }
   if (Array.isArray(p.b)) for (const b of p.b) if (rbul.length < 240) rbul.push({ x: b[0] * U, y: b[1] * U, vx: b[2] * U, vy: b[3] * U, life: 1.4, bs: P.bs, dmg: Math.min(10, (+b[4] || 10) / 10), by: P.id });
   if (Array.isArray(p.tk) && ow) for (const k of p.tk) if (!ow.taken[k]) ow.taken[k] = now;
   if (Array.isArray(p.ev)) for (const e of p.ev) if (Array.isArray(e)) mpEvent(P, e);
