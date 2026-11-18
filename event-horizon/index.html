@@ -733,7 +733,7 @@ body.touch .srow2.nt{display:none}
 <script>
 'use strict';
 // Versioning: next version -> next whole number (4.00), sub version -> +0.01 (3.01)
-const VERSION = '4.44';
+const VERSION = '4.45';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -1661,9 +1661,13 @@ const DK = {
   gunship: { name: 'Gunship', hint: 'Tough, fires wide volleys', c: '210,215,230', sc: 420, du: 6, pk: 0.36, hp: 10, R: 19, cost: 3 },
   phantom: { name: 'Phantom', hint: 'Teleports next to you', c: '255,110,240', sc: 320, du: 5, pk: 0.3, hp: 4, R: 13, cost: 2.2 },
   carrier: { name: 'Carrier', hint: 'Launches seekers', c: '255,195,150', sc: 520, du: 7, pk: 0.4, hp: 12, R: 21, cost: 3.5 },
+  lumen: { name: 'Lumen', hint: 'Matter Colossus drone - circles you and fires bursts of light', c: '255,232,165', sc: 260, du: 4, pk: 0.3, hp: 4, R: 13, cost: 1.6 },
+  umbra: { name: 'Umbra', hint: 'Antimatter Colossus drone - winds up, dashes through you, scatters dark bolts', c: '170,90,255', sc: 260, du: 4, pk: 0.3, hp: 5, R: 14, cost: 1.6 },
 };
 const KTIP = { drone: 'Keep moving sideways - its shots aim where you are now.', seeker: 'Shoot them early or dash through the swarm.', lancer: 'When the line flashes, get off it before it locks.', charger: 'Sidestep at the last moment, then hit it while it rests.', bomber: 'Do not chase it through its own mine trail.', splitter: 'Kill it from a distance so the seekers have time to be shot.', warden: 'Circle around it - its back and sides are open.', gunship: 'Stay far away so the volley spreads out, or dash through a gap.', phantom: 'Keep moving - it appears near where you are standing still.', carrier: 'Focus it down quickly, or the seekers never stop.' };
 const KINDS = ['drone', 'seeker', 'lancer', 'charger', 'bomber', 'splitter', 'warden', 'gunship', 'phantom', 'carrier'];
+// every kind the network can name (the boss drones are never part of normal spawns)
+const KALL = KINDS.concat(['lumen', 'umbra']);
 const KP = { bomber: { keep: 300, th: 300, cap: 240 }, splitter: { keep: 150, th: 330, cap: 290 }, warden: { keep: 230, th: 240, cap: 170 }, gunship: { keep: 380, th: 200, cap: 150 }, phantom: { keep: 260, th: 280, cap: 230 }, carrier: { keep: 430, th: 180, cap: 130 } };
 const sectorKinds = sec => KINDS.slice(0, Math.min(KINDS.length, sec));
 const dCol = d => (DK[d.kind] || DK.drone).c;
@@ -2771,7 +2775,7 @@ function devRun(line) {
       if (!needWorld()) return;
       if (A1 === 'matter' || A1 === 'antimatter') {
         if (ow.wb) return err('A boss is already up - /boss end first');
-        const k = A1 === 'matter' ? 'm' : 'a', n = mp ? 1 + Object.values(mp.peers).filter(P => !P.away).length : 1, max = Math.round(num(A2, 2400 + 1500 * (n - 1)));
+        const k = A1 === 'matter' ? 'm' : 'a', n = mp ? 1 + Object.values(mp.peers).filter(P => !P.away).length : 1, max = Math.round(num(A2, wbHp(n)));
         owWbBegin(k, WBDUR, max, max, 0); if (mp) mp.ev.push(['wb', k, WBDUR, max]); ok('Summoned the ' + WBN[k] + ' (' + max + ' HP)'); return;
       }
       if (!ow.wb) return err('No boss is up');
@@ -2808,6 +2812,14 @@ function devRun(line) {
       ok('Teleported to ' + Math.round(x / U) + ', ' + Math.round(y / U)); return;
     }
     case 'upgrade': {
+      if (devWorld()) {
+        // in Multiplayer your garage upgrades don't apply - set the match upgrades instead
+        const tail = A2 != null ? ' ' + A2 : '';
+        if (A1 === 'all') { devRun('/basic all' + tail); devRun('/ability all' + tail); return; }
+        if (BASICS.some(b => b.k === A1)) { devRun('/basic ' + A1 + tail); return; }
+        if (OWA[A1]) { devRun('/ability ' + A1 + tail); return; }
+        return err('In Multiplayer use a basic (' + BASICS.map(b => b.k).join(', ') + ') or an ability (' + Object.keys(OWA).join(', ') + ')');
+      }
       const lv = A2 == null ? 99 : Math.round(num(A2, 99)), list = A1 === 'all' ? UPG : UPG.filter(u => u.k === A1);
       if (!list.length) return err('Unknown upgrade: ' + A1);
       for (const u of list) save.up[u.k] = clamp(lv, 0, u.max); persist(); if (gmode !== 'world') calcStats();
@@ -4198,6 +4210,7 @@ function owEvDraw2() {
 // The galaxy turns light or dark, rocks shrink to bubbles (60% fewer), only the boss's own drones fly, PvP is off and the
 // safe zone is gone. Everyone has 5 minutes; if it dies every pilot gets a Quasar Orb (20% chance of a Holy Orb instead).
 const WBDUR = 300000;
+const wbHp = n => 1300 + 800 * (n - 1);
 const WBTH = {
   m: Object.assign({}, SECTORS[0], { name: 'Matter', neb: ['255,230,170', '255,250,235', '255,205,130', '245,225,255', '255,215,150'], base: '#332b1a', disk: ['255,255,250', '255,240,200', '255,215,140', '255,190,110'], glow: ['255,240,200', '255,210,140'], ring: '255,246,225', danger: '255,215,120', rock: '#d8c8a0', rim: '255,240,200', boss: '255,225,140' }),
   a: Object.assign({}, SECTORS[0], { name: 'Antimatter', neb: ['90,20,140', '40,0,70', '140,30,170', '25,0,45', '70,10,120'], base: '#000000', disk: ['220,180,255', '170,100,255', '110,40,200', '60,10,120'], glow: ['170,90,255', '90,30,160'], ring: '200,150,255', danger: '190,110,255', rock: '#2a1838', rim: '170,100,255', boss: '180,100,255' }),
@@ -4212,7 +4225,6 @@ function owWbBegin(k, rem, hp, max, el) {
   const now = performance.now(), col = k === 'm' ? '255,225,140' : '190,110,255';
   ow.wb = { k, col, name: WBN[k], t0: now - el, end: now + rem, stage: 1, inv: 0, n1: -1, n2: -1, n3: -1, sT: 2, o: { x: 0, y: 0, R: 150 * U, hp: Math.min(hp, max), max, wb: true, dead: false, hit: 0 } };
   const B = ow.wb, st = B.o.hp / max; B.stage = st > 0.66 ? 1 : st > 0.33 ? 2 : 3;
-  ow.wbDK = {}; for (const key in DK) { ow.wbDK[key] = DK[key].c; DK[key].c = k === 'm' ? '255,226,150' : '185,105,255'; }
   if (!mp || mp.host) drones = [];
   ebullets = []; TH = WBTH[k]; buildNebula(); buildStars(); owWbRegen();
   if (ship) ship.inv = Math.max(ship.inv, 2);
@@ -4223,7 +4235,6 @@ function owWbBegin(k, rem, hp, max, el) {
 function owWbEnd(dead) {
   const B = ow.wb; if (!B) return;
   ow.wb = null;
-  for (const key in ow.wbDK || {}) if (DK[key]) DK[key].c = ow.wbDK[key];
   if (!mp || mp.host) drones = [];
   ebullets = []; TH = SECTORS[BIOMES[Math.max(0, ow.biome)].th]; buildNebula(); buildStars(); owWbRegen();
   if (dead) {
@@ -4253,7 +4264,7 @@ function owWbHost(dt, pl) {
     if (ow.wbT <= 0) {
       ow.wbT = 300;
       if (Math.random() < 0.5) {
-        const k = Math.random() < 0.5 ? 'm' : 'a', n = mp ? 1 + Object.values(mp.peers).filter(P => !P.away).length : 1, max = 2400 + 1500 * (n - 1);
+        const k = Math.random() < 0.5 ? 'm' : 'a', n = mp ? 1 + Object.values(mp.peers).filter(P => !P.away).length : 1, max = wbHp(n);
         owWbBegin(k, WBDUR, max, max, 0); if (mp) mp.ev.push(['wb', k, WBDUR, max]);
       }
     }
@@ -4265,7 +4276,7 @@ function owWbHost(dt, pl) {
     B.sT = [3.2, 2.6, 2][B.stage - 1];
     const cap = [10, 14, 18][B.stage - 1] + 3 * (pl.length - 1);
     if (drones.length < cap && pl.some(P => Math.hypot(P.x, P.y) < 3200 * U)) {
-      const pool = KINDS.slice(0, 2 + B.stage * 2); sector = Math.min(NS, 3 + B.stage * 2);
+      const pool = [B.k === 'm' ? 'lumen' : 'umbra']; sector = Math.min(NS, 3 + B.stage * 2);
       for (let j = 0; j < 1 + B.stage; j++) { const a = rand(0, TAU), d = droneObj(Math.cos(a) * B.o.R * 2.2, Math.sin(a) * B.o.R * 2.2, pool[Math.random() * pool.length | 0]); d.extra = true; drones.push(d); }
     }
   }
@@ -4294,18 +4305,69 @@ function owWbTick(dt) {
     if (B.stage >= 2 && q % 2) for (let k = 0; k < arms; k++) emit(-q * iv * 1.1 + k * TAU / arms + 0.3, 180 + B.stage * 20, 6);
   }
   B.n1 = n;
-  // rings
-  const ri = [6, 4.5, 3.2][B.stage - 1], rn = Math.floor(tb / ri);
-  if (B.n2 < 0) B.n2 = rn;
-  if (rn > B.n2) { B.n2 = rn; const c = [24, 32, 40][B.stage - 1], off = rn * 0.37; for (let k = 0; k < c; k++) emit(off + k * TAU / c, 165, 9); if (near) ring(0, 0, 200, B.col, 0.5, 3); }
-  // aimed fans at you from stage 2
-  if (B.stage >= 2) {
-    const ai = B.stage === 2 ? 2.2 : 1.4, an = Math.floor(tb / ai);
-    if (B.n3 < 0) B.n3 = an;
-    if (an > B.n3 && ship) { B.n3 = an; const a0 = Math.atan2(ship.y - o.y, ship.x - o.x); for (let k = -2; k <= 2; k++) emit(a0 + k * 0.12, 330, 8); }
+  // stage 3 adds a ring of bullets every few seconds
+  if (B.stage >= 3) {
+    const rn = Math.floor(tb / 3.4);
+    if (B.n2 < 0) B.n2 = rn;
+    if (rn > B.n2) { B.n2 = rn; const off = rn * 0.37; for (let k = 0; k < 30; k++) emit(off + k * TAU / 30, 165, 9); if (near) ring(0, 0, 200, B.col, 0.5, 3); }
   }
   // touching it hurts and throws you back
   if (ship) { const d = Math.hypot(ship.x - o.x, ship.y - o.y) || 1; if (d < o.R + 14 * U) { if (ship.inv <= 0) hurt(); const k = 700 * U; ship.vx = ship.x / d * k; ship.vy = ship.y / d * k; } }
+}
+// boss drones: Lumen (matter) circles you and fires short light bursts; Umbra (antimatter) winds up, dashes through
+// you and scatters a ring of dark bolts when the dash ends
+function wbDroneStep(d, dt) {
+  const T = gmode === 'world' ? owTarget(d) : ship;
+  d.hit = Math.max(0, d.hit - dt); d.stT += dt; d.cd -= dt;
+  const damp = Math.pow(0.3, dt);
+  if (T) {
+    const dx = T.x - d.x, dy = T.y - d.y, dl = Math.hypot(dx, dy) || 1, ux = dx / dl, uy = dy / dl;
+    if (d.kind === 'lumen') {
+      const keep = 320 * U, want = dl > keep * 1.15 ? 1 : dl < keep * 0.85 ? -0.8 : 0, side = Math.sin(time * 0.8 + d.ph) > 0 ? 1 : -1;
+      d.vx = d.vx * damp + (ux * want * 430 - uy * side * 300) * U * dt; d.vy = d.vy * damp + (uy * want * 430 + ux * side * 300) * U * dt;
+      d.ang = Math.atan2(uy, ux);
+      if (d.cd <= 0 && dl < 900 * U) { d.cd = 1.8; d.burst = 3; d.bT = 0; d.st = 'fire'; d.stT = 0; }
+      if (d.burst > 0) { d.bT -= dt; if (d.bT <= 0) { d.burst--; d.bT = 0.12; const sp = 390 * U; eShot(d.x + ux * d.R, d.y + uy * d.R, ux * sp, uy * sp, 3, 0, 5 * U, '255,240,190'); if (onScreen(d)) tone(1400, 0.05, 'sine', 0.02); } }
+      else if (d.st === 'fire' && d.stT > 0.5) d.st = 'move';
+    } else {
+      if (d.st === 'wind') { d.vx *= Math.pow(0.02, dt); d.vy *= Math.pow(0.02, dt); d.ang = Math.atan2(uy, ux); if (d.stT > 0.7) { d.st = 'dash'; d.stT = 0; d.la = d.ang; d.vx = Math.cos(d.la) * 950 * U; d.vy = Math.sin(d.la) * 950 * U; } }
+      else if (d.st === 'dash') { if (d.stT > 0.45) { d.st = 'move'; d.stT = 0; d.cd = rand(2.2, 3.2); for (let k = 0; k < 8; k++) { const a = k / 8 * TAU + d.ph; eShot(d.x, d.y, Math.cos(a) * 230 * U, Math.sin(a) * 230 * U, 3.2, 0, 6 * U, '175,95,255'); } } }
+      else {
+        const want = dl > 360 * U ? 1 : dl < 240 * U ? -0.6 : 0, side = Math.sin(time * 0.6 + d.ph) > 0 ? 1 : -1;
+        d.vx = d.vx * damp + (ux * want * 380 - uy * side * 200) * U * dt; d.vy = d.vy * damp + (uy * want * 380 + ux * side * 200) * U * dt;
+        d.ang = Math.atan2(uy, ux);
+        if (d.cd <= 0 && dl < 560 * U) { d.st = 'wind'; d.stT = 0; }
+      }
+    }
+  } else { d.vx *= damp; d.vy *= damp; }
+  d.x += d.vx * dt; d.y += d.vy * dt;
+  if (gmode === 'world' && ow) { const r = Math.hypot(d.x, d.y), lim = ow.R - 30 * U; if (r > lim) { d.x *= lim / r; d.y *= lim / r; } }
+  if (ship && ship.inv <= 0 && Math.hypot(ship.x - d.x, ship.y - d.y) < d.R + 10 * U) hurt();
+}
+function drawWbDrone(d, c) {
+  const R = d.R, t = time + d.ph;
+  c.save(); c.translate(d.x, d.y);
+  if (d.kind === 'lumen') {
+    c.globalCompositeOperation = 'lighter';
+    const g = c.createRadialGradient(0, 0, 0, 0, 0, R * 2.6); g.addColorStop(0, 'rgba(255,245,215,0.65)'); g.addColorStop(1, 'rgba(255,220,150,0)');
+    c.fillStyle = g; c.beginPath(); c.arc(0, 0, R * 2.6, 0, TAU); c.fill();
+    c.globalCompositeOperation = 'source-over';
+    c.rotate(t * 1.6);
+    c.fillStyle = d.hit > 0 ? '#fff' : 'rgb(255,248,225)'; c.strokeStyle = 'rgb(150,90,25)'; c.lineWidth = 2.4;
+    c.beginPath(); c.moveTo(R, 0); c.lineTo(0, R * 0.62); c.lineTo(-R, 0); c.lineTo(0, -R * 0.62); c.closePath(); c.fill(); c.stroke();
+    c.rotate(Math.PI / 2); c.globalAlpha = 0.7; c.beginPath(); c.moveTo(R * 0.75, 0); c.lineTo(0, R * 0.4); c.lineTo(-R * 0.75, 0); c.lineTo(0, -R * 0.4); c.closePath(); c.stroke();
+    if (d.burst > 0) { c.globalAlpha = 1; c.strokeStyle = 'rgba(255,255,255,0.9)'; c.beginPath(); c.arc(0, 0, R * 1.5, 0, TAU); c.stroke(); }
+  } else {
+    if (d.st === 'dash') { c.save(); c.rotate(d.la); const g = c.createLinearGradient(0, 0, -R * 7, 0); g.addColorStop(0, 'rgba(150,70,255,0.6)'); g.addColorStop(1, 'rgba(60,0,120,0)'); c.fillStyle = g; c.fillRect(-R * 7, -R * 0.8, R * 7, R * 1.6); c.restore(); }
+    const g = c.createRadialGradient(0, 0, R * 0.5, 0, 0, R * 2.4); g.addColorStop(0, 'rgba(0,0,0,0.75)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+    c.fillStyle = g; c.beginPath(); c.arc(0, 0, R * 2.4, 0, TAU); c.fill();
+    if (d.st === 'wind') { const f = Math.min(1, d.stT / 0.7); c.strokeStyle = `rgba(200,140,255,${0.4 + 0.6 * f})`; c.lineWidth = 2; c.beginPath(); c.arc(0, 0, R * (2.6 - 1.3 * f), 0, TAU); c.stroke(); }
+    c.rotate(-t * 1.2);
+    c.fillStyle = d.hit > 0 ? 'rgb(140,80,200)' : 'rgb(6,0,14)'; c.strokeStyle = 'rgb(180,100,255)'; c.lineWidth = 1.8;
+    c.beginPath(); for (let i = 0; i < 16; i++) { const a = i / 16 * TAU, r = i % 2 ? R * 0.55 : R * 1.12; i ? c.lineTo(Math.cos(a) * r, Math.sin(a) * r) : c.moveTo(Math.cos(a) * r, Math.sin(a) * r); } c.closePath(); c.fill(); c.stroke();
+    c.fillStyle = 'rgba(200,150,255,0.9)'; c.beginPath(); c.arc(0, 0, R * 0.18, 0, TAU); c.fill();
+  }
+  c.restore();
 }
 function drawWb() {
   const B = ow.wb, o = B.o, R = o.R, t = time, L = B.k === 'm', st = B.stage;
@@ -5138,7 +5200,7 @@ function mpSnap(E) {
     const [id, ki, x, y, vx, vy, hp, mx, st, stT, la, cd] = e; seen.add(id);
     if (mp.dead[id] > now) continue;
     let d = map.get(id); const X = x * U, Y = y * U;
-    if (!d) { d = droneObj(X, Y, KINDS[ki] || 'drone'); d.nid = id; d.extra = true; if (e[12]) owMakeMini(d, e[13] * U, e[14] * U); d.hp = hp / 10; drones.push(d); }
+    if (!d) { d = droneObj(X, Y, KALL[ki] || 'drone'); d.nid = id; d.extra = true; if (e[12]) owMakeMini(d, e[13] * U, e[14] * U); d.hp = hp / 10; drones.push(d); }
     else {
       const ex = X + vx * U * 0.06 - d.x, ey = Y + vy * U * 0.06 - d.y;
       if (ex * ex + ey * ey > (260 * U) ** 2) { d.x = X; d.y = Y; } else { d.x += ex * 0.5; d.y += ey * 0.5; }
@@ -5166,7 +5228,7 @@ function mpSend() {
   if (mp.ev.length) { pk.ev = mp.ev; mp.ev = []; }
   if (mp.host) {
     for (const d of drones) if (d.nid == null) d.nid = ++mp.nid;
-    pk.e = drones.map(d => [d.nid, Math.max(0, KINDS.indexOf(d.kind)), R(d.x / U), R(d.y / U), R(d.vx / U), R(d.vy / U), R(d.hp * 10), R(d.max * 10), Math.max(0, MPST.indexOf(d.st)), R((d.stT || 0) * 100), R((d.la || 0) * 100), R((d.cd || 0) * 100), d.mini ? 1 : 0, R((d.ax || 0) / U), R((d.ay || 0) / U)]);
+    pk.e = drones.map(d => [d.nid, Math.max(0, KALL.indexOf(d.kind)), R(d.x / U), R(d.y / U), R(d.vx / U), R(d.vy / U), R(d.hp * 10), R(d.max * 10), Math.max(0, MPST.indexOf(d.st)), R((d.stT || 0) * 100), R((d.la || 0) * 100), R((d.cd || 0) * 100), d.mini ? 1 : 0, R((d.ax || 0) / U), R((d.ay || 0) / U)]);
     if (ow && ow.wb) { const B = ow.wb; pk.wb = [B.k, R(Math.max(0, B.end - performance.now())), R(B.o.hp * 10) / 10, B.o.max, R(performance.now() - B.t0)]; }
     if (++mp.tkT % 10 === 0 && ow) { pk.tk = Object.keys(ow.taken); ow.hm.so = ow.sk.map(o => [o.ck, o.k, R(o.x / U), R(o.y / U)]); const nw = performance.now(); pk.wv = [ow.bh ? [ow.bh.id, R(Math.max(0, ow.bh.end - nw))] : null, ow.hm, ow.cm ? ow.cm.e.slice(0, 6).concat([R(Math.max(0, ow.cm.end - nw))]) : null, ow.gs ? R(Math.max(0, ow.gs.end - nw)) : 0, ow.mt ? [ow.mt.e.slice(0, 5).concat([R(Math.max(0, ow.mt.end - nw))]), [...ow.mt.gone]] : null]; }
   }
@@ -5731,6 +5793,7 @@ function update(dt, rdt) {
   for (let i = drones.length - 1; i >= 0; i--) {
     const d = drones[i];
     if (!d) continue;
+    if (d.kind === 'lumen' || d.kind === 'umbra') { wbDroneStep(d, edt); continue; }
     const r = gravity(d, 1, edt);
     let TS = gmode === 'world' ? owTarget(d) : ship;
     if (d.mini && (!TS || Math.hypot(TS.x - d.x, TS.y - d.y) > 1100 * U || Math.hypot(d.x - d.ax, d.y - d.ay) > 1600 * U)) { TS = { x: d.ax + Math.cos(time * 0.3 + d.ph) * 220 * U, y: d.ay + Math.sin(time * 0.3 + d.ph) * 220 * U, vx: 0, vy: 0 }; d.cd = Math.max(d.cd, 0.6); if (d.st !== 'move' && d.st !== 'rest') { d.st = 'move'; d.stT = 0; } }
@@ -6385,6 +6448,7 @@ function drawDroneX(d, c = ctx) {
   c.restore();
 }
 function drawDrone(d, c = ctx) {
+  if (d.kind === 'lumen' || d.kind === 'umbra') { drawWbDrone(d, c); return; }
   const k = U;
   if (d.kind === 'lancer') {
     if (d.st === 'aim' || d.st === 'fire') {
