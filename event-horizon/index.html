@@ -625,6 +625,8 @@ body.touch .srow2.nt{display:none}
     <div class="sgt">Camera</div>
     <div class="srow2" style="--c:120,230,255"><div class="sico"><i data-ic="camera"></i></div><div class="stx"><b>View</b><small>Follow ship keeps you centred in a big round arena. Fixed fits the whole arena on one screen.</small></div><div class="opts sopt" data-set="cam"><button data-v="follow">Follow ship</button><button data-v="fixed">Fixed</button></div></div>
     <div class="srow2 nt" style="--c:120,230,255"><div class="sico"><i data-ic="look"></i></div><div class="stx"><b>Look toward cursor</b><small>Mouse only. Tap Space to re-centre, hold Space to keep the ship centred.</small></div><div class="opts sopt" data-set="look"><button data-v="off">Off</button><button data-v="on">On</button></div></div>
+    <div class="sgt">Graphics</div>
+    <div class="srow2" style="--c:255,214,120"><div class="sico"><i data-ic="gfx"></i></div><div class="stx"><b>Quality</b><small>Auto lowers resolution and glow detail by itself if the game starts to stutter.</small></div><div class="opts sopt" data-set="gfx"><button data-v="auto">Auto</button><button data-v="high">High</button><button data-v="bal">Balanced</button><button data-v="perf">Fast</button></div></div>
     <div class="sgt">Feel</div>
     <div class="srow2" style="--c:143,255,214"><div class="sico"><i data-ic="sound"></i></div><div class="stx"><b>Sound</b><small>Music and sound effects.</small></div><div class="opts sopt" data-set="snd"><button data-v="on">On</button><button data-v="off">Off</button></div></div>
     <div class="srow2" style="--c:255,176,112"><div class="sico"><i data-ic="shake"></i></div><div class="stx"><b>Screen shake</b><small>Camera shake on explosions and hits.</small></div><div class="opts sopt" data-set="shake"><button data-v="on">On</button><button data-v="off">Off</button></div></div>
@@ -753,7 +755,7 @@ body.touch .srow2.nt{display:none}
 <script>
 'use strict';
 // Versioning: next version -> next whole number (4.00), sub version -> +0.01 (3.01)
-const VERSION = '4.51';
+const VERSION = '4.52';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -818,6 +820,7 @@ const ICONS = {
   look: [C(12, 12, 3), 'M12 2v4M12 18v4M2 12h4M18 12h4'],
   hud: ['M3 5h18v14H3z', 'M6 8h5v4H6z', C(16.5, 14.5, 2)],
   play: ['M8 5.5v13l10.5-6.5z'],
+  gfx: ['M3 5h18v12H3z', 'M8 21h8M12 17v4', 'M7 13l3-3 2 2 4-4'],
 };
 const svgIcon = k => `<svg viewBox="0 0 24 24" aria-hidden="true">${(ICONS[k] || []).map(d => `<path d="${d}"/>`).join('')}</svg>`;
 const P2D = {};
@@ -1426,7 +1429,8 @@ function freshPw() { return { multi: 0, rapid: 0, shield: 0, sats: 0, beam: 0, s
 
 // ================= SETUP =================
 function resize() {
-  DPR = Math.min(window.devicePixelRatio || 1, LOW ? 1.75 : 2);
+  const QT = gfxTier();
+  DPR = Math.max(1, Math.min(window.devicePixelRatio || 1, [LOW ? 1.75 : 2, 1.5, 1.15, 1][QT]));
   W = innerWidth; H = innerHeight;
   cv.width = W * DPR | 0; cv.height = H * DPR | 0;
   cv.style.width = W + 'px'; cv.style.height = H + 'px';
@@ -1439,7 +1443,7 @@ function resize() {
   readSafe();
   GMv = 4.3e6 * U * U * U * bhMass;
   rh = 26 * U * Math.pow(bhMass, 0.7);
-  const f = LOW ? 6 : 4;
+  const f = Math.max(LOW ? 6 : 4, [4, 5, 6, 7][QT]);
   bA.width = bB.width = Math.max(2, W / f | 0); bA.height = bB.height = Math.max(2, H / f | 0);
   bC.width = Math.max(2, W / (f * 2.5) | 0); bC.height = Math.max(2, H / (f * 2.5) | 0);
   for (const b of [bxA, bxB, bxC]) { b.imageSmoothingEnabled = true; b.imageSmoothingQuality = 'high'; }
@@ -3253,7 +3257,7 @@ function openProfile() {
 function profSum() { $('pSum').innerHTML = `◆ ${fmt(save.dust)} <small>${Math.min(NS, save.unlocked - 1)}/${NS} SECTORS</small>`; }
 $('pilotBtn').onclick = () => { audio(); sfx.ui(); openProfile(); };
 function renderSettings() {
-  const cur = { look: save.look ? 'on' : 'off', cam: save.cam === 'fixed' ? 'fixed' : 'follow', snd: muted ? 'off' : 'on', shake: save.shake === false ? 'off' : 'on' };
+  const cur = { look: save.look ? 'on' : 'off', cam: save.cam === 'fixed' ? 'fixed' : 'follow', snd: muted ? 'off' : 'on', shake: save.shake === false ? 'off' : 'on', gfx: save.gfx || 'auto' };
   document.querySelectorAll('#settings .opts').forEach(g => g.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === cur[g.dataset.set])));
 }
 $('setBtn').onclick = () => { audio(); sfx.ui(); setFrom = 'menu'; hideAll(); show('settings'); renderSettings(); $('sTutRow').classList.remove('hidden'); };
@@ -3266,6 +3270,7 @@ $('settings').addEventListener('click', e => {
   if (k === 'cam') save.cam = v;
   if (k === 'look') save.look = v === 'on';
   if (k === 'shake') save.shake = v === 'on';
+  if (k === 'gfx') { save.gfx = v; gfxNoUp = false; resize(); }
   if (k === 'snd') { save.muted = v === 'off'; setMute(save.muted); }
   persist(); sfx.ui(); renderSettings();
 });
@@ -6919,16 +6924,35 @@ function drawAnn() {
   if (a.sub) { ctx.font = `500 ${a.big ? 15 : 14}px ${FONT}`; ctx.fillStyle = `rgb(${a.col})`; ctx.fillText(a.sub, CX, y + sz * 0.62 + 18); }
   ctx.restore();
 }
+// V4.52 performance: graphics tiers (0 high .. 3 low). 'auto' starts high and steps down when frames run slow.
+let gfxAuto = 0, gfxSlowT = 0, gfxFastT = 0, gfxEma = 16.7, gfxLastDrop = -1e9, gfxNoUp = false, bloomN = 0;
+const GFX_T = { high: 0, bal: 1, perf: 2 };
+function gfxTier() { const m = (typeof save !== 'undefined' && save && save.gfx) || 'auto'; return m === 'auto' ? gfxAuto : GFX_T[m] ?? 0; }
+function gfxWatch(ms) {
+  if (!(ms > 0) || ms > 120 || document.hidden) return;
+  gfxEma += (ms - gfxEma) * 0.05;
+  if (((typeof save !== 'undefined' && save && save.gfx) || 'auto') !== 'auto' || mode !== 'play') { gfxSlowT = gfxFastT = 0; return; }
+  const t = ms / 1000;
+  if (gfxEma > 21) { gfxSlowT += t; gfxFastT = 0; } else if (gfxEma < 17.6) { gfxFastT += t; gfxSlowT = 0; } else { gfxSlowT = Math.max(0, gfxSlowT - t); gfxFastT = 0; }
+  if (gfxSlowT > 2 && gfxAuto < 3) {
+    if (rtime - gfxLastDrop < 12) gfxNoUp = true; // stepping up just made it slow again: stay put
+    gfxAuto++; gfxLastDrop = rtime; gfxSlowT = 0; gfxEma = 17; resize();
+  } else if (gfxFastT > 25 && gfxAuto > 0 && !gfxNoUp) { gfxAuto--; gfxLastDrop = rtime; gfxFastT = 0; resize(); }
+}
 function bloom() {
-  bxA.globalCompositeOperation = 'copy'; bxA.drawImage(cv, 0, 0, bA.width, bA.height);
-  bxB.globalCompositeOperation = 'copy'; bxB.drawImage(bA, 0, 0);
-  bxB.globalCompositeOperation = 'multiply'; bxB.drawImage(bA, 0, 0);
-  bxA.globalCompositeOperation = 'copy'; bxA.drawImage(bB, 0, 0);
-  bxA.globalCompositeOperation = 'multiply'; bxA.drawImage(bB, 0, 0);
-  bxC.globalCompositeOperation = 'copy'; bxC.drawImage(bA, 0, 0, bC.width, bC.height);
+  const QT = gfxTier(), every = [1, 2, 2, 3][QT];
+  if (bloomN++ % every === 0) {
+    bxA.globalCompositeOperation = 'copy'; bxA.drawImage(cv, 0, 0, bA.width, bA.height);
+    bxB.globalCompositeOperation = 'copy'; bxB.drawImage(bA, 0, 0);
+    bxB.globalCompositeOperation = 'multiply'; bxB.drawImage(bA, 0, 0);
+    bxA.globalCompositeOperation = 'copy'; bxA.drawImage(bB, 0, 0);
+    bxA.globalCompositeOperation = 'multiply'; bxA.drawImage(bB, 0, 0);
+    bxC.globalCompositeOperation = 'copy'; bxC.drawImage(bA, 0, 0, bC.width, bC.height);
+    // fold the wide halo into the tight one so the screen only takes one full-size composite
+    bxA.globalCompositeOperation = 'lighter'; bxA.drawImage(bC, 0, 0, bA.width, bA.height);
+  }
   ctx.save(); ctx.globalCompositeOperation = 'lighter';
-  ctx.globalAlpha = 0.65; ctx.drawImage(bA, 0, 0, W, H);
-  ctx.globalAlpha = 0.75; ctx.drawImage(bC, 0, 0, W, H);
+  ctx.globalAlpha = 0.68; ctx.drawImage(bA, 0, 0, W, H);
   ctx.restore();
 }
 
@@ -7335,6 +7359,7 @@ if (cloudUser) cloudPull(); else showLogin();
 try { for (const w of ['300', '500', '600', '700']) document.fonts.load(`${w} 16px "Chakra Petch"`); } catch (e) {}
 let last = performance.now();
 function loop(now) {
+  gfxWatch(now - last);
   const rdt = Math.min(0.033, (now - last) / 1000); last = now; rtime += rdt;
   if (mp || lobby) mpPoll(rdt);
   if (!paused || (gmode === 'world' && mode === 'play')) {
