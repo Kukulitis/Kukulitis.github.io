@@ -195,7 +195,8 @@ svg{stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-l
 @media (max-width:760px){.mpw{grid-template-columns:1fr;align-content:start;gap:10px;margin:10px 0}.mpc{padding:16px;gap:10px}}
 #owPick.hidden{display:none}
 .owp{width:min(860px,96vw);text-align:center;display:flex;flex-direction:column;gap:10px;align-items:center;animation:up .35s cubic-bezier(.2,.8,.2,1) both}
-.owc{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;width:100%;margin-top:8px}
+.owc{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;width:100%;margin-top:30px}
+.owcat{position:absolute;left:0;right:0;top:-22px;text-align:center;font-size:10.5px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:rgb(var(--cc,200,150,255));pointer-events:none}
 .owcard{position:relative;display:flex;flex-direction:column;align-items:center;gap:8px;padding:22px 14px 18px;border-radius:18px;border:1px solid rgba(200,150,255,.45);background:linear-gradient(180deg,rgba(200,150,255,.16),rgba(20,12,40,.9));color:#fff;cursor:pointer;font:inherit;transition:transform .15s,box-shadow .15s}
 .owcard:hover{transform:translateY(-4px);box-shadow:0 0 30px rgba(200,150,255,.35)}
 .owcard.up{border-color:rgba(200,150,255,.85);background:linear-gradient(180deg,rgba(200,150,255,.22),rgba(20,12,40,.9))}
@@ -205,7 +206,7 @@ svg{stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-l
 .owcard.up .owi{background:rgba(200,150,255,.24);color:rgb(225,195,255)}
 .own{font-size:17px;font-weight:600}.owl{font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgb(200,150,255)}.owcard.up .owl{color:rgb(225,195,255)}
 .owd{font-size:12.5px;color:var(--dim);line-height:1.45}
-@media (max-width:640px){.owc{grid-template-columns:1fr}.owcard{display:grid;grid-template-columns:42px 1fr;grid-template-areas:'i n' 'i l' 'i d';justify-items:start;align-items:center;text-align:left;padding:12px 14px;gap:2px 12px}.owcard .owi{grid-area:i;width:42px;height:42px}.owcard .own{grid-area:n}.owcard .owl{grid-area:l}.owcard .owd{grid-area:d}}
+@media (max-width:640px){.owc{grid-template-columns:1fr;margin-top:10px}.owcat{top:9px;left:auto;right:12px;text-align:right;font-size:9.5px}.owcard{display:grid;grid-template-columns:42px 1fr;grid-template-areas:'i n' 'i l' 'i d';justify-items:start;align-items:center;text-align:left;padding:12px 14px;gap:2px 12px}.owcard .owi{grid-area:i;width:42px;height:42px}.owcard .own{grid-area:n}.owcard .owl{grid-area:l}.owcard .owd{grid-area:d}}
 #roadmap{background:linear-gradient(180deg,rgba(3,5,12,.75),rgba(3,5,12,.15) 30%,rgba(3,5,12,.15) 70%,rgba(3,5,12,.8))}
 .mapw{position:relative;flex:1;min-height:0;width:100%;max-width:min(1100px,96vw)}
 .mapv{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;scroll-snap-type:y mandatory;-webkit-overflow-scrolling:touch;touch-action:pan-y;scrollbar-width:none;-webkit-mask-image:linear-gradient(180deg,transparent,#000 7%,#000 93%,transparent);mask-image:linear-gradient(180deg,transparent,#000 7%,#000 93%,transparent)}
@@ -624,7 +625,7 @@ body.paused .tbtn{display:none!important}
 <script>
 'use strict';
 // Versioning: next version -> next whole number (4.00), sub version -> +0.01 (3.01)
-const VERSION = '4.32';
+const VERSION = '4.33';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -3469,7 +3470,7 @@ function owOpenPick(kind = 'a', basics = null) {
   if (kind === 'b') {
     owChoosing = true; ow.pickKind = 'b'; ow.pickEnd = performance.now() + OWPICK * 1000; ow.pickN = 0; ow.safe = 2;
     $('owH').textContent = 'CHOOSE AN UPGRADE';
-    $('owC').innerHTML = basics.map((k, i) => { const b = BASICS.find(x => x.k === k), l = (ow.bs[k] || 0) + 1; return `<button class="owcard bas" data-k="${k}" style="--bc:${CATCOL[BCAT[k]]};--ic:${b.c}"><span class="owk">${i + 1}</span><div class="owi">${svgIcon(b.ic)}</div><div class="own">${b.n}</div><div class="owl">Level ${l} / ${b.max}</div><div class="owd">${b.d}</div></button>`; }).join('');
+    $('owC').innerHTML = basics.map((k, i) => { const b = BASICS.find(x => x.k === k), l = (ow.bs[k] || 0) + 1; return `<button class="owcard bas" data-k="${k}" style="--bc:${CATCOL[BCAT[k]]};--ic:${b.c};--cc:${CATCOL[BCAT[k]]}"><span class="owcat">${BCAT[k] === 'SHIP' ? 'Ship' : 'Weapon'}</span><span class="owk">${i + 1}</span><div class="owi">${svgIcon(b.ic)}</div><div class="own">${b.n}</div><div class="owl">Level ${l} / ${b.max}</div><div class="owd">${b.d}</div></button>`; }).join('');
     $('owBar').style.transform = 'scaleX(1)'; $('owTm').textContent = 'Auto-pick in ' + OWPICK + 's';
     $('owPick').classList.remove('hidden'); tone(620, 0.3, 'triangle', 0.06, 930);
     return;
@@ -3478,7 +3479,7 @@ function owOpenPick(kind = 'a', basics = null) {
   const ch = owOffer();
   if (!ch.length) { save.dust += 60; runDust += 60; dustPop = 1; announce('Fully powered', { sub: '+◆ 60 stardust', col: '143,255,214', dur: 2 }); return; }
   owChoosing = true; ow.pickEnd = performance.now() + OWPICK * 1000; ow.pickN = 0; ow.safe = 2;
-  $('owC').innerHTML = ch.map((k, i) => { const A = OWA[k], l = (ow.ab[k] || 0) + 1; return `<button class="owcard${l > 1 ? ' up' : ''}" data-k="${k}"><span class="owk">${i + 1}</span><div class="owi">${svgIcon(A.ic)}</div><div class="own">${A.n}</div><div class="owl">${l > 1 ? 'Upgrade to level ' + l : 'New ability'}</div><div class="owd">${A.d(l)}</div></button>`; }).join('');
+  $('owC').innerHTML = ch.map((k, i) => { const A = OWA[k], l = (ow.ab[k] || 0) + 1; return `<button class="owcard${l > 1 ? ' up' : ''}" data-k="${k}"><span class="owcat">Power-up</span><span class="owk">${i + 1}</span><div class="owi">${svgIcon(A.ic)}</div><div class="own">${A.n}</div><div class="owl">${l > 1 ? 'Upgrade to level ' + l : 'New ability'}</div><div class="owd">${A.d(l)}</div></button>`; }).join('');
   $('owBar').style.transform = 'scaleX(1)'; $('owTm').textContent = 'Auto-pick in ' + OWPICK + 's';
   $('owPick').classList.remove('hidden');
   tone(660, 0.4, 'triangle', 0.07, 990);
