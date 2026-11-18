@@ -626,7 +626,7 @@ body.paused .tbtn{display:none!important}
 <script>
 'use strict';
 // Versioning: next version -> next whole number (4.00), sub version -> +0.01 (3.01)
-const VERSION = '4.35';
+const VERSION = '4.36';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -3548,6 +3548,14 @@ function owSpawnMini(pl) {
     const d = droneObj(x, y, k); owMakeMini(d, x, y); drones.push(d); return;
   }
 }
+// small health bar under an enemy once it has taken damage (same style as the rock bars)
+function droneHp(d) {
+  if (!d.max || d.hp >= d.max || d.hp <= 0 || d.dead) return;
+  const bw = Math.max(18, d.R * 1.9), bx = d.x - bw / 2, by = d.y + d.R + 6;
+  ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(bx - 1, by - 1, bw + 2, 5);
+  ctx.fillStyle = 'rgba(255,255,255,0.15)'; ctx.fillRect(bx, by, bw, 3);
+  const f = clamp(d.hp / d.max, 0, 1); ctx.fillStyle = f > 0.5 ? 'rgb(143,255,214)' : f > 0.25 ? 'rgb(255,210,100)' : 'rgb(255,110,90)'; ctx.fillRect(bx, by, bw * f, 3);
+}
 function drawMini(d) {
   ctx.save();
   ctx.strokeStyle = `rgba(255,90,90,${0.35 + 0.2 * Math.sin(time * 3 + d.ph)})`; ctx.lineWidth = 2; ctx.setLineDash([6 * U, 5 * U]); ctx.lineDashOffset = -time * 20 * U;
@@ -5675,7 +5683,7 @@ function draw() {
   if (tut && tut.bc) drawBeacon(tut.bc);
   if (pw.well > 0) drawWell();
   for (const a of asts) drawAst(a);
-  for (const d of drones) { if (d.mini) drawMini(d); else drawDrone(d); }
+  for (const d of drones) { if (d.mini) drawMini(d); else { drawDrone(d); droneHp(d); } }
   if (boss) drawBoss(boss);
   ctx.globalCompositeOperation = 'lighter';
   const ds = Math.max(3, 4 * U);
