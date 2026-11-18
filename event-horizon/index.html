@@ -24,7 +24,7 @@ canvas{display:block;cursor:crosshair}
 button{font-family:inherit;color:inherit}
 svg{stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .ov{position:fixed;inset:0;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:calc(14px + env(safe-area-inset-top)) calc(14px + env(safe-area-inset-right)) calc(14px + env(safe-area-inset-bottom)) calc(14px + env(safe-area-inset-left));background:radial-gradient(ellipse at center,rgba(0,0,0,0) 0%,rgba(0,0,0,.4) 60%,rgba(0,0,0,.78) 100%);animation:fade .35s ease both}
-.ov.scr{justify-content:flex-start;background:rgba(3,5,12,.9)}
+.ov.scr{justify-content:flex-start;background:radial-gradient(110% 70% at 50% -8%,rgba(70,90,170,.14),rgba(0,0,0,0) 62%),#04060e}
 .hidden{display:none!important}
 @keyframes fade{from{opacity:0}to{opacity:1}}
 @keyframes up{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
@@ -384,13 +384,7 @@ body.paused #tutBox{display:none}
 @media (max-width:760px) and (min-height:521px){.shopb{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);grid-template-areas:"prev" "list";gap:10px}#pvCv{height:150px}.sprev{padding:10px;gap:8px;max-height:none}.pvi{gap:7px}.pvd{font-size:12px}.pvn{font-size:16px}.orbv{justify-content:flex-start}.orbc .skp{height:110px}.orbref{border-radius:14px}}
 @media (max-height:520px){.shopb{grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);grid-template-areas:"list prev";gap:10px}.sprev{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);align-items:center;gap:10px;padding:9px}#pvCv{height:min(170px,calc(100vh - 210px))}.sprev .pvd,.sprev .lv{display:none}.pvi{gap:7px}.pvn{font-size:15px}.pvh .chip{display:none}.sprev .cs{flex-direction:column;align-items:flex-start;gap:2px;padding:6px 8px}.sprev .buy{padding:9px 10px;font-size:12px}.orbv{justify-content:flex-start}}
 .orbp{height:150px}
-#crate{background:rgba(2,3,10,.88)}
-#crCv{width:min(380px,86vw);height:min(380px,86vw);cursor:pointer;touch-action:manipulation;-webkit-mask-image:radial-gradient(circle at 50% 50%,#000 48%,transparent 70%);mask-image:radial-gradient(circle at 50% 50%,#000 48%,transparent 70%)}
-#crRes{min-height:96px;margin-top:4px}
-.crR{font-size:12px;font-weight:700;letter-spacing:.32em;margin-bottom:6px}
-#crRes .h2{font-size:clamp(24px,5vw,40px);letter-spacing:.16em;margin-right:-.16em}
-.crDup{margin-top:6px;font-size:13px;color:var(--mint)}
-#crate .row{max-width:460px}
+
 .ch2{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .pgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:10px;padding:2px 2px 12px}
 .fld{width:100%;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.18);border-radius:10px;color:#eaf6ff;font:14px/1.45 var(--f);padding:10px 12px;resize:none;user-select:text;-webkit-user-select:text;touch-action:auto;outline:none;transition:border-color .2s}
@@ -420,6 +414,102 @@ body.paused .tbtn{display:none!important}
 @media (orientation:portrait){#dashBtn{bottom:calc(33vh + env(safe-area-inset-bottom))}#bombBtn{bottom:calc(33vh + 82px + env(safe-area-inset-bottom))}}
 @media (max-height:600px){.hole{height:15vmin}.icons{margin-top:10px}.ib{padding:8px 0 7px;width:76px}.meta{margin-top:10px}.hint{display:none}.tiles{margin:10px auto 4px}.tile{padding:7px 8px}.tile b{font-size:17px}.panel{padding:16px 16px 14px}.big{font-size:34px}.hd .sub{display:none}.seg{margin:8px 0}.dot{width:44px;height:44px;font-size:15px}.road::before{left:21px}.keys{display:none}.play{padding:10px 22px}}
 @media (max-height:420px){.hole{height:64px}.title{font-size:26px}.h2{font-size:24px}.ib span{display:none}.ib{padding:9px 0;width:60px}.play{padding:8px 20px}.pm{font-size:16px}.meta{margin-top:8px}#over .hole,#pause .hole{height:12px}#over,#pause{background:rgba(0,0,0,.62)}#over .top{flex:.45}.tile{padding:5px 6px}.tile b{font-size:15px}.tiles{margin:6px auto 2px}.big{font-size:30px}.badge{margin-top:4px}.bestl{margin-top:4px}}
+
+/* ---- V4.40 polish: garage tabs, orb shop, orb opening, settings rows ---- */
+.hti{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.mchip{--mc:255,170,90;display:inline-flex;align-items:center;gap:7px;padding:4px 11px 4px 9px;border-radius:999px;font-size:10.5px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:rgb(var(--mc));background:rgba(var(--mc),.1);border:1px solid rgba(var(--mc),.38);white-space:nowrap}
+.mchip::before{content:'';width:6px;height:6px;border-radius:50%;background:rgb(var(--mc));box-shadow:0 0 6px rgb(var(--mc))}
+.gtabs{display:flex;gap:4px;width:100%;max-width:min(1500px,96vw);margin:12px 0 10px;padding:4px;border-radius:14px;background:rgba(255,255,255,.035);border:1px solid var(--line);flex:none}
+.gtab{position:relative;flex:1;display:flex;align-items:center;justify-content:center;gap:9px;padding:11px 12px;border:0;border-radius:10px;background:transparent;color:var(--dim);font:600 12px var(--f);letter-spacing:.18em;text-transform:uppercase;cursor:pointer;transition:background .2s,color .2s}
+.gtab svg{width:17px;height:17px;flex:none}
+.gtab:hover{color:#fff;background:rgba(255,255,255,.05)}
+.gtab.on{color:#fff;background:linear-gradient(180deg,rgba(255,255,255,.11),rgba(255,255,255,.05));box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
+.gtab.on::after{content:'';position:absolute;left:30%;right:30%;bottom:-1px;height:2px;border-radius:2px;background:var(--amber);box-shadow:0 0 10px var(--amber)}
+.gtab b{min-width:19px;height:19px;padding:0 6px;border-radius:10px;background:rgb(185,145,255);color:#170c2c;font-size:11px;font-weight:700;line-height:19px;letter-spacing:0;box-shadow:0 0 10px rgba(185,145,255,.55)}
+.gtab i.gd{width:7px;height:7px;border-radius:50%;background:var(--mint);box-shadow:0 0 6px var(--mint)}
+.swap{animation:swap .32s cubic-bezier(.2,.8,.2,1) backwards}
+#garage.a3,#orbV.a3{animation-fill-mode:backwards}
+@keyframes swap{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media (max-width:520px){.gtab{letter-spacing:.1em;font-size:11px;padding:10px 6px;gap:6px}.gtab svg{width:15px;height:15px}.hti{gap:8px}.mchip{font-size:9.5px;letter-spacing:.14em}}
+@media (max-height:520px){.gtabs{margin:6px 0}.gtab{padding:7px 10px}#hangar .hd .h3{font-size:22px}#hangar .ft{padding-top:8px}#hangar .ft .play{padding:7px 18px}#hangar .ft .sec{padding:9px 14px}}
+.orbrow{gap:16px}
+.orbc{width:300px;gap:12px;overflow:hidden}
+.orbart{position:relative;margin:-14px -14px 0;height:168px;background:radial-gradient(circle at 50% 56%,rgba(var(--c),.2),rgba(var(--c),.04) 46%,rgba(0,0,0,0) 70%);border-bottom:1px solid rgba(var(--c),.18)}
+.orbart canvas.orbp{display:block;width:100%;height:100%}
+.orbn{position:absolute;top:10px;right:10px;padding:3px 9px;border-radius:999px;font-size:12px;font-weight:700;color:#fff;background:rgba(var(--c),.22);border:1px solid rgba(var(--c),.55)}
+.orbn.z{opacity:.4}
+.orbt{font-size:11px;color:var(--dim);letter-spacing:.04em;white-space:nowrap}
+.buy.opn:not(:disabled){border-color:rgba(255,190,130,.65);background:linear-gradient(180deg,rgba(255,150,70,.32),rgba(255,90,40,.16));color:#fff1e2}
+.buy.opn:hover:not(:disabled){background:linear-gradient(180deg,rgba(255,150,70,.44),rgba(255,90,40,.24))}
+@media (max-width:760px) and (min-height:521px){.orbart{height:128px}.orbc{width:100%;max-width:440px}}
+@media (max-height:520px){.orbart{height:96px}}
+.list.ctr{display:flex;flex-direction:column}.list.ctr>*{margin-top:auto;margin-bottom:auto}
+.panel{background:rgba(7,10,22,.84);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.ib .cnt{position:absolute;top:6px;right:14px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:rgb(185,145,255);color:#170c2c;font:700 11px/18px var(--f);box-shadow:0 0 10px rgba(185,145,255,.6)}
+@media (max-width:480px){.ib .cnt{right:8px;top:4px}}
+#owPick{background:radial-gradient(ellipse at center,rgba(4,3,14,.86),rgba(4,3,14,.62) 75%)}
+.owcard{background:linear-gradient(180deg,rgba(200,150,255,.16),rgba(200,150,255,.03)),#0d0a1e}
+.owcard.up{background:linear-gradient(180deg,rgba(200,150,255,.24),rgba(200,150,255,.05)),#0f0b22}
+.owcard.bas{background:linear-gradient(180deg,rgba(var(--bc),.16),rgba(var(--bc),.03)),#0a0f1e}
+body:has(#owPick:not(.hidden)) .tbtn{display:none!important}
+/* settings as rows */
+.setl{width:100%;max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:8px;text-align:left;padding:2px 2px 12px}
+.sgt{font-size:10.5px;font-weight:700;letter-spacing:.24em;text-transform:uppercase;color:var(--dim);margin:12px 4px 0}
+.sgt:first-child{margin-top:0}
+.srow2{--c:255,255,255;display:grid;grid-template-columns:40px minmax(0,1fr) auto;align-items:center;gap:14px;padding:12px 14px;border-radius:14px;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02));border:1px solid var(--line)}
+.sico{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;background:rgba(var(--c),.12);border:1px solid rgba(var(--c),.35);color:rgb(var(--c))}.sico svg{width:21px;height:21px}
+.stx b{display:block;font-size:14.5px;font-weight:600;color:#fff}.stx small{display:block;margin-top:2px;font-size:12.5px;color:var(--dim);line-height:1.4}
+.opts.sopt{display:flex;gap:3px;padding:3px;border-radius:11px;background:rgba(0,0,0,.3);border:1px solid var(--line)}
+.opts.sopt button{display:block;padding:8px 14px;border-radius:8px;border:0;background:transparent;font-size:12px;font-weight:600;color:var(--dim);white-space:nowrap;text-align:center}
+.opts.sopt button:hover{color:#fff}
+.opts.sopt button.on{background:rgba(var(--c),.18);color:#fff;box-shadow:inset 0 0 0 1px rgba(var(--c),.6)}
+.sbtn{padding:9px 18px;min-width:96px}
+body.touch .srow2.nt{display:none}
+@media (max-width:560px){.srow2{grid-template-columns:36px minmax(0,1fr);row-gap:10px;padding:11px 12px}.sico{width:36px;height:36px}.srow2>.sopt,.srow2>.sbtn{grid-column:1/-1}.opts.sopt button{flex:1}}
+/* phone garage: the details card is a bottom sheet so nothing jumps when you tap */
+@media (max-width:900px) and (min-height:521px){
+#hangar .garage{grid-template-rows:repeat(3,max-content);grid-template-areas:"c c" "l r" "b b";padding-bottom:16px}
+#hangar .garage.skmode{grid-template-rows:repeat(2,max-content);grid-template-areas:"c" "s"}
+#hangar .gdet{position:fixed;z-index:7;left:max(10px,env(safe-area-inset-left));right:max(10px,env(safe-area-inset-right));bottom:calc(88px + env(safe-area-inset-bottom));max-width:640px;margin:0 auto;height:auto;background:rgba(10,12,26,.97);box-shadow:0 -10px 40px rgba(0,0,0,.6),0 0 0 1px rgba(var(--c),.22);transition:opacity .2s,transform .25s cubic-bezier(.2,.8,.2,1),visibility 0s}
+#hangar .gdet.idle{visibility:hidden;opacity:0;transform:translateY(14px);transition:opacity .2s,transform .25s,visibility 0s linear .25s}
+#hangar .garage:has(.gdet:not(.idle)){padding-bottom:190px}
+}
+/* orb opening */
+#crate{justify-content:space-between;gap:6px;background:radial-gradient(ellipse at 50% 40%,#11132a,#020309 72%);padding-top:calc(26px + env(safe-area-inset-top));padding-bottom:calc(18px + env(safe-area-inset-bottom));cursor:pointer;touch-action:manipulation}
+#crCv{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+#crate>:not(#crCv){position:relative;z-index:1}
+.crTop{display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none}
+.crTop .kick{margin:0;color:rgb(var(--oc,143,255,214))}
+.crSub{font-size:12.5px;color:var(--dim);min-height:18px;padding:0 12px}
+#crStage{flex:1;width:100%;min-height:150px;pointer-events:none}
+.crInfo{position:relative;width:100%;max-width:560px;min-height:136px;display:flex;flex-direction:column;align-items:center}
+.crLadW{display:flex;flex-direction:column;align-items:center;gap:14px;transition:opacity .25s}
+.crInfo.rev .crLadW{position:absolute;top:0;opacity:0;pointer-events:none}
+.crLad{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;padding:0 6px}
+.crp{--c:255,255,255;display:flex;align-items:center;gap:6px;padding:5px 10px 5px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:rgba(233,238,247,.32);transition:color .3s,border-color .3s,background .3s,box-shadow .3s}
+.crp i{width:7px;height:7px;border-radius:50%;background:rgba(var(--c),.28);transition:background .3s,box-shadow .3s}
+.crp.on{color:rgb(var(--c));border-color:rgba(var(--c),.45);background:rgba(var(--c),.1)}
+.crp.on i{background:rgb(var(--c));box-shadow:0 0 8px rgb(var(--c))}
+.crp.cur{box-shadow:0 0 18px rgba(var(--c),.35);border-color:rgba(var(--c),.8)}
+.crp.pop{animation:crpop .5s cubic-bezier(.2,1.6,.4,1)}
+@keyframes crpop{0%{transform:scale(1)}35%{transform:scale(1.28)}100%{transform:scale(1)}}
+.crHint{display:flex;align-items:center;gap:10px;min-height:20px;font-size:11.5px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#fff}
+.crHint span:last-child{animation:crh 1.6s ease-in-out infinite}
+@keyframes crh{50%{opacity:.4}}
+.crTaps{display:flex;gap:6px}.crTaps i{width:9px;height:9px;border-radius:50%;border:1px solid rgba(255,255,255,.45);transition:background .2s,box-shadow .2s}.crTaps i.on{background:#fff;border-color:#fff;box-shadow:0 0 8px #fff}
+.crCard{--c:255,255,255;width:min(440px,92vw);padding:14px 18px 16px;border-radius:18px;background:linear-gradient(180deg,rgba(var(--c),.16),rgba(var(--c),.03) 60%),rgba(8,10,22,.84);border:1px solid rgba(var(--c),.55);box-shadow:0 0 0 1px rgba(var(--c),.12),0 18px 50px rgba(0,0,0,.5),0 0 60px rgba(var(--c),.18);animation:crIn .5s cubic-bezier(.2,1.25,.3,1) both}
+@keyframes crIn{from{opacity:0;transform:translateY(16px) scale(.94)}to{opacity:1;transform:none}}
+.crR{font-size:11px;font-weight:700;letter-spacing:.34em;margin-right:-.34em;color:rgb(var(--c))}
+.crName{margin-top:5px;font-size:clamp(24px,5.4vw,40px);font-weight:300;letter-spacing:.16em;margin-right:-.16em;color:#fff;line-height:1.1}
+.crType{margin-top:8px;display:flex;justify-content:center;align-items:center;gap:10px;flex-wrap:wrap;font-size:12.5px;color:var(--dim)}
+.crNew{font-size:10px;font-weight:700;letter-spacing:.18em;padding:3px 9px;border-radius:999px;color:#06251b;background:var(--mint);box-shadow:0 0 12px rgba(143,255,214,.5)}
+.crDupT{color:var(--mint);font-weight:600}.crDupT b{font-weight:700}
+#crBtns{max-width:480px;margin-top:4px;transition:opacity .35s}
+#crBtns.off{visibility:hidden;opacity:0}
+.sec:disabled{opacity:.5;cursor:default}
+#settings .hd,#settings .ft{max-width:720px}
+@media (max-width:480px){.crLad{gap:4px}.crp{padding:4px 7px 4px 6px;gap:4px;font-size:9px;letter-spacing:.08em}}
+@media (max-height:600px){.crSub{display:none}.crInfo{min-height:112px}.crLadW{gap:8px}.crCard{padding:10px 14px 12px}}
 </style>
 </head>
 <body>
@@ -439,10 +529,11 @@ body.paused .tbtn{display:none!important}
       <button class="ib" id="mapBtn"><i data-ic="map"></i><span>Map</span></button>
       <button class="ib" id="shopBtn"><i data-ic="bag"></i><span>Shop</span><i class="dotn hidden" id="shopDot"></i></button>
       <button class="ib" id="pilotBtn"><i data-ic="user"></i><span>Profile</span></button>
+      <button class="ib" id="orbBtn"><i data-ic="orb"></i><span>Orbs</span><b class="cnt hidden" id="orbN"></b></button>
       <button class="ib" id="beastBtn"><i data-ic="enemy"></i><span>Enemies</span><i class="dotn hidden" id="beastDot"></i></button>
       <button class="ib" id="setBtn"><i data-ic="gear"></i><span>Settings</span></button>
     </div>
-    <div class="meta a4"><span>Best <b id="bestM">0</b></span><span class="mint">◆ <b id="dustM">0</b></span><span id="orbM" style="color:rgb(180,150,255)"></span></div>
+    <div class="meta a4"><span>Best <b id="bestM">0</b></span><span class="mint">◆ <b id="dustM">0</b></span></div>
   </div>
   <div class="hint a5" id="ctrlHint"></div>
 </div>
@@ -454,7 +545,7 @@ body.paused .tbtn{display:none!important}
     <div class="big a2" id="oScore">0</div>
     <div class="a2" id="oBestWrap"></div>
     <div class="tiles a3" id="oTiles"></div>
-    <div class="row a4" style="max-width:460px"><button class="sec" id="ovMenu">Menu</button><button class="sec" id="ovShop">Shop<i class="dotn hidden" id="ovDot"></i></button><button class="play sm" id="again"><span class="pm">RETRY</span><span class="ps" id="againSub"></span></button></div>
+    <div class="row a4" style="max-width:460px"><button class="sec" id="ovMenu">Menu</button><button class="sec" id="ovShop">Upgrade<i class="dotn hidden" id="ovDot"></i></button><button class="play sm" id="again"><span class="pm">RETRY</span><span class="ps" id="againSub"></span></button></div>
   </div>
 </div>
 
@@ -473,7 +564,7 @@ body.paused .tbtn{display:none!important}
 
 <div id="tutAsk" class="ov hidden">
   <div class="tpanel a1">
-    <div class="tico"><i data-ic="map"></i></div>
+    <div class="tico"><i data-ic="ship"></i></div>
     <div class="h3" style="font-size:24px">NEW PILOT?</div>
     <div class="sub">Take a quick 2-minute tutorial to learn how to fly, shoot and survive. You get ◆ 100 stardust for finishing it.</div>
     <div class="tbtns"><button class="sec" id="taSkip">Skip</button><button class="play sm" id="taGo"><span class="pm">START TUTORIAL</span></button></div>
@@ -484,26 +575,28 @@ body.paused .tbtn{display:none!important}
 <div id="tutBox" class="hidden"><div class="tk" id="tutK"></div><div class="tt" id="tutT"></div><div class="td" id="tutD"></div><div class="tbar"><i id="tutP"></i></div><button id="tutSkip">Skip tutorial</button></div>
 
 <div id="crate" class="ov hidden">
-  <div class="kick" id="crK">VOID ORB</div>
   <canvas id="crCv"></canvas>
-  <div id="crRes"><div class="crR" id="crRar"></div><div class="h2" id="crName"></div><div class="sub" id="crType"></div><div class="crDup" id="crDup"></div></div>
-  <div class="row" id="crBtns"><button class="sec" id="crBack">Back</button><button class="sec" id="crEquip">Equip</button><button class="play sm" id="crAgain"><span class="pm">OPEN</span><span class="ps" id="crAgainS"></span></button></div>
+  <div class="crTop"><div class="kick" id="crK">VOID ORB</div><div class="crSub" id="crSub"></div></div>
+  <div id="crStage"></div>
+  <div class="crInfo" id="crInfo">
+    <div class="crLadW"><div class="crLad" id="crLad"></div><div class="crHint"><span class="crTaps" id="crTaps"><i></i><i></i><i></i></span><span id="crHintT"></span></div></div>
+    <div class="crCard hidden" id="crCard"><div class="crR" id="crRar"></div><div class="crName" id="crName"></div><div class="crType" id="crType"></div></div>
+  </div>
+  <div class="row off" id="crBtns"><button class="sec" id="crBack">Done</button><button class="sec" id="crEquip">Equip</button><button class="play sm" id="crAgain"><span class="pm">OPEN NEXT</span><span class="ps" id="crAgainS"></span></button></div>
 </div>
 
 <div id="settings" class="ov scr hidden">
-  <div class="hd a1"><div><div class="h3">SETTINGS</div><div class="sub">Saved in this browser. Camera changes apply from your next run.</div></div></div>
-  <div class="list a2" style="margin-top:14px"><div class="pgrid">
-    <div class="card" style="--c:120,230,255"><div class="ct"><div class="ico"><i data-ic="camera"></i></div><div class="cn">Camera<div class="cd">How the view moves during play.</div></div></div>
-      <div class="opts" data-set="look" style="margin-top:8px"><button data-v="off">Centered<small>The ship stays in the middle.</small></button><button data-v="on">Look toward cursor<small>Mouse only. Tap Space to re-centre, hold Space to keep it centred.</small></button></div>
-      <div class="opts" data-set="cam"><button data-v="follow">Follow ship<small>Big round arena. The view stays on your ship.</small></button><button data-v="fixed">Fixed<small>Classic. The whole arena fits on one screen.</small></button></div></div>
-    <div class="card" style="--c:143,255,214"><div class="ct"><div class="ico"><i data-ic="sound"></i></div><div class="cn">Sound<div class="cd">Music and sound effects.</div></div></div>
-      <div class="opts" data-set="snd"><button data-v="on">On</button><button data-v="off">Off</button></div></div>
-    <div class="card" style="--c:255,176,112"><div class="ct"><div class="ico"><i data-ic="shake"></i></div><div class="cn">Screen shake<div class="cd">Camera shake on explosions and hits.</div></div></div>
-      <div class="opts" data-set="shake"><button data-v="on">On</button><button data-v="off">Off</button></div></div>
-    <div class="card" style="--c:200,150,255"><div class="ct"><div class="ico"><i data-ic="map"></i></div><div class="cn">HUD layout<div class="cd">Move and resize the minimap, upgrade panel and scoreboard used in Multiplayer.</div></div></div>
-      <button class="buy ctr" id="sMM">Edit HUD layout</button></div>
-    <div class="card" style="--c:200,150,255"><div class="ct"><div class="ico"><i data-ic="map"></i></div><div class="cn">Tutorial<div class="cd">Learn the controls step by step.</div></div></div>
-      <button class="buy ctr" id="sTut">Play tutorial</button></div>
+  <div class="hd a1"><div><div class="h3">SETTINGS</div><div class="sub">Saved on this device. Camera changes apply from your next run.</div></div></div>
+  <div class="list ctr a2" style="margin-top:14px"><div class="setl">
+    <div class="sgt">Camera</div>
+    <div class="srow2" style="--c:120,230,255"><div class="sico"><i data-ic="camera"></i></div><div class="stx"><b>View</b><small>Follow ship keeps you centred in a big round arena. Fixed fits the whole arena on one screen.</small></div><div class="opts sopt" data-set="cam"><button data-v="follow">Follow ship</button><button data-v="fixed">Fixed</button></div></div>
+    <div class="srow2 nt" style="--c:120,230,255"><div class="sico"><i data-ic="look"></i></div><div class="stx"><b>Look toward cursor</b><small>Mouse only. Tap Space to re-centre, hold Space to keep the ship centred.</small></div><div class="opts sopt" data-set="look"><button data-v="off">Off</button><button data-v="on">On</button></div></div>
+    <div class="sgt">Feel</div>
+    <div class="srow2" style="--c:143,255,214"><div class="sico"><i data-ic="sound"></i></div><div class="stx"><b>Sound</b><small>Music and sound effects.</small></div><div class="opts sopt" data-set="snd"><button data-v="on">On</button><button data-v="off">Off</button></div></div>
+    <div class="srow2" style="--c:255,176,112"><div class="sico"><i data-ic="shake"></i></div><div class="stx"><b>Screen shake</b><small>Camera shake on explosions and hits.</small></div><div class="opts sopt" data-set="shake"><button data-v="on">On</button><button data-v="off">Off</button></div></div>
+    <div class="sgt">Interface</div>
+    <div class="srow2" style="--c:200,150,255"><div class="sico"><i data-ic="hud"></i></div><div class="stx"><b>HUD layout</b><small>Move and resize the minimap, upgrade panel and scoreboard in Multiplayer.</small></div><button class="buy ctr sbtn" id="sMM">Edit</button></div>
+    <div class="srow2" id="sTutRow" style="--c:200,150,255"><div class="sico"><i data-ic="play"></i></div><div class="stx"><b>Tutorial</b><small>Learn the controls step by step.</small></div><button class="buy ctr sbtn" id="sTut">Play</button></div>
   </div></div>
   <div class="ft a3"><button class="play sm" id="sBack"><span class="pm">DONE</span></button></div>
 </div>
@@ -524,15 +617,15 @@ body.paused .tbtn{display:none!important}
     <div class="h2" id="clName"></div>
     <div class="tiles" id="clTiles"></div>
     <div class="nextc" id="clNextInfo"></div>
-    <div class="row"><button class="sec" id="clHome" aria-label="Home"><span class="clh">⌂</span> Home</button><button class="sec" id="clShop">Shop<i class="dotn hidden" id="clDot"></i></button><button class="play sm" id="clNext"><span class="pm">NEXT</span><span class="ps" id="clNextSub"></span></button></div>
+    <div class="row"><button class="sec" id="clHome" aria-label="Home"><span class="clh">⌂</span> Home</button><button class="sec" id="clShop">Upgrade<i class="dotn hidden" id="clDot"></i></button><button class="play sm" id="clNext"><span class="pm">NEXT</span><span class="ps" id="clNextSub"></span></button></div>
   </div>
 </div>
 
 <div id="hangar" class="ov scr hidden">
-  <div class="hd a1"><div><div class="h3" id="hTitle">GARAGE</div><div class="sub" id="hSub"></div></div><div class="hdr"><button class="gorb" id="gOrbBtn"><span id="gOrbT">Orbs</span><i class="hidden" id="gOrbDot"></i></button><div class="pill">◆ <span id="hDust">0</span></div></div></div>
-  <div class="skbar a2" id="skBar"><div class="skl">Ships</div><div class="skscroll car" id="skShips"></div><div class="skl">Bullets</div><div class="skscroll car" id="skBul"></div><button class="skall" id="skAllBtn"><b>All skins</b><small id="skAllN"></small></button></div>
+  <div class="hd a1"><div><div class="hti"><div class="h3" id="hTitle">GARAGE</div><span class="mchip" id="hMode"></span></div><div class="sub" id="hSub"></div></div><div class="hdr"><div class="pill">◆ <span id="hDust">0</span></div></div></div>
+  <div class="gtabs a2" id="gTabs"></div>
   <div class="garage a3" id="garage">
-    <div class="gskins" id="gS"><div class="gsh"><button class="sec" id="skBack">◂ Garage</button><div class="subseg" id="skSeg"><button data-sub="ship">Ships</button><button data-sub="bullet">Bullets</button></div></div><div class="skgrid" id="skList"></div></div>
+    <div class="gskins" id="gS"><div class="gsh"><div class="subseg" id="skSeg"><button data-sub="ship">Ships</button><button data-sub="bullet">Bullets</button></div></div><div class="skgrid" id="skList"></div></div>
     <canvas id="gLines"></canvas>
     <div class="gcol gl" id="gL"></div>
     <div class="gbay"><canvas id="pvCv"></canvas></div>
@@ -605,7 +698,7 @@ body.paused .tbtn{display:none!important}
 
 <div id="profile" class="ov scr hidden">
   <div class="hd a1"><div><div class="h3">PROFILE</div><div class="sub">Log in with a username to keep your progress on all your devices.</div></div><div class="pill" id="pSum"></div></div>
-  <div class="list a2" style="margin-top:14px"><div class="pgrid">
+  <div class="list ctr a2" style="margin-top:14px"><div class="pgrid">
     <div class="card" style="--c:143,200,255"><div class="ct"><div class="ico"><i data-ic="cloud"></i></div><div class="cn">Account<div class="cd" id="accD">Pick a username. Use the same one on any device to continue.</div></div></div>
       <div class="accrow" id="accIn"><input class="fld" id="accU" maxlength="20" placeholder="Username" autocomplete="username" autocapitalize="off" spellcheck="false"><button class="buy ctr" id="accGo">Log in</button></div>
       <div id="accOut" class="hidden"><div class="accst"><i class="cdot" id="accDot"></i><b id="accName"></b><span id="accSt"></span></div></div>
@@ -626,7 +719,7 @@ body.paused .tbtn{display:none!important}
 <script>
 'use strict';
 // Versioning: next version -> next whole number (4.00), sub version -> +0.01 (3.01)
-const VERSION = '4.37';
+const VERSION = '4.40';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -686,6 +779,11 @@ const ICONS = {
   camera: ['M3 8h4l2-3h6l2 3h4v11H3z', C(12, 13, 3.5)],
   shake: ['M3 8c3-3 5 3 9 0s6 3 9 0', 'M3 16c3-3 5 3 9 0s6 3 9 0'],
   download: ['M12 3v12', 'M7 10l5 5 5-5', 'M4 20h16'],
+  orb: [C(12, 12, 5.5), 'M2.6 13.6c1.6 2.6 17.2 2.6 18.8 0', 'M2.6 13.6c-.7-1.3 1-2.6 4-3.4M21.4 13.6c.7-1.3-1-2.6-4-3.4'],
+  ship: ['M12 3l6.5 17L12 16l-6.5 4z'],
+  look: [C(12, 12, 3), 'M12 2v4M12 18v4M2 12h4M18 12h4'],
+  hud: ['M3 5h18v14H3z', 'M6 8h5v4H6z', C(16.5, 14.5, 2)],
+  play: ['M8 5.5v13l10.5-6.5z'],
 };
 const svgIcon = k => `<svg viewBox="0 0 24 24" aria-hidden="true">${(ICONS[k] || []).map(d => `<path d="${d}"/>`).join('')}</svg>`;
 const P2D = {};
@@ -1948,7 +2046,7 @@ function startMode(gm = menuMode()) { audio(); goFull(); if (gm === 'story') sta
 function refreshMenu() {
   $('bestM').textContent = fmt(save.best);
   $('dustM').textContent = fmt(save.dust);
-  $('orbM').textContent = orbCount() ? '● ' + orbCount() + ' orb' + (orbCount() > 1 ? 's' : '') : '';
+  $('orbN').textContent = orbCount(); $('orbN').classList.toggle('hidden', !orbCount());
   $('psStory').textContent = playLabel(Math.min(save.sel, NS));
   $('psWaves').textContent = save.bestWave ? 'Best wave ' + save.bestWave : 'Survive the waves';
   // map, shop and enemies live in each mode's garage now; the menu keeps profile and settings
@@ -1968,7 +2066,7 @@ function buildKeysRef() {
 let hangarFrom = 'menu', hTab = 'G', skSub = 'ship';
 const shopSel = { G: '' };
 let hangarMode = 'story';
-function openHangar(from) {
+function openHangar(from, tab) {
   hangarFrom = from; hideAll(); show('hangar');
   hangarMode = from === 'cleared' || from === 'over' ? (gmode === 'waves' ? 'waves' : 'story') : menuMode();
   const mpg = hangarMode === 'world';
@@ -1978,23 +2076,41 @@ function openHangar(from) {
   $('hBeastDot').classList.toggle('hidden', $('beastDot').classList.contains('hidden'));
   if (from === 'cleared') { $('hGoT').textContent = 'NEXT'; $('hGoS').textContent = playLabel(sector + 1); }
   else { $('hGoT').textContent = 'PLAY'; $('hGoS').textContent = hangarMode === 'story' ? playLabel(save.sel) : hangarMode === 'waves' ? (save.bestWave ? 'Endless · best wave ' + save.bestWave : 'Endless waves') : 'Multiplayer · online'; }
-  if (mpg) { shopSel.G = ''; if (hTab === 'G' || !hTab) hTab = 'G'; }
+  if (tab) hTab = tab;
   if (hTab !== 'ORB' && hTab !== 'SK') hTab = 'G';
+  if (mpg && hTab === 'G') hTab = 'SK';
   shopSel.G = '';
   renderHangar();
 }
 const upgCan = () => UPG.some(u => tier(u.k) < u.max && save.dust >= u.cost[tier(u.k)]);
 const chipR = r => `<span class="chip" style="background:rgba(${RAR[r].c},.16);color:rgb(${RAR[r].c})">${RAR[r].n}</span>`;
+const MODEC = { story: ['Story', '255,170,90'], waves: ['Endless', '255,90,120'], world: ['Multiplayer', '200,150,255'] };
+const GTABS = [['G', 'Loadout', 'wrench'], ['SK', 'Skins', 'ship'], ['ORB', 'Orbs', 'orb']];
+function renderGTabs() {
+  const mpg = hangarMode === 'world', n = orbCount();
+  $('gTabs').innerHTML = GTABS.filter(x => !(mpg && x[0] === 'G')).map(([k, nm, ic]) => {
+    const badge = k === 'ORB' ? (n ? `<b>${n}</b>` : '') : k === 'SK' ? (skinAffordable() ? '<i class="gd"></i>' : '') : (upgCan() ? '<i class="gd"></i>' : '');
+    return `<button class="gtab${hTab === k ? ' on' : ''}" data-tab="${k}">${svgIcon(ic)}<span>${nm}</span>${badge}</button>`;
+  }).join('');
+}
+$('gTabs').addEventListener('click', e => {
+  const b = e.target.closest('.gtab'); if (!b || b.dataset.tab === hTab) return;
+  sfx.ui(); hTab = b.dataset.tab; shopSel.G = ''; renderHangar();
+  const el = hTab === 'ORB' ? $('orbV') : $('garage'); el.classList.remove('swap'); void el.offsetWidth; el.classList.add('swap');
+});
 function renderHangar(flashK) {
   $('hDust').textContent = fmt(save.dust);
+  const mpg = hangarMode === 'world';
+  if (mpg && hTab === 'G') hTab = 'SK';
   const orb = hTab === 'ORB', skm = hTab === 'SK';
-  $('garage').classList.toggle('hidden', orb); $('garage').classList.toggle('skmode', skm); $('skBar').classList.toggle('hidden', orb || skm); $('orbV').classList.toggle('hidden', !orb);
-  $('gOrbT').textContent = orb ? 'Back to garage' : 'Orbs' + (orbCount() ? ' (' + orbCount() + ')' : '');
-  $('gOrbDot').classList.toggle('hidden', orb || !(orbCount() > 0 || save.dust >= ORBS.void.cost));
-  $('hTitle').textContent = orb ? 'ORBS' : skm ? 'SKINS' : 'GARAGE';
-  $('hSub').textContent = orb ? 'Open orbs for random skins. Beat any sector boss for a free Void Orb.' : skm ? 'Every ship and bullet skin. Tap one to preview it, then buy or equip it.' : hangarMode === 'world' ? 'Pick your ship and bullet skins. In Multiplayer, upgrades come from orbs you collect.' : 'Pick an upgrade around your ship to see it in action. Your skins are at the top.';
+  $('garage').classList.toggle('hidden', orb); $('garage').classList.toggle('skmode', skm); $('orbV').classList.toggle('hidden', !orb);
+  renderGTabs();
+  const M = MODEC[hangarMode] || MODEC.story; $('hMode').textContent = M[0]; $('hMode').style.setProperty('--mc', M[1]);
+  $('hSub').textContent = orb ? 'Every orb holds a random ship or bullet skin. Beat a sector boss for a free Void Orb.'
+    : skm ? (mpg ? 'Only skins change here. Upgrades come from orbs out in the galaxy.' : 'Tap a skin to preview it, then buy or equip it.')
+    : isTouch() ? 'Tap an upgrade to preview it, tap it again to buy.' : 'Hover an upgrade to preview it, click to buy.';
   if (orb) renderOrbs(); else {
-    renderOwned(); if (skm) renderSkins(); else renderNodes(); renderPrevInfo();
+    if (skm) renderSkins(); else renderNodes(); renderPrevInfo();
     if (flashK) { const p = $('pvI'); p.classList.remove('flash'); void p.offsetWidth; p.classList.add('flash'); }
   }
   startShopAnim();
@@ -2011,49 +2127,7 @@ function renderNodes() {
   $('gR').innerHTML = '<div class="ghd">Weapons</div>' + by('WEAPON').map(u => nodeHTML(u)).join('');
   $('gB').innerHTML = `<div class="gbg"><div class="ghd">Power-ups</div><div class="gbr">${by('POWER').sort((a, b) => (hasAb(UPAB[b.k] || 'shield') ? 1 : 0) - (hasAb(UPAB[a.k] || 'shield') ? 1 : 0)).map(u => nodeHTML(u, true)).join('')}</div></div>`;
 }
-function renderOwned() {
-  const row = (list, owned, cur, sub) => list.filter(x => owned.includes(x.id)).sort(byRarity).map(it => {
-    const id = sub + ':' + it.id, eq = cur.id === it.id;
-    return `<button class="skc sm${shopSel.G === id ? ' sel' : ''}${eq ? ' eq' : ''}" data-sel="${id}" style="--c:${RAR[it.rar].c}" title="${it.name}"><canvas class="sth" data-${sub === 'ship' ? 's' : 'b'}="${it.id}"></canvas><span class="skn">${it.name}</span></button>`;
-  }).join('');
-  const os = save.skins || ['scrap'], ob = save.bskins || ['pellet'];
-  const a = $('skShips'), b = $('skBul');
-  carLock = true;
-  a.innerHTML = row(SKINS, os, SK(), 'ship'); b.innerHTML = row(BSKINS, ob, BS(), 'bullet');
-  carCentre(a, false); carCentre(b, false);
-  requestAnimationFrame(() => { carCentre(a, false); carCentre(b, false); setTimeout(() => { carLock = false; }, 120); });
-  $('skAllN').textContent = `${os.length + ob.length}/${SKINS.length + BSKINS.length} owned`;
-  $('skAllBtn').classList.toggle('can', skinAffordable());
-  drawThumbs('#skBar');
-}
-// carousel rows: the skin in the middle is the one you fly with
-let carLock = false;
-function carCentre(row, smooth, el) {
-  el = el || row.querySelector('.skc.eq') || row.querySelector('.skc'); if (!el) return;
-  const rr = row.getBoundingClientRect(), er = el.getBoundingClientRect(), left = row.scrollLeft + (er.left - rr.left) - (rr.width - er.width) / 2;
-  if (smooth) row.scrollTo({ left, behavior: 'smooth' }); else row.scrollLeft = left;
-}
-function carMid(row) {
-  const r = row.getBoundingClientRect(), mid = r.left + r.width / 2; let best = null, bd = 1e9;
-  row.querySelectorAll('.skc').forEach(el => { const q = el.getBoundingClientRect(), d = Math.abs(q.left + q.width / 2 - mid); if (d < bd) { bd = d; best = el; } });
-  return best;
-}
-function carEquip(el) {
-  const id = el.dataset.sel, ship = id.startsWith('ship:'), sid = id.slice(ship ? 5 : 7);
-  if ((ship ? save.skin : save.bskin) === sid) return;
-  if (ship) save.skin = sid; else { save.bskin = sid; garageShoot(6); }
-  persist(); sfx.ui(); buzz(10);
-  el.parentElement.querySelectorAll('.skc').forEach(x => x.classList.toggle('eq', x === el));
-  shopSel.G = ''; renderPrevInfo();
-}
-for (const id of ['skShips', 'skBul']) {
-  const row = $(id); let t = 0;
-  row.addEventListener('scroll', () => {
-    if (carLock) return;
-    const m = carMid(row); if (m) row.querySelectorAll('.skc').forEach(x => x.classList.toggle('mid', x === m));
-    clearTimeout(t); t = setTimeout(() => { const m2 = carMid(row); if (m2) carEquip(m2); }, 160);
-  }, { passive: true });
-}
+function renderOwned() {}
 function renderSkins() {
   document.querySelectorAll('#skSeg button').forEach(b => b.classList.toggle('on', b.dataset.sub === skSub));
   const ship = skSub === 'ship', list = ship ? SKINS : BSKINS, owned = ship ? (save.skins || ['scrap']) : (save.bskins || ['pellet']), cur = ship ? SK() : BS();
@@ -2112,9 +2186,13 @@ function renderPrevInfo() {
 }
 function renderOrbs() {
   const n = save.orbs || {};
-  $('orbV').innerHTML = `<div class="orbrow">${Object.entries(ORBS).map(([k, o]) => `<div class="card orbc" style="--c:${o.col}"><canvas class="skp orbp" data-o="${k}"></canvas><div class="ch2"><span class="cn">${o.name}</span><span class="chip" style="background:rgba(${o.col},.16);color:rgb(${o.col})">You have ${n[k] || 0}</span></div>` +
-    `<div class="odds">${RORDER.filter(r => o.odds[r]).map(r => `<div><i style="background:rgb(${RAR[r].c})"></i><span>${RAR[r].n}</span><b>${o.odds[r]}%</b></div>`).join('')}</div>` +
-    `<div class="row2"><button class="buy" data-buyorb="${k}" ${save.dust >= o.cost ? '' : 'disabled'}><span>Buy</span><span>◆ ${fmt(o.cost)}</span></button><button class="buy ctr" data-openorb="${k}" ${n[k] ? '' : 'disabled'}>Open${n[k] ? ' (' + n[k] + ')' : ''}</button></div></div>`).join('')}</div>` +
+  $('orbV').innerHTML = `<div class="orbrow">${Object.entries(ORBS).map(([k, o]) => {
+    const have = n[k] || 0, tiers = RORDER.filter(r => o.odds[r]);
+    return `<div class="card orbc" style="--c:${o.col}"><div class="orbart"><canvas class="orbp" data-o="${k}"></canvas><span class="orbn${have ? '' : ' z'}">×${have}</span></div>` +
+      `<div class="ch2"><span class="cn">${o.name}</span><span class="orbt">${RAR[tiers[0]].n} to ${RAR[tiers[tiers.length - 1]].n}</span></div>` +
+      `<div class="odds">${tiers.map(r => `<div><i style="background:rgb(${RAR[r].c})"></i><span>${RAR[r].n}</span><b>${o.odds[r]}%</b></div>`).join('')}</div>` +
+      `<div class="row2"><button class="buy" data-buyorb="${k}" ${save.dust >= o.cost ? '' : 'disabled'}><span>Buy</span><span>◆ ${fmt(o.cost)}</span></button><button class="buy ctr opn" data-openorb="${k}" ${have ? '' : 'disabled'}>${have ? 'Open' : 'None yet'}</button></div></div>`;
+  }).join('')}</div>` +
     `<div class="orbref"><span>Duplicates refund</span>${RORDER.map(r => `<span><i style="background:rgb(${RAR[r].c})"></i>${RAR[r].n} <b>◆ ${RAR[r].dup}</b></span>`).join('')}</div>`;
 }
 function selectShop(id) {
@@ -2143,6 +2221,7 @@ $('garage').addEventListener('click', e => {
     return;
   }
   if (e.target.closest('#pvCv')) { const r = $('pvCv').getBoundingClientRect(), z = (pv && pv.z) || 1; selectShop(''); audio(); garageShoot(4, (e.clientX - r.left) / z, (e.clientY - r.top) / z); }
+  else if (shopSel.G && !e.target.closest('.skc, .gdet, .subseg')) selectShop('');
 });
 let hovT = 0;
 $('garage').addEventListener('pointerover', e => { if (e.pointerType !== 'mouse') return; const n = e.target.closest('.gnode'); if (n) { clearTimeout(hovT); selectShop(n.dataset.sel); } });
@@ -2156,11 +2235,7 @@ function skinClick(e) {
   document.querySelectorAll('#garage .gnode').forEach(r => r.classList.remove('sel'));
 }
 $('skList').addEventListener('click', skinClick);
-$('skBar').addEventListener('click', e => { if (e.target.closest('#skAllBtn')) return; const b = e.target.closest('.skc'); if (!b) return; const row = b.parentElement; carCentre(row, true, b); if (!b.classList.contains('eq')) setTimeout(() => carEquip(b), 380); });
-$('skAllBtn').onclick = () => { sfx.ui(); hTab = 'SK'; shopSel.G = ''; const k = shopSel.G; renderHangar(); };
-$('skBack').onclick = () => { sfx.ui(); hTab = 'G'; shopSel.G = ''; renderHangar(); };
 $('skSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b || b.dataset.sub === skSub) return; skSub = b.dataset.sub; sfx.ui(); renderSkins(); });
-$('gOrbBtn').onclick = () => { sfx.ui(); hTab = hTab === 'ORB' ? 'G' : 'ORB'; shopSel.G = ''; renderHangar(); };
 const shopBuyClick = e => { const b = e.target.closest('.buy'); if (!b || b.disabled) return; if (b.dataset.buyorb) buyOrb(b.dataset.buyorb); else if (b.dataset.openorb) openOrb(b.dataset.openorb); else if (b.dataset.skin) buySkin(b.dataset.skin); else if (b.dataset.bskin) buyBSkin(b.dataset.bskin); else if (b.dataset.k) buy(b.dataset.k); };
 $('pvI').addEventListener('click', shopBuyClick);
 $('orbV').addEventListener('click', shopBuyClick);
@@ -2204,7 +2279,7 @@ function shopLoop(now) {
       const d = Math.min(2, window.devicePixelRatio || 1), w = cvs.clientWidth, h = cvs.clientHeight; if (!w) return;
       if (cvs.width !== (w * d | 0) || cvs.height !== (h * d | 0)) { cvs.width = w * d | 0; cvs.height = h * d | 0; }
       const c = cvs.getContext('2d'); c.setTransform(d, 0, 0, d, 0, 0); c.clearRect(0, 0, w, h);
-      const o = ORBS[cvs.dataset.o]; drawOrb(c, w / 2, h / 2, Math.min(w, h) * 0.27, o.col, o.col2, t);
+      const o = ORBS[cvs.dataset.o], ph = cvs.dataset.o.length; drawOrb(c, w / 2, h / 2 + Math.sin(t * 1.8 + ph) * 3, Math.min(w, h) * 0.27, o.col, o.col2, t);
     });
   } else { pvFrame(dt, t); drawLines(t); }
   requestAnimationFrame(shopLoop);
@@ -2546,88 +2621,249 @@ function buyOrb(k) {
   save.dust -= o.cost; save.orbs = save.orbs || { void: 0, stellar: 0 }; save.orbs[k] = (save.orbs[k] || 0) + 1;
   persist(); sfx.buy(); renderHangar();
 }
+// ================= ORB OPENING =================
+// Tap the orb three times to crack it. Any crack can push the rarity up a tier (the ladder under the orb shows it climb),
+// then the shell bursts and the skin is revealed on a card. The result is rolled and saved before the show starts.
 let crate = null, crAnim = false;
+const easeOutBack = f => { const k = 1.70158; return 1 + (k + 1) * Math.pow(f - 1, 3) + k * Math.pow(f - 1, 2); };
+const mixC = (a, b, f) => { const A = a.split(',').map(Number), B = b.split(',').map(Number); return A.map((v, i) => Math.round(v + (B[i] - v) * f)).join(','); };
+function crNextKind(k) { const n = save.orbs || {}; return n[k] > 0 ? k : Object.keys(ORBS).find(x => n[x] > 0) || ''; }
 function openOrb(k) {
   save.orbs = save.orbs || { void: 0, stellar: 0 };
   if (!(save.orbs[k] > 0)) return;
   save.orbs[k]--;
   const res = rollOrb(k); persist();
-  crate = { k, res, phase: 'idle', t: 0, parts: [], flick: '255,255,255', nextF: 0 };
+  const tiers = RORDER.filter(r => ORBS[k].odds[r]), fin = Math.max(0, tiers.indexOf(res.rar)), slots = [0, 0, 0, 0];
+  for (let i = 0; i < fin; i++) { const r = Math.random(); slots[r < 0.22 ? 0 : r < 0.5 ? 1 : r < 0.8 ? 2 : 3]++; }
+  const cracks = [];
+  for (let i = 0; i < 8; i++) {
+    let an = i / 8 * TAU + rand(-0.25, 0.25), r = rand(0.04, 0.2); const pts = [[Math.cos(an) * r, Math.sin(an) * r]];
+    while (r < 1) { r = Math.min(1.02, r + rand(0.13, 0.22)); an += rand(-0.42, 0.42); pts.push([Math.cos(an) * r, Math.sin(an) * r]); }
+    cracks.push({ pts, at: (i % 3) / 3 });
+  }
+  crate = { k, res, tiers, fin, slots, cracks, tier: 0, col: RAR[tiers[0]].c, cFrom: '', cTo: '', cF: 1, hits: 0, phase: 'drop', t: 0, q: [], late: 0, lateN: 0, dur: 0, parts: [], shards: [], rings: [], pop: null, punch: 0, shake: 0, flash: 0, fcol: '255,255,255', crack: 0, crackT: 0, shown: false, shots: [], fcd: 0, cx: 0, cy: 0, R: 60 };
   hideAll(); show('crate');
-  $('crK').textContent = ORBS[k].name.toUpperCase();
-  $('crRar').textContent = ''; $('crName').textContent = ''; $('crType').textContent = 'Tap the orb to open it'; $('crDup').textContent = '';
-  $('crBtns').style.visibility = 'hidden';
-  if (!crAnim) { crAnim = true; let last = performance.now(); const step = now => { const dt = Math.min(0.05, (now - last) / 1000); last = now; if (!crate || $('crate').classList.contains('hidden')) { crAnim = false; return; } crateFrame(dt); requestAnimationFrame(step); }; requestAnimationFrame(step); }
+  const o = ORBS[k];
+  $('crate').style.setProperty('--oc', o.col);
+  $('crK').textContent = o.name.toUpperCase();
+  $('crSub').textContent = 'Crack it three times. Every crack can raise the rarity.';
+  $('crLad').innerHTML = tiers.map((r, i) => `<span class="crp${i ? '' : ' on cur'}" style="--c:${RAR[r].c}"><i></i>${RAR[r].n}</span>`).join('');
+  crTapsUI(); $('crHintT').textContent = isTouch() ? 'Tap the orb' : 'Click or press Space';
+  $('crInfo').classList.remove('rev'); $('crCard').classList.add('hidden'); $('crBtns').classList.add('off');
+  audio(); tone(70, 0.5, 'sine', 0.1, 150);
+  if (!crAnim) {
+    crAnim = true; let last = performance.now();
+    const step = now => { const dt = Math.min(0.05, Math.max(0, (now - last) / 1000)); last = now; if (!crate || $('crate').classList.contains('hidden')) { crAnim = false; return; } crateFrame(dt); requestAnimationFrame(step); };
+    requestAnimationFrame(step);
+  }
 }
-function crateTap() {
-  if (!crate || crate.phase !== 'idle') return;
-  crate.phase = 'charge'; crate.t = 0; $('crType').textContent = '';
-  audio(); tone(120, 1.8, 'sawtooth', 0.05, 900);
+function crTapsUI() { const cr = crate; $('crTaps').querySelectorAll('i').forEach((el, i) => el.classList.toggle('on', i < cr.hits)); }
+function crLadUI(pop) {
+  const cr = crate;
+  $('crLad').querySelectorAll('.crp').forEach((el, i) => { el.classList.toggle('on', i <= cr.tier); el.classList.toggle('cur', i === cr.tier); if (pop && i === cr.tier) { el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); } });
+}
+function crSpark(n, col, s0, s1, life, from) {
+  const cr = crate, kk = cr.R / 80;
+  for (let i = 0; i < n; i++) { const an = rand(0, TAU), sp = rand(s0, s1) * kk, r0 = from * cr.R; cr.parts.push({ x: cr.cx + Math.cos(an) * r0, y: cr.cy + Math.sin(an) * r0, vx: Math.cos(an) * sp, vy: Math.sin(an) * sp, life: rand(life * 0.5, life), max: life, col: Math.random() < 0.35 ? '255,255,255' : col, w: rand(1.4, 2.6) }); }
+}
+// tap = pointer on the overlay, go = Space / Enter, back = Escape
+function crInput(kind) {
+  const cr = crate; if (!cr) return;
+  audio();
+  if (cr.phase === 'drop') { cr.t = Math.max(cr.t, 0.74); return; }
+  if (cr.phase === 'idle') { if (kind === 'back') crBurst(); else crHit(); return; }
+  if (cr.phase === 'charge') { crBurst(); return; }
+  if (!cr.shown) { crShow(); return; }
+  if (kind === 'back') $('crBack').click();
+  else if (kind === 'go') (!$('crAgain').classList.contains('hidden') ? $('crAgain') : $('crBack')).click();
+}
+function crHit() {
+  const cr = crate; if (cr.q.length || cr.hits >= 3) return;
+  cr.hits++; cr.punch = 1; cr.shake = Math.max(cr.shake, 0.4); cr.crackT = cr.hits / 3;
+  tone(250 + cr.hits * 130, 0.16, 'triangle', 0.09, 520 + cr.hits * 220); noise(0.12, 0.07, 6500, 1400); buzz(14);
+  crSpark(18 + cr.hits * 6, cr.col, 160, 460, 0.6, 0.95);
+  cr.rings.push({ x: cr.cx, y: cr.cy, r: 1, v: 2.6, life: 0.45, max: 0.45, col: cr.col, w: 3 });
+  for (let i = 0; i < cr.slots[cr.hits - 1]; i++) cr.q.push(i ? 0.5 : 0.24);
+  crTapsUI(); $('crSub').textContent = '';
+  $('crHintT').textContent = cr.hits === 1 ? 'Again' : cr.hits === 2 ? 'One more' : '';
+  if (cr.hits >= 3 && !cr.q.length) crCharge();
+}
+function crUpgrade() {
+  const cr = crate; if (cr.tier >= cr.fin) return;
+  cr.tier++; const r = cr.tiers[cr.tier], col = RAR[r].c;
+  cr.cFrom = cr.col; cr.cTo = col; cr.cF = 0;
+  cr.flash = 0.6; cr.fcol = col; cr.punch = 1.35; cr.shake = Math.max(cr.shake, 0.55);
+  cr.rings.push({ x: cr.cx, y: cr.cy, r: 1, v: 7, life: 0.75, max: 0.75, col, w: 6 }, { x: cr.cx, y: cr.cy, r: 1, v: 4, life: 0.5, max: 0.5, col: '255,255,255', w: 2 });
+  crSpark(50, col, 220, 620, 0.9, 1);
+  cr.pop = { text: RAR[r].n.toUpperCase(), col, t: 0 };
+  const f0 = [392, 440, 523, 587, 659][cr.tier] || 523;
+  [1, 1.26, 1.5, 2].forEach((m, i) => setTimeout(() => tone(f0 * m, 0.28, 'triangle', 0.08), i * 65)); noise(0.35, 0.08, 9000, 3000); buzz([20, 30, 60]);
+  crLadUI(true);
+}
+function crCharge() {
+  const cr = crate; cr.phase = 'charge'; cr.t = 0; cr.lateN = cr.slots[3]; cr.late = 0; cr.dur = 0.8 + cr.lateN * 0.55;
+  tone(110, cr.dur, 'sawtooth', 0.05, 950); $('crHintT').textContent = '';
+}
+function crBurst() {
+  const cr = crate; if (cr.phase === 'reveal') return;
+  cr.q.length = 0; cr.tier = cr.fin; cr.col = RAR[cr.res.rar].c; cr.cF = 1; crLadUI(false);
+  cr.hits = 3; crTapsUI(); cr.crack = cr.crackT = 1;
+  cr.phase = 'reveal'; cr.t = 0; cr.flash = 1; cr.fcol = '255,255,255'; cr.shake = 0.7; cr.pop = null;
+  const col = cr.col, myth = cr.res.rar === 'mythic', leg = cr.res.rar === 'legendary';
+  for (let i = 0; i < 28; i++) { const an = rand(0, TAU), sp = rand(260, 720) * cr.R / 80; cr.shards.push({ x: cr.cx + Math.cos(an) * cr.R * 0.5, y: cr.cy + Math.sin(an) * cr.R * 0.5, vx: Math.cos(an) * sp, vy: Math.sin(an) * sp, a: rand(0, TAU), va: rand(-9, 9), s: rand(0.1, 0.24) * cr.R, life: rand(0.7, 1.3), max: 1.3, p: [rand(0.7, 1), rand(0.5, 1), rand(0.6, 1)] }); }
+  crSpark(myth ? 170 : leg ? 130 : 90, col, 200, 900, 1.4, 0.3);
+  cr.rings.push({ x: cr.cx, y: cr.cy, r: 0.6, v: 9, life: 0.9, max: 0.9, col, w: 8 }, { x: cr.cx, y: cr.cy, r: 0.6, v: 5, life: 0.6, max: 0.6, col: '255,255,255', w: 3 });
+  const notes = { common: [523, 659, 784], rare: [523, 659, 784, 1046], epic: [523, 659, 784, 1046, 1318], legendary: [523, 659, 784, 1046, 1318, 1568], mythic: [392, 523, 659, 784, 1046, 1318, 1568, 2093] }[cr.res.rar] || [523, 659, 784];
+  notes.forEach((nf, i) => setTimeout(() => tone(nf, 0.55, 'triangle', 0.085), i * 80)); noise(0.9, 0.32, 4200, 180); tone(80, 0.6, 'sine', 0.22, 35);
+  buzz(myth ? [60, 40, 120, 40, 220] : [50, 30, 90]);
+  $('crSub').textContent = ''; $('crHintT').textContent = '';
+}
+function crShow() {
+  const cr = crate; if (!cr || cr.shown) return; cr.shown = true;
+  const it = cr.res.it, R_ = RAR[cr.res.rar], ship = cr.res.type === 'ship';
+  const card = $('crCard'); card.style.setProperty('--c', R_.c);
+  $('crRar').textContent = R_.n.toUpperCase();
+  $('crName').textContent = it.name.toUpperCase();
+  $('crType').innerHTML = `<span>${ship ? 'Ship skin' : 'Bullet skin'}</span>` + (cr.res.dupe ? `<span class="crDupT">Duplicate · +◆ <b id="crDupN">0</b></span>` : '<span class="crNew">NEW</span>');
+  $('crInfo').classList.add('rev'); card.classList.remove('hidden');
+  const eq = ship ? save.skin === it.id : save.bskin === it.id;
+  $('crEquip').classList.toggle('hidden', eq); $('crEquip').disabled = false; $('crEquip').textContent = 'Equip';
+  const nk = crNextKind(cr.k);
+  $('crAgain').classList.toggle('hidden', !nk);
+  if (nk) $('crAgainS').textContent = nk === cr.k ? save.orbs[nk] + ' left' : ORBS[nk].name;
+  $('crBack').className = nk ? 'sec' : 'play sm'; $('crBack').innerHTML = nk ? 'Done' : '<span class="pm">DONE</span>';
+  $('crBtns').classList.remove('off');
+  const left = save.orbs[cr.k] || 0; $('crSub').textContent = left ? `${left} ${ORBS[cr.k].name}${left > 1 ? 's' : ''} left` : '';
+  if (cr.res.dupe) {
+    const tgt = R_.dup, t0 = performance.now();
+    const tick = () => { const el = $('crDupN'); if (!el || crate !== cr) return; const f = Math.min(1, (performance.now() - t0) / 700); el.textContent = fmt(tgt * easeOut(f)); if (f < 1) requestAnimationFrame(tick); else tone(1500, 0.1, 'sine', 0.05); };
+    requestAnimationFrame(tick);
+  }
+}
+// the orb: its own colours inside, the current rarity colour in the aura, rim and the light leaking out of the cracks
+function drawCrOrb(c, x, y, R, sx, sy, o, col, t, power, crack, cracks) {
+  c.save(); c.translate(x, y); c.scale(sx, sy);
+  const g = c.createRadialGradient(0, 0, R * 0.6, 0, 0, R * 2.4);
+  g.addColorStop(0, `rgba(${col},${0.3 + power * 0.4})`); g.addColorStop(1, `rgba(${col},0)`);
+  c.fillStyle = g; c.beginPath(); c.arc(0, 0, R * 2.4, 0, TAU); c.fill();
+  const g2 = c.createRadialGradient(-R * 0.32, -R * 0.36, R * 0.08, 0, 0, R);
+  g2.addColorStop(0, '#fff'); g2.addColorStop(0.22, `rgb(${o.col2})`); g2.addColorStop(0.72, `rgb(${o.col})`); g2.addColorStop(1, 'rgb(10,6,30)');
+  c.fillStyle = g2; c.beginPath(); c.arc(0, 0, R, 0, TAU); c.fill();
+  c.save(); c.beginPath(); c.arc(0, 0, R, 0, TAU); c.clip();
+  c.strokeStyle = 'rgba(255,255,255,.42)'; c.lineWidth = Math.max(1, R * 0.04);
+  for (let i = 0; i < 3; i++) { c.beginPath(); c.ellipse(0, 0, R * (0.9 - i * 0.2), R * 0.28, t * (0.8 + i * 0.5) * (1 + power * 2) + i, 0, TAU); c.stroke(); }
+  c.globalCompositeOperation = 'lighter';
+  const tg = c.createRadialGradient(0, 0, 0, 0, 0, R); tg.addColorStop(0, `rgba(${col},${0.12 + power * 0.3})`); tg.addColorStop(1, `rgba(${col},${0.3 + power * 0.2})`);
+  c.fillStyle = tg; c.fillRect(-R, -R, R * 2, R * 2);
+  if (crack > 0.01) {
+    c.lineJoin = 'round'; c.lineCap = 'round';
+    for (const k of cracks) {
+      const vis = clamp((crack - k.at) / 0.3, 0, 1); if (vis <= 0) continue;
+      const n = Math.max(2, Math.ceil(k.pts.length * vis));
+      const path = () => { c.beginPath(); c.moveTo(k.pts[0][0] * R, k.pts[0][1] * R); for (let i = 1; i < n; i++) c.lineTo(k.pts[i][0] * R, k.pts[i][1] * R); };
+      c.strokeStyle = `rgba(${col},${0.5 * vis})`; c.lineWidth = R * (0.1 + power * 0.08); path(); c.stroke();
+      c.strokeStyle = `rgba(255,255,255,${0.95 * vis})`; c.lineWidth = Math.max(1.2, R * 0.028); path(); c.stroke();
+    }
+  }
+  c.restore();
+  c.strokeStyle = `rgba(${col},.95)`; c.lineWidth = Math.max(1.5, R * 0.05); c.beginPath(); c.arc(0, 0, R, 0, TAU); c.stroke();
+  c.globalCompositeOperation = 'lighter';
+  for (let i = 0; i < 6; i++) { const an = t * (1.1 + power * 2) + i / 6 * TAU, dd = R * (1.32 + 0.08 * Math.sin(t * 3 + i)); c.fillStyle = `rgba(${i % 2 ? col : '255,255,255'},${0.55 + 0.4 * Math.sin(t * 5 + i)})`; c.beginPath(); c.arc(Math.cos(an) * dd, Math.sin(an) * dd * 0.78, Math.max(1.2, R * 0.035), 0, TAU); c.fill(); }
+  c.restore();
+}
+function crReveal(c, cx, cy, R, t, W, H, dt) {
+  const cr = crate, it = cr.res.it, col = cr.col, f = Math.min(1, cr.t / 0.6), e = easeOutBack(Math.min(1, cr.t / 0.55)), myth = cr.res.rar === 'mythic';
+  c.save(); c.translate(cx, cy); c.globalCompositeOperation = 'lighter';
+  const L = Math.hypot(W, H) * 0.6, n = 16;
+  for (let sI = 0; sI < 2; sI++) {
+    const rc = myth && sI ? hsl2rgb((t * 0.08) % 1, 1, 0.62) : col;
+    const g = c.createRadialGradient(0, 0, R * 0.2, 0, 0, L);
+    g.addColorStop(0, `rgba(${rc},${(sI ? 0.11 : 0.17) * f})`); g.addColorStop(0.45, `rgba(${rc},${(sI ? 0.04 : 0.06) * f})`); g.addColorStop(1, `rgba(${rc},0)`);
+    c.fillStyle = g; c.save(); c.rotate(t * (sI ? -0.07 : 0.11) + sI * 0.2);
+    for (let i = 0; i < n; i++) { const an = i / n * TAU, w = (sI ? 0.045 : 0.075) * (0.75 + 0.25 * Math.sin(i * 2.3 + sI)); c.beginPath(); c.moveTo(0, 0); c.arc(0, 0, L, an - w, an + w); c.closePath(); c.fill(); }
+    c.restore();
+  }
+  const hg = c.createRadialGradient(0, 0, 0, 0, 0, R * 2.1);
+  hg.addColorStop(0, `rgba(${col},${0.42 * f})`); hg.addColorStop(0.5, `rgba(${col},${0.14 * f})`); hg.addColorStop(1, `rgba(${col},0)`);
+  c.fillStyle = hg; c.beginPath(); c.arc(0, 0, R * 2.1, 0, TAU); c.fill();
+  c.restore();
+  c.save(); c.translate(cx, cy + R * 1.12); c.globalAlpha = f;
+  c.strokeStyle = `rgba(${col},.35)`; c.lineWidth = 1.2; c.beginPath(); c.ellipse(0, 0, R * 1.05, R * 0.2, 0, 0, TAU); c.stroke();
+  c.strokeStyle = `rgba(${col},.7)`; c.lineWidth = 2; c.setLineDash([R * 0.16, R * 0.24]); c.lineDashOffset = -t * R * 0.5; c.beginPath(); c.ellipse(0, 0, R * 1.25, R * 0.25, 0, 0, TAU); c.stroke(); c.setLineDash([]);
+  c.restore();
+  const rate = { common: 0.3, rare: 0.5, epic: 0.8, legendary: 1.2, mythic: 1.8 }[cr.res.rar] || 0.5;
+  if (Math.random() < rate * 0.5) cr.parts.push({ x: cx + rand(-R * 1.6, R * 1.6), y: cy + R * rand(0.6, 1.4), vx: rand(-10, 10), vy: -rand(30, 80) * R / 80, life: rand(1, 1.8), max: 1.8, col: myth ? hsl2rgb(Math.random(), 1, 0.65) : (Math.random() < 0.4 ? '255,255,255' : col), w: rand(1.2, 2.2) });
+  const sc = Math.max(0.01, e);
+  if (cr.res.type === 'ship') drawShipModel(c, it, cx, cy + Math.sin(t * 2) * R * 0.05, -Math.PI / 2 + Math.sin(t * 1.3) * 0.08, R / 23 * sc, t, false);
+  else {
+    // the new bullets streaming out of the ship you fly now
+    const k = R / 40, sy = cy + R * 0.95;
+    cr.fcd -= dt;
+    if (cr.fcd <= 0 && cr.t > 0.25) { cr.fcd = 0.13; cr.shots.push({ x: cx, y: sy - 14 * k, vx: 0, vy: -R * 4.2, seed: Math.random() * 1000 }); }
+    c.save(); c.globalCompositeOperation = 'lighter';
+    for (let i = cr.shots.length - 1; i >= 0; i--) { const b = cr.shots[i]; b.y += b.vy * dt; if (b.y < cy - R * 1.9) { cr.shots.splice(i, 1); continue; } c.globalAlpha = clamp((b.y - (cy - R * 1.9)) / (R * 0.9), 0, 1); drawBullet(c, it, b, t, R / 30 * sc); }
+    c.restore();
+    drawShipModel(c, SK(), cx, sy, -Math.PI / 2, k * sc, t, false);
+  }
 }
 function crateFrame(dt) {
-  const cr = crate, cvs = $('crCv'), d = Math.min(2, window.devicePixelRatio || 1), w = cvs.clientWidth, h = cvs.clientHeight;
-  if (cvs.width !== (w * d | 0) || cvs.height !== (h * d | 0)) { cvs.width = w * d | 0; cvs.height = h * d | 0; }
-  const c = cvs.getContext('2d'); c.setTransform(d, 0, 0, d, 0, 0); c.clearRect(0, 0, w, h);
-  cr.t += dt; const t = performance.now() / 1000, o = ORBS[cr.k], rc = RAR[cr.res.rar].c, cx = w / 2, cy = h / 2, R0 = Math.min(w, h) * 0.22;
-  const myth = cr.res.rar === 'mythic';
-  if (cr.phase === 'idle') {
-    drawOrb(c, cx, cy + Math.sin(t * 2) * 5, R0, o.col, o.col2, t);
+  const cr = crate, cvs = $('crCv'), d = Math.min(2, window.devicePixelRatio || 1), W = cvs.clientWidth, H = cvs.clientHeight;
+  if (!W || !H) return;
+  if (cvs.width !== (W * d | 0) || cvs.height !== (H * d | 0)) { cvs.width = W * d | 0; cvs.height = H * d | 0; }
+  const c = cvs.getContext('2d'); c.setTransform(d, 0, 0, d, 0, 0); c.clearRect(0, 0, W, H);
+  cr.t += dt; const t = performance.now() / 1000, o = ORBS[cr.k];
+  const sr = $('crStage').getBoundingClientRect(), vr = cvs.getBoundingClientRect();
+  const R = clamp(Math.min(sr.width, sr.height) * 0.25, 40, 110), cx = sr.left - vr.left + sr.width / 2, cy0 = sr.top - vr.top + sr.height / 2;
+  cr.R = R;
+  if (cr.cF < 1) { cr.cF = Math.min(1, cr.cF + dt * 4); cr.col = mixC(cr.cFrom, cr.cTo, cr.cF); }
+  cr.punch = Math.max(0, cr.punch - dt * 3.5); cr.shake = Math.max(0, cr.shake - dt * 1.8); cr.flash = Math.max(0, cr.flash - dt * (cr.phase === 'reveal' ? 1.6 : 2.4));
+  cr.crack += (cr.crackT - cr.crack) * Math.min(1, dt * 9);
+  if (cr.q.length) { cr.q[0] -= dt; if (cr.q[0] <= 0) { cr.q.shift(); crUpgrade(); if (!cr.q.length && cr.hits >= 3 && cr.phase === 'idle') crCharge(); } }
+  let cy = cy0 + Math.sin(t * 2.2) * R * 0.05, power = 0;
+  if (cr.phase === 'drop') {
+    const f = Math.min(1, cr.t / 0.75); cy = cy0 - (1 - easeOutBack(f)) * (cy0 + R * 2.5);
+    if (f >= 1) { cr.phase = 'idle'; cr.t = 0; cr.shake = 0.3; cr.cx = cx; cr.cy = cy0; cr.rings.push({ x: cx, y: cy0 + R * 1.05, r: 0.5, v: 3, life: 0.55, max: 0.55, col: cr.col, w: 2, flat: 1 }); crSpark(16, cr.col, 80, 220, 0.5, 0.9); tone(90, 0.3, 'sine', 0.18, 45); noise(0.18, 0.08, 1400, 200); }
   } else if (cr.phase === 'charge') {
-    const T = 2.0, f = Math.min(1, cr.t / T);
-    if (cr.t > cr.nextF) {
-      cr.nextF = cr.t + 0.05 + f * 0.22;
-      const opts = RORDER.filter(r => o.odds[r]);
-      cr.flick = f > 0.82 ? rc : RAR[opts[Math.random() * opts.length | 0]].c;
-      tone(400 + f * 500, 0.05, 'triangle', 0.03);
-    }
-    const sh = f * f * (myth ? 9 : 6);
-    const gl = c.createRadialGradient(cx, cy, 0, cx, cy, R0 * (2 + f));
-    gl.addColorStop(0, `rgba(${cr.flick},${0.3 + f * 0.5})`); gl.addColorStop(1, `rgba(${cr.flick},0)`);
-    c.fillStyle = gl; c.beginPath(); c.arc(cx, cy, R0 * (2 + f), 0, TAU); c.fill();
-    drawOrb(c, cx + rand(-sh, sh), cy + rand(-sh, sh), R0 * (1 + f * 0.12), cr.flick, o.col2, t * (1 + f * 4), f);
-    if (Math.random() < 0.6) { const a = rand(0, TAU), rr0 = R0 * 2.4; cr.parts.push({ x: cx + Math.cos(a) * rr0, y: cy + Math.sin(a) * rr0, vx: -Math.cos(a) * 160, vy: -Math.sin(a) * 160, life: 0.6, col: cr.flick }); }
-    if (cr.t >= T) {
-      cr.phase = 'burst'; cr.t = 0;
-      for (let i = 0; i < (myth ? 140 : 80); i++) { const a = rand(0, TAU), s = rand(80, myth ? 520 : 380); cr.parts.push({ x: cx, y: cy, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: rand(0.6, 1.4), col: Math.random() < 0.3 ? '255,255,255' : rc }); }
-      const notes = { common: [523, 659], rare: [523, 659, 784], epic: [523, 659, 784, 1046], legendary: [523, 659, 784, 1046, 1318], mythic: [392, 523, 659, 784, 1046, 1318, 1568] }[cr.res.rar];
-      notes.forEach((nf, i) => setTimeout(() => tone(nf, 0.5, 'triangle', 0.09), i * 90)); noise(0.8, 0.3, 4000, 200); buzz(myth ? [60, 40, 120, 40, 200] : [50, 30, 80]);
-    }
-  } else {
-    const f = Math.min(1, cr.t / 0.6);
-    if (cr.phase === 'burst' && cr.t > 0.25) {
-      cr.phase = 'reveal';
-      const it = cr.res.it, R_ = RAR[cr.res.rar];
-      $('crRar').textContent = R_.n.toUpperCase(); $('crRar').style.color = `rgb(${R_.c})`;
-      $('crName').textContent = it.name.toUpperCase();
-      $('crType').textContent = cr.res.type === 'ship' ? 'Ship skin' : 'Bullet skin';
-      $('crDup').textContent = cr.res.dupe ? `Already owned · +◆ ${R_.dup} stardust` : 'New skin unlocked!';
-      $('crDup').style.color = cr.res.dupe ? 'var(--mint)' : `rgb(${R_.c})`;
-      const eq = cr.res.type === 'ship' ? save.skin === it.id : save.bskin === it.id;
-      $('crEquip').style.display = eq ? 'none' : ''; $('crEquip').textContent = 'Equip';
-      const left = save.orbs[cr.k] || 0;
-      $('crAgain').style.display = left ? '' : 'none'; $('crAgainS').textContent = left + ' left';
-      $('crBtns').style.visibility = 'visible';
-    }
-    c.save(); c.translate(cx, cy); c.rotate(t * 0.3);
-    for (let i = 0; i < 14; i++) { c.rotate(TAU / 14); c.fillStyle = `rgba(${rc},${0.12 * f})`; c.beginPath(); c.moveTo(0, 0); c.lineTo(R0 * 3, -R0 * 0.35); c.lineTo(R0 * 3, R0 * 0.35); c.closePath(); c.fill(); }
-    c.restore();
-    const gl = c.createRadialGradient(cx, cy, 0, cx, cy, R0 * 1.8);
-    gl.addColorStop(0, `rgba(${rc},${0.45 * f})`); gl.addColorStop(1, `rgba(${rc},0)`);
-    c.fillStyle = gl; c.beginPath(); c.arc(cx, cy, R0 * 1.8, 0, TAU); c.fill();
-    if (cr.phase === 'burst') { c.fillStyle = `rgba(255,255,255,${1 - cr.t / 0.25})`; c.fillRect(0, 0, w, h); }
-    const sc = easeOut(f) * 2.6, it = cr.res.it;
-    if (cr.res.type === 'ship') drawShipModel(c, it, cx, cy + Math.sin(t * 2) * 4, -Math.PI / 2 + Math.sin(t * 1.4) * 0.1, sc, t, false);
-    else { c.globalCompositeOperation = 'lighter'; for (let i = 0; i < 3; i++) { const ph = (t * 0.8 + i / 3) % 1; drawBullet(c, it, { x: cx + (i - 1) * 34, y: cy + R0 * 1.3 - ph * R0 * 2.6, vx: 0, vy: -500, seed: i * 31 + 3 }, t, 2.6 * easeOut(f)); } c.globalCompositeOperation = 'source-over'; }
+    const f = Math.min(1, cr.t / cr.dur); power = f; cr.shake = Math.max(cr.shake, 0.15 + f * 0.6);
+    if (Math.random() < 0.7) { const an = rand(0, TAU), r0 = R * rand(2.2, 3); cr.parts.push({ x: cx + Math.cos(an) * r0, y: cy0 + Math.sin(an) * r0, vx: -Math.cos(an) * r0 * 2.4, vy: -Math.sin(an) * r0 * 2.4, life: 0.38, max: 0.38, col: Math.random() < 0.5 ? '255,255,255' : cr.col, w: 1.6 }); }
+    if (cr.late < cr.lateN && cr.t > 0.5 + cr.late * 0.55) { cr.late++; crUpgrade(); }
+    if (cr.t >= cr.dur) crBurst();
   }
-  c.globalCompositeOperation = 'lighter';
-  for (let i = cr.parts.length - 1; i >= 0; i--) { const p = cr.parts[i]; p.life -= dt; if (p.life <= 0) { cr.parts.splice(i, 1); continue; } p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= 0.97; p.vy *= 0.97; c.fillStyle = `rgba(${p.col},${Math.min(1, p.life * 1.5)})`; c.fillRect(p.x - 1.5, p.y - 1.5, 3, 3); }
+  const sh = cr.shake * cr.shake * R * 0.14, ox = rand(-sh, sh), oy = rand(-sh, sh);
+  cr.cx = cx + ox; cr.cy = cy + oy;
+  const bgA = cr.phase === 'reveal' ? 0.22 : 0.1 + power * 0.12;
+  const bg = c.createRadialGradient(cx, cy0, 0, cx, cy0, Math.max(W, H) * 0.62); bg.addColorStop(0, `rgba(${cr.col},${bgA})`); bg.addColorStop(1, `rgba(${cr.col},0)`); c.fillStyle = bg; c.fillRect(0, 0, W, H);
+  if (cr.phase !== 'reveal') {
+    c.save(); c.translate(cx, cy0 + R * 1.2); c.scale(1, 0.22);
+    const fg = c.createRadialGradient(0, 0, 0, 0, 0, R * 1.4); fg.addColorStop(0, `rgba(${cr.col},${cr.phase === 'drop' ? 0.35 * Math.min(1, cr.t / 0.75) : 0.35})`); fg.addColorStop(1, `rgba(${cr.col},0)`);
+    c.fillStyle = fg; c.beginPath(); c.arc(0, 0, R * 1.4, 0, TAU); c.fill(); c.restore();
+    const p2 = cr.punch * cr.punch;
+    drawCrOrb(c, cr.cx, cr.cy, R, 1 + 0.14 * p2, 1 - 0.09 * p2, o, cr.col, t, Math.min(1, power + cr.punch * 0.25), cr.crack, cr.cracks);
+  } else crReveal(c, cx, cy0, R, t, W, H, dt);
+  c.globalCompositeOperation = 'lighter'; c.lineCap = 'round';
+  for (let i = cr.rings.length - 1; i >= 0; i--) { const g = cr.rings[i]; g.life -= dt; if (g.life <= 0) { cr.rings.splice(i, 1); continue; } g.r += g.v * dt; const f = g.life / g.max; c.strokeStyle = `rgba(${g.col},${0.85 * f})`; c.lineWidth = g.w * f + 0.6; c.beginPath(); if (g.flat) c.ellipse(g.x, g.y, g.r * R, g.r * R * 0.24, 0, 0, TAU); else c.arc(g.x, g.y, g.r * R, 0, TAU); c.stroke(); }
+  for (let i = cr.parts.length - 1; i >= 0; i--) { const p = cr.parts[i]; p.life -= dt; if (p.life <= 0) { cr.parts.splice(i, 1); continue; } const dr = Math.pow(0.05, dt); p.vx *= dr; p.vy *= dr; p.x += p.vx * dt; p.y += p.vy * dt; c.strokeStyle = `rgba(${p.col},${Math.min(1, p.life / p.max * 1.6)})`; c.lineWidth = p.w; c.beginPath(); c.moveTo(p.x, p.y); c.lineTo(p.x - p.vx * 0.035, p.y - p.vy * 0.035 + 0.01); c.stroke(); }
+  for (let i = cr.shards.length - 1; i >= 0; i--) { const sd = cr.shards[i]; sd.life -= dt; if (sd.life <= 0) { cr.shards.splice(i, 1); continue; } const dr = Math.pow(0.12, dt); sd.vx *= dr; sd.vy *= dr; sd.x += sd.vx * dt; sd.y += sd.vy * dt; sd.a += sd.va * dt; const f = sd.life / sd.max; c.save(); c.translate(sd.x, sd.y); c.rotate(sd.a); c.fillStyle = `rgba(${cr.col},${0.7 * f})`; c.strokeStyle = `rgba(255,255,255,${0.9 * f})`; c.lineWidth = 1; c.beginPath(); c.moveTo(sd.s * sd.p[0], 0); c.lineTo(-sd.s * 0.5 * sd.p[1], sd.s * 0.8 * sd.p[2]); c.lineTo(-sd.s * 0.6 * sd.p[2], -sd.s * 0.7 * sd.p[1]); c.closePath(); c.fill(); c.stroke(); c.restore(); }
   c.globalCompositeOperation = 'source-over';
+  if (cr.pop) {
+    const P = cr.pop; P.t += dt;
+    if (P.t > 1.25) cr.pop = null;
+    else {
+      const al = P.t < 0.9 ? 1 : 1 - (P.t - 0.9) / 0.35, sc = 1 + 0.5 * Math.pow(1 - Math.min(1, P.t / 0.22), 2), fs = clamp(R * 0.3, 17, 34), sp = fs * 0.2;
+      c.save(); c.translate(cx + sp / 2, cy0 - R * 1.6); c.scale(sc, sc); c.globalAlpha = al; c.textAlign = 'center'; c.textBaseline = 'middle';
+      try { c.letterSpacing = sp + 'px'; } catch (e) {}
+      c.font = `700 ${fs * 0.38}px ${FONT}`; c.fillStyle = 'rgba(255,255,255,.75)'; c.fillText('RARITY UP', 0, -fs * 0.95);
+      c.font = `700 ${fs}px ${FONT}`; c.shadowColor = `rgba(${P.col},.95)`; c.shadowBlur = 20; c.fillStyle = `rgb(${P.col})`; c.fillText(P.text, 0, 0);
+      c.restore();
+    }
+  }
+  if (cr.flash > 0) { c.globalCompositeOperation = 'lighter'; c.fillStyle = `rgba(${cr.fcol},${cr.flash * (cr.fcol === '255,255,255' ? 0.85 : 0.28)})`; c.fillRect(0, 0, W, H); c.globalCompositeOperation = 'source-over'; }
+  if (cr.phase === 'reveal' && !cr.shown && cr.t > 0.5) crShow();
 }
-$('crCv').addEventListener('click', crateTap);
-$('crCv').addEventListener('touchstart', e => { e.preventDefault(); crateTap(); }, { passive: false });
-$('crBack').onclick = () => { crate = null; hTab = 'ORB'; openHangar(hangarFrom); };
-$('crEquip').onclick = () => { if (!crate) return; const r = crate.res; if (r.type === 'ship') save.skin = r.it.id; else save.bskin = r.it.id; persist(); sfx.ui(); $('crEquip').style.display = 'none'; };
-$('crAgain').onclick = () => { if (crate) openOrb(crate.k); };
+$('crate').addEventListener('pointerdown', e => { if (e.target.closest('button')) return; e.preventDefault(); crInput('tap'); });
+$('crBack').onclick = () => { crate = null; openHangar(hangarFrom, 'ORB'); };
+$('crEquip').onclick = () => { if (!crate) return; const r = crate.res; if (r.type === 'ship') save.skin = r.it.id; else save.bskin = r.it.id; persist(); sfx.ui(); buzz(10); $('crEquip').textContent = 'Equipped'; $('crEquip').disabled = true; };
+$('crAgain').onclick = () => { if (!crate) return; const nk = crNextKind(crate.k); if (nk) openOrb(nk); };
 function buyBSkin(id) {
   if (save.bskin !== id) garageShoot(6);
   const bs = BSKINS.find(x => x.id === id); if (!bs) return;
@@ -2775,10 +3011,10 @@ function renderSettings() {
   const cur = { look: save.look ? 'on' : 'off', cam: save.cam === 'fixed' ? 'fixed' : 'follow', snd: muted ? 'off' : 'on', shake: save.shake === false ? 'off' : 'on' };
   document.querySelectorAll('#settings .opts').forEach(g => g.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === cur[g.dataset.set])));
 }
-$('setBtn').onclick = () => { audio(); sfx.ui(); setFrom = 'menu'; hideAll(); show('settings'); renderSettings(); $('sTut').closest('.card').classList.remove('hidden'); };
+$('setBtn').onclick = () => { audio(); sfx.ui(); setFrom = 'menu'; hideAll(); show('settings'); renderSettings(); $('sTutRow').classList.remove('hidden'); };
 let setFrom = 'menu';
 $('sBack').onclick = () => { if (setFrom === 'pause' && mode === 'play') { setFrom = 'menu'; hideAll(); show('pause'); setPause(true); } else { setFrom = 'menu'; goMenu(); } };
-$('pSet').onclick = () => { sfx.ui(); setFrom = 'pause'; hideAll(); show('settings'); renderSettings(); $('sTut').closest('.card').classList.add('hidden'); };
+$('pSet').onclick = () => { sfx.ui(); setFrom = 'pause'; hideAll(); show('settings'); renderSettings(); $('sTutRow').classList.add('hidden'); };
 $('settings').addEventListener('click', e => {
   const b = e.target.closest('.opts button'); if (!b) return;
   const k = b.parentElement.dataset.set, v = b.dataset.v;
@@ -4324,6 +4560,11 @@ const keys = {};
 let mx = 0, my = 0, mdown = false, stick = null, aimT = null;
 addEventListener('keydown', e => {
   if (e.target && /^(INPUT|TEXTAREA)$/.test(e.target.tagName)) return;
+  if (crate && !$('crate').classList.contains('hidden')) {
+    if ((e.code === 'Space' || e.code === 'Enter') && !e.repeat) { e.preventDefault(); crInput('go'); }
+    else if (e.code === 'Escape') crInput('back');
+    return;
+  }
   keys[e.code] = true;
   if (e.code === 'KeyE' || e.code === 'KeyQ') wantBomb = true;
   if ((e.code === 'ShiftLeft' || e.code === 'ShiftRight') && !e.repeat) wantDash = true;
@@ -4334,6 +4575,8 @@ addEventListener('keydown', e => {
     else if (!$('roadmap').classList.contains('hidden')) $('rBack').click();
     else if (!$('profile').classList.contains('hidden')) $('pBack').click();
     else if (!$('settings').classList.contains('hidden')) $('sBack').click();
+    else if (!$('beast').classList.contains('hidden')) { if (!$('bxM').classList.contains('hidden')) $('bxX').click(); else $('bxBack').click(); }
+    else if (!$('mp').classList.contains('hidden')) $('mpBack').click();
   }
   if (e.code === 'Enter' && !e.repeat) {
     if (!$('menu').classList.contains('hidden')) { audio(); startRun(save.sel); }
@@ -4391,20 +4634,21 @@ function openModes() {
   $('mdStory').textContent = playLabel(Math.min(save.sel, NS));
   $('mdWaves').textContent = save.bestWave ? 'Best: wave ' + save.bestWave : 'No record yet';
 }
-$('pModes').addEventListener('click', e => { const b = e.target.closest('.play'); if (!b) return; save.gm = b.dataset.g; persist(); audio(); sfx.ui(); openHangar('menu'); });
+$('pModes').addEventListener('click', e => { const b = e.target.closest('.play'); if (!b) return; save.gm = b.dataset.g; persist(); audio(); sfx.ui(); openHangar('menu', 'G'); });
+$('orbBtn').onclick = () => { audio(); sfx.ui(); openHangar('menu', 'ORB'); };
 $('hMap').onclick = () => { audio(); sfx.ui(); mapFrom = 'hangar'; openMap(); };
 $('mdBack').onclick = () => goMenu();
 $('modes').addEventListener('click', e => { const b = e.target.closest('.mcd'); if (!b) return; audio(); goFull(); const m = b.dataset.m; if (m === 'story') startRun(save.sel); else if (m === 'waves') startWaves(); else openMP(); });
 $('again').onclick = () => { audio(); goFull(); if (gmode === 'waves') startWaves(); else startRun(save.sel); };
 $('mapBtn').onclick = () => { if (menuMode() !== 'story') return; audio(); sfx.ui(); mapFrom = 'menu'; openMap(); };
 $('shopBtn').onclick = () => { if (menuMode() === 'world') return; audio(); sfx.ui(); openHangar('menu'); };
-$('ovShop').onclick = () => { sfx.ui(); openHangar('over'); };
+$('ovShop').onclick = () => { sfx.ui(); openHangar('over', 'G'); };
 $('ovMenu').onclick = () => goMenu();
 $('resume').onclick = () => setPause(false);
 $('muteBtn').onclick = () => { audio(); setMute(!muted); save.muted = muted; persist(); };
 $('quit').onclick = () => { save.best = Math.max(save.best, score); persist(); goMenu(); };
-$('clShop').onclick = () => { sfx.ui(); openHangar('cleared'); };
-$('clHome').onclick = () => { sfx.ui(); save.best = Math.max(save.best, score); save.gm = 'story'; persist(); goMenu(); openHangar('menu'); };
+$('clShop').onclick = () => { sfx.ui(); openHangar('cleared', 'G'); };
+$('clHome').onclick = () => { sfx.ui(); save.best = Math.max(save.best, score); save.gm = 'story'; persist(); goMenu(); openHangar('menu', 'G'); };
 $('clNext').onclick = () => { audio(); if (gmode === 'story' && sector >= NS) { goMenu(); return; } goFull(); warpTo(sector + 1); };
 $('hBack').onclick = () => {
   hideAll();
