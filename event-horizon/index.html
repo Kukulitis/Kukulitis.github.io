@@ -796,7 +796,7 @@ body:not(.touch) .srow2.to{display:none}
 <script>
 'use strict';
 // Versioning: next version -> next whole number (4.00), sub version -> +0.01 (3.01)
-const VERSION = '4.54';
+const VERSION = '4.55';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -1700,27 +1700,196 @@ function mkShip() {
   return { x: CX, y: CY - r, vx: v, vy: 0, ang: 0, inv: 2.5, thr: 0, dcd: 0, trail: [], sling: false };
 }
 function mkAst(x, y, vx, vy, size) {
-  const R = [0, 13, 24, 42][size] * U, n = 9 + size * 2, pts = [];
-  for (let i = 0; i < n; i++) { const a = i / n * TAU, rr_ = R * rand(0.7, 1.08); pts.push([Math.cos(a) * rr_, Math.sin(a) * rr_]); }
-  const craters = [];
-  for (let i = 0; i < size; i++) craters.push([rand(-0.4, 0.4) * R, rand(-0.4, 0.4) * R, rand(0.12, 0.25) * R]);
-  const o = { pts0: pts, cr0: craters, x, y, vx, vy, size, R, pts, craters, rot: rand(0, TAU), vr: rand(-1.2, 1.2), hp: [0, 1, 2, 4][size] * hpMul(), hit: 0, bw: -1, dead: false, v: '' };
-  if (!owGen && (mode === 'play' || mode === 'warp')) { const pool = sector >= NS ? AVAR.slice(1) : sector > NS ? AVAR.slice(1) : [AVAR[Math.min(sector, NS) - 1]]; const v = pool[Math.random() * pool.length | 0]; if (v && Math.random() < (sector >= NS ? 0.6 : 0.45)) setVar(o, v); }
+  const R = [0, 13, 24, 42][size] * U;
+  const o = { x, y, vx, vy, size, R, rot: rand(0, TAU), vr: rand(-1.2, 1.2) * (size === 3 ? 0.6 : 1), hp: [0, 1, 2, 4][size] * hpMul(), hit: 0, bw: -1, dead: false, v: '', tc: TH.rock };
+  shapeAst(o);
+  if (!owGen && gmode !== 'world' && (mode === 'play' || mode === 'warp')) { const pool = sector >= NS ? AVAR.slice(1) : [AVAR[Math.min(sector, NS) - 1]]; const v = pool[Math.random() * pool.length | 0]; if (v && Math.random() < (sector >= NS ? 0.6 : 0.45)) setVar(o, v); }
   o.max = o.hp;
   return o;
 }
 // each sector brings its own kind of floating debris
 const AVAR = ['', 'ember', 'comet', 'crystal', 'obsidian', 'gold', 'ice', 'ion', 'monolith', 'dark'];
 const AVN = { ember: 'Magma rock', comet: 'Comet chunk', crystal: 'Verdant crystal', obsidian: 'Obsidian shard', gold: 'Gold asteroid', ice: 'Ice block', ion: 'Ion crystal', monolith: 'Monolith', dark: 'Dark matter' };
+const varHp = v => v === 'monolith' || v === 'dark' ? 1.5 : v === 'obsidian' ? 1.3 : 1;
+function shapeAst(o) { o.pts = astShape(o.v, o.R, o.size); o.fx = astFeat(o.v, o.R, o.pts); o.cuts = []; o.spr = null; }
 function setVar(o, v) {
-  o.v = v; const R = o.R; o.pts = o.pts0 || o.pts; o.craters = o.cr0 || o.craters;
-  if (v === 'ice') { const s_ = R * 0.82; o.pts = [[-s_, -s_], [s_ * 0.95, -s_ * 1.05], [s_ * 1.05, s_ * 0.9], [-s_ * 0.9, s_ * 1.0]]; o.craters = []; }
-  else if (v === 'monolith') { o.pts = [[-R * 0.5, -R * 1.1], [R * 0.5, -R * 1.05], [R * 0.55, R * 1.1], [-R * 0.48, R * 1.05]]; o.craters = []; o.hp *= 1.5; }
-  else if (v === 'crystal' || v === 'ion') { const n = 7, pts = []; for (let i = 0; i < n * 2; i++) { const a = i / (n * 2) * TAU, rr_ = R * (i % 2 ? 0.55 : rand(0.95, 1.15)); pts.push([Math.cos(a) * rr_, Math.sin(a) * rr_]); } o.pts = pts; o.craters = []; }
-  else if (v === 'dark') { const pts = []; for (let i = 0; i < 18; i++) { const a = i / 18 * TAU; pts.push([Math.cos(a) * R * 0.9, Math.sin(a) * R * 0.9]); } o.pts = pts; o.craters = []; o.hp *= 1.5; }
-  else if (v === 'obsidian') { const pts = []; for (let i = 0; i < 6; i++) { const a = i / 6 * TAU + rand(-0.2, 0.2); pts.push([Math.cos(a) * R * rand(0.7, 1.15), Math.sin(a) * R * rand(0.7, 1.15)]); } o.pts = pts; o.craters = []; o.hp *= 1.3; }
-  else if (v === 'comet') { o.vx *= 1.25; o.vy *= 1.25; }
+  o.v = v; shapeAst(o); o.hp *= varHp(v);
+  if (v === 'comet') { o.vx *= 1.25; o.vy *= 1.25; }
+}
 
+// ================= DEBRIS (V4.55) =================
+// every rock is a real polygon with its surface painted once into a sprite. Breaking one slices that polygon,
+// so the halves fit together and keep their craters, veins and cracks: blocks split into smaller blocks,
+// crystals snap across, rocks crack along a jagged line, dark matter pinches into two droplets.
+const AMAT = {
+  ember: { base: '62,24,14', dark: '18,6,3', lite: '128,58,34', edge: '255,140,60', core: '255,170,80', glow: '255,120,40', cut: 0.09 },
+  comet: { base: '92,122,152', dark: '22,34,52', lite: '214,238,255', edge: '205,236,255', core: '240,250,255', cut: 0.08 },
+  crystal: { base: '50,150,96', dark: '6,44,28', lite: '190,255,210', edge: '175,255,205', core: '225,255,236', cut: 0 },
+  obsidian: { base: '36,14,24', dark: '5,2,4', lite: '118,64,86', edge: '255,80,100', core: '255,100,120', glow: '255,40,70', cut: 0.17 },
+  gold: { base: '112,86,50', dark: '36,26,12', lite: '196,166,112', edge: '255,226,130', core: '255,238,170', cut: 0.08 },
+  ice: { base: '150,202,236', dark: '46,92,128', lite: '244,252,255', edge: '236,250,255', core: '255,255,255', cut: 0 },
+  ion: { base: '28,128,170', dark: '5,28,46', lite: '196,250,255', edge: '130,240,255', core: '215,255,255', glow: '120,240,255', cut: 0 },
+  monolith: { base: '64,55,116', dark: '15,12,32', lite: '156,146,214', edge: '205,195,255', core: '225,215,255', glow: '190,170,255', cut: 0 },
+  dark: { base: '44,8,52', dark: '4,0,8', lite: '130,44,150', edge: '255,90,225', core: '255,130,235', glow: '255,60,220', cut: 0 },
+};
+function amat(a) {
+  if (a.v && AMAT[a.v]) return AMAT[a.v];
+  if (a.m) return a.m;
+  const r = hexRgb(a.tc || TH.rock);
+  return a.m = { base: mixC(r, '24,20,32', 0.5), dark: mixC(r, '6,5,10', 0.86), lite: mixC(r, '255,250,240', 0.22), edge: mixC(r, '255,255,255', 0.4), core: mixC(r, '255,235,210', 0.5), cut: 0.09 };
+}
+function astShape(v, R, size) {
+  const P = [];
+  if (v === 'ice' || v === 'monolith') {
+    const hw = v === 'ice' ? R * 0.8 * rand(0.92, 1.18) : R * 0.5, hh = v === 'ice' ? R * 0.8 * rand(0.85, 1.02) : R * 1.1, c = Math.min(hw, hh) * 0.16;
+    return [[-hw + c, -hh], [hw - c, -hh], [hw, -hh + c], [hw, hh - c], [hw - c, hh], [-hw + c, hh], [-hw, hh - c], [-hw, -hh + c]];
+  }
+  if (v === 'crystal' || v === 'ion') { const L = R * 1.12, w = R * 0.48 * rand(0.85, 1.1); return [[L, 0], [L * 0.52, -w], [-L * 0.52, -w], [-L, 0], [-L * 0.52, w], [L * 0.52, w]]; }
+  if (v === 'dark') { for (let i = 0; i < 22; i++) { const a = i / 22 * TAU; P.push([Math.cos(a) * R * 0.9, Math.sin(a) * R * 0.9]); } return P; }
+  if (v === 'obsidian') { for (let i = 0; i < 7; i++) { const a = i / 7 * TAU + rand(-0.2, 0.2), e = i === 0 || i === 4 ? rand(1.15, 1.3) : rand(0.62, 0.85); P.push([Math.cos(a) * R * e, Math.sin(a) * R * e * 0.8]); } return P; }
+  const n = 12 + size * 3, p1 = rand(0, TAU), p2 = rand(0, TAU), k1 = rand(0.05, 0.13), k2 = rand(0.03, 0.08);
+  for (let i = 0; i < n; i++) { const a = i / n * TAU, r = R * (0.9 + k1 * Math.sin(2 * a + p1) + k2 * Math.sin(3 * a + p2) + rand(-0.05, 0.04)); P.push([Math.cos(a) * r, Math.sin(a) * r]); }
+  return P;
+}
+function crackPath(R, s) {
+  const a = rand(0, TAU); let x = Math.cos(a) * R * s * rand(0.4, 0.9), y = Math.sin(a) * R * s * rand(0.4, 0.9);
+  const p = [[x, y]], n = 3 + (Math.random() * 3 | 0), d = R * s * 1.7 / n; let h = a + Math.PI + rand(-0.5, 0.5);
+  for (let i = 0; i < n; i++) { h += rand(-0.6, 0.6); x += Math.cos(h) * d; y += Math.sin(h) * d; p.push([x, y]); }
+  return p;
+}
+function astFeat(v, R, pts) {
+  const F = [], N = (a, b) => rand(a, b) * R, k = Math.max(1, U);
+  if (v === '' || v === 'gold' || v === 'comet' || v === 'ember') {
+    for (let i = 0, n = 1 + Math.round(R / 13); i < n; i++) F.push({ t: 'cr', x: N(-0.55, 0.55), y: N(-0.55, 0.55), r: N(0.09, 0.22) });
+    for (let i = 0, n = Math.round(R / 3.5); i < n; i++) F.push({ t: 'sp', x: N(-0.9, 0.9), y: N(-0.9, 0.9), r: rand(0.5, 1.5) * k, l: Math.random() < 0.5 });
+    F.push({ t: 'crk', p: crackPath(R, 0.8) });
+  }
+  if (v === 'gold') for (let i = 0, n = 2 + Math.round(R / 16); i < n; i++) F.push({ t: 'vein', p: crackPath(R, 0.85) });
+  if (v === 'gold') for (let i = 0, n = 1 + Math.round(R / 14); i < n; i++) F.push({ t: 'nug', x: N(-0.6, 0.6), y: N(-0.6, 0.6), r: N(0.06, 0.12) });
+  if (v === 'ember') for (let i = 0, n = 2 + Math.round(R / 15); i < n; i++) F.push({ t: 'glow', p: crackPath(R, 0.95), w: 1.6 });
+  if (v === 'comet') for (let i = 0; i < 3; i++) F.push({ t: 'frost', x: N(-0.5, 0.5), y: N(-0.5, 0.5), r: N(0.25, 0.5) });
+  if (v === 'obsidian') { F.push({ t: 'fac', x: N(-0.15, 0.15), y: N(-0.15, 0.15), v: pts.map(p => p.slice()) }); F.push({ t: 'glow', p: crackPath(R, 0.7), w: 1.3 }); }
+  if (v === 'ice' || v === 'monolith') F.push({ t: 'ring', p: pts.map(([x, y]) => [x * 0.8, y * 0.8]), c: v === 'ice' ? 'lite' : 'edge', a: v === 'ice' ? 0.55 : 0.28 });
+  if (v === 'ice') { for (let i = 0; i < 2; i++) F.push({ t: 'frac', p: crackPath(R, 0.75) }); for (let i = 0, n = Math.round(R / 5); i < n; i++) F.push({ t: 'bub', x: N(-0.65, 0.65), y: N(-0.65, 0.65), r: rand(0.8, 2) * k }); F.push({ t: 'glint', x: N(-0.4, -0.1), y: N(-0.5, -0.2), r: N(0.18, 0.28) }); }
+  if (v === 'monolith') for (const yy of [-0.66, -0.22, 0.22, 0.66]) F.push({ t: 'glow', p: [[-R * 0.3, yy * R], [R * 0.3, yy * R]], w: 1.4 });
+  if (v === 'crystal' || v === 'ion') {
+    const [L] = pts[0], w = -pts[1][1];
+    F.push({ t: 'poly', p: [[L, 0], [L * 0.52, -w], [-L * 0.52, -w], [-L, 0], [-L * 0.52, -w * 0.25], [L * 0.52, -w * 0.25]], c: 'lite', a: 0.38 });
+    F.push({ t: 'poly', p: [[L, 0], [L * 0.52, w], [-L * 0.52, w], [-L, 0], [-L * 0.52, w * 0.3], [L * 0.52, w * 0.3]], c: 'dark', a: 0.45 });
+    F.push({ t: 'line', p: [[L * 0.52, -w], [L * 0.52, w]], c: 'lite', a: 0.35 }); F.push({ t: 'line', p: [[-L * 0.52, -w], [-L * 0.52, w]], c: 'lite', a: 0.25 });
+    if (v === 'ion') F.push({ t: 'glow', p: [[-L * 0.8, 0], [L * 0.8, 0]], w: 1.4 });
+  }
+  if (v === 'dark') for (let i = 0; i < 3; i++) F.push({ t: 'swirl', r: N(0.25, 0.72), a: rand(0, TAU), l: rand(1, 2.3) });
+  return F;
+}
+const shiftF = (F, dx, dy) => F.map(f => { const g = Object.assign({}, f); if ('x' in f) { g.x += dx; g.y += dy; } if (f.p) g.p = f.p.map(([x, y]) => [x + dx, y + dy]); if (f.v) g.v = f.v.map(([x, y]) => [x + dx, y + dy]); return g; });
+function astSprite(a) {
+  const m = amat(a), d = DPR || 1, k = Math.max(1, U);
+  let md = 0; for (const [x, y] of a.pts) md = Math.max(md, Math.hypot(x, y));
+  const half = md + 4, S = Math.max(4, Math.ceil(half * 2 * d)), mk = () => { const c = document.createElement('canvas'); c.width = c.height = S; const g = c.getContext('2d'); g.setTransform(d, 0, 0, d, half * d, half * d); g.lineJoin = 'round'; g.lineCap = 'round'; return [c, g]; };
+  const [c, g] = mk(), path = (G = g) => { G.beginPath(); a.pts.forEach(([x, y], i) => i ? G.lineTo(x, y) : G.moveTo(x, y)); G.closePath(); };
+  const line = (G, p) => { G.beginPath(); p.forEach(([x, y], i) => i ? G.lineTo(x, y) : G.moveTo(x, y)); };
+  const col = (n, al) => `rgba(${m[n] || n},${al})`;
+  const bg = g.createRadialGradient(-md * 0.3, -md * 0.35, md * 0.05, 0, 0, md * 1.15);
+  bg.addColorStop(0, `rgb(${m.lite})`); bg.addColorStop(0.42, `rgb(${m.base})`); bg.addColorStop(1, `rgb(${m.dark})`);
+  path(); g.fillStyle = bg; g.fill();
+  g.save(); path(); g.clip();
+  let hasGlow = false;
+  for (const f of a.fx) {
+    if (f.t === 'cr') {
+      g.fillStyle = col('dark', 0.5); g.beginPath(); g.arc(f.x, f.y, f.r, 0, TAU); g.fill();
+      g.strokeStyle = col('lite', 0.45); g.lineWidth = Math.max(1, f.r * 0.22); g.beginPath(); g.arc(f.x, f.y, f.r * 0.86, 0.2, 1.9); g.stroke();
+      g.strokeStyle = col('dark', 0.6); g.lineWidth = 1; g.beginPath(); g.arc(f.x, f.y, f.r, 3.4, 5.1); g.stroke();
+    } else if (f.t === 'sp') { g.fillStyle = f.l ? col('lite', 0.3) : col('dark', 0.45); g.beginPath(); g.arc(f.x, f.y, f.r, 0, TAU); g.fill(); }
+    else if (f.t === 'crk') { line(g, f.p); g.strokeStyle = col('dark', 0.6); g.lineWidth = 1.1; g.stroke(); }
+    else if (f.t === 'vein') { line(g, f.p); g.strokeStyle = 'rgba(120,80,10,.7)'; g.lineWidth = 3.2; g.stroke(); g.strokeStyle = 'rgb(255,214,90)'; g.lineWidth = 1.8; g.stroke(); g.strokeStyle = 'rgba(255,250,210,.8)'; g.lineWidth = 0.7; g.stroke(); }
+    else if (f.t === 'nug') { const gg = g.createRadialGradient(f.x - f.r * 0.3, f.y - f.r * 0.3, 0, f.x, f.y, f.r); gg.addColorStop(0, '#fff8d0'); gg.addColorStop(0.5, '#ffcf4a'); gg.addColorStop(1, '#8a5a10'); g.fillStyle = gg; g.beginPath(); g.arc(f.x, f.y, f.r, 0, TAU); g.fill(); }
+    else if (f.t === 'frost') { const gg = g.createRadialGradient(f.x, f.y, 0, f.x, f.y, f.r); gg.addColorStop(0, 'rgba(240,250,255,.42)'); gg.addColorStop(1, 'rgba(240,250,255,0)'); g.fillStyle = gg; g.beginPath(); g.arc(f.x, f.y, f.r, 0, TAU); g.fill(); }
+    else if (f.t === 'fac') { for (let i = 0; i < f.v.length; i++) { const p = f.v[i], q = f.v[(i + 1) % f.v.length]; g.beginPath(); g.moveTo(f.x, f.y); g.lineTo(p[0], p[1]); g.lineTo(q[0], q[1]); g.closePath(); g.fillStyle = i % 2 ? 'rgba(255,255,255,.07)' : 'rgba(0,0,0,.28)'; g.fill(); g.strokeStyle = 'rgba(255,160,180,.16)'; g.lineWidth = 0.8; g.stroke(); } }
+    else if (f.t === 'ring') { line(g, f.p); g.closePath(); g.strokeStyle = col(f.c, f.a); g.lineWidth = 1.4; g.stroke(); }
+    else if (f.t === 'poly') { line(g, f.p); g.closePath(); g.fillStyle = col(f.c, f.a); g.fill(); }
+    else if (f.t === 'line') { line(g, f.p); g.strokeStyle = col(f.c, f.a); g.lineWidth = 1; g.stroke(); }
+    else if (f.t === 'frac') { line(g, f.p); g.strokeStyle = 'rgba(255,255,255,.5)'; g.lineWidth = 1; g.stroke(); }
+    else if (f.t === 'bub') { g.strokeStyle = 'rgba(255,255,255,.4)'; g.lineWidth = 0.8; g.beginPath(); g.arc(f.x, f.y, f.r, 0, TAU); g.stroke(); }
+    else if (f.t === 'glint') { g.save(); g.translate(f.x, f.y); g.rotate(-0.6); const gg = g.createLinearGradient(0, -f.r, 0, f.r); gg.addColorStop(0, 'rgba(255,255,255,0)'); gg.addColorStop(0.5, 'rgba(255,255,255,.55)'); gg.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gg; g.fillRect(-f.r * 0.12, -f.r, f.r * 0.24, f.r * 2); g.restore(); }
+    else if (f.t === 'swirl') { g.strokeStyle = col('edge', 0.32); g.lineWidth = 1.4; g.beginPath(); g.arc(0, 0, f.r, f.a, f.a + f.l); g.stroke(); }
+    else if (f.t === 'glow') { hasGlow = true; line(g, f.p); g.strokeStyle = col('dark', 0.9); g.lineWidth = (f.w || 1.5) + 2; g.stroke(); }
+  }
+  if (a.v === 'dark') { const gg = g.createRadialGradient(0, 0, 0, 0, 0, md); gg.addColorStop(0, 'rgba(255,120,240,.45)'); gg.addColorStop(0.35, 'rgba(120,20,140,.15)'); gg.addColorStop(1, 'rgba(0,0,0,0)'); g.fillStyle = gg; g.fillRect(-md, -md, md * 2, md * 2); }
+  // fracture faces: the inside of the rock shows where it broke
+  for (const p of a.cuts || []) { line(g, p); g.strokeStyle = col('core', 0.5); g.lineWidth = 3.2; g.stroke(); g.strokeStyle = col('core', 0.85); g.lineWidth = 1.1; g.stroke(); }
+  g.restore();
+  path(); g.strokeStyle = col('dark', 0.95); g.lineWidth = 2; g.stroke();
+  path(); g.strokeStyle = col('edge', a.v === 'ice' || a.v === 'crystal' || a.v === 'ion' ? 0.75 : 0.42); g.lineWidth = 1; g.stroke();
+  let glow = null;
+  if (hasGlow) {
+    const [c2, g2] = mk(); g2.save(); path(g2); g2.clip(); g2.shadowColor = `rgb(${m.glow})`; g2.shadowBlur = 6;
+    for (const f of a.fx) if (f.t === 'glow') { line(g2, f.p); g2.strokeStyle = `rgb(${m.glow})`; g2.lineWidth = f.w || 1.5; g2.stroke(); g2.strokeStyle = 'rgba(255,240,200,.8)'; g2.lineWidth = (f.w || 1.5) * 0.4; g2.stroke(); }
+    g2.restore(); glow = c2;
+  }
+  const [c3, g3] = mk(); path(g3); g3.fillStyle = '#fff'; g3.fill();
+  a.spr = { c, glow, white: c3, half, d };
+}
+function polyCentroid(P) {
+  let A = 0, cx = 0, cy = 0;
+  for (let i = 0; i < P.length; i++) { const [x0, y0] = P[i], [x1, y1] = P[(i + 1) % P.length], f = x0 * y1 - x1 * y0; A += f; cx += (x0 + x1) * f; cy += (y0 + y1) * f; }
+  if (Math.abs(A) < 1e-6) return [0, 0, 0];
+  return [cx / (3 * A), cy / (3 * A), Math.abs(A) / 2];
+}
+function slicePoly(P, px, py, nx, ny) {
+  const A = [], B = [], I = [];
+  for (let i = 0; i < P.length; i++) {
+    const p = P[i], q = P[(i + 1) % P.length], dp = (p[0] - px) * nx + (p[1] - py) * ny, dq = (q[0] - px) * nx + (q[1] - py) * ny;
+    (dp >= 0 ? A : B).push(p);
+    if ((dp >= 0) !== (dq >= 0)) { const t = dp / (dp - dq), x = [p[0] + (q[0] - p[0]) * t, p[1] + (q[1] - p[1]) * t]; A.push(x); B.push(x); I.push(x); }
+  }
+  return { A, B, I };
+}
+function jagInsert(P, I0, I1, J) {
+  const n = P.length, i0 = P.indexOf(I0), i1 = P.indexOf(I1);
+  if ((i0 + 1) % n === i1) P.splice(i0 + 1, 0, ...J);
+  else if ((i1 + 1) % n === i0) P.splice(i1 + 1, 0, ...J.slice().reverse());
+}
+function splitAst(a) {
+  const ns = a.size - 1, out = [];
+  if (a.v === 'dark') { // dark matter pinches into two droplets
+    const an = rand(0, TAU), c = Math.cos(an), s = Math.sin(an);
+    for (const sd of [-1, 1]) {
+      const o = mkAst(a.x + c * a.R * 0.42 * sd, a.y + s * a.R * 0.42 * sd, a.vx + c * sd * rand(50, 90) * U, a.vy + s * sd * rand(50, 90) * U, ns);
+      o.v = 'dark'; o.R = a.R * 0.68; shapeAst(o); o.hp = o.max = [0, 1, 2, 4][ns] * hpMul() * varHp('dark'); o.ck = a.ck; out.push(o);
+    }
+    return out;
+  }
+  const m = amat(a), P = a.pts, [gcx, gcy, area] = polyCentroid(P);
+  let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9; for (const [x, y] of P) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
+  const clean = !m.cut, along = (x1 - x0) >= (y1 - y0) * (clean ? 1 : rand(0.8, 1.25));
+  let res = null, nx = 0, ny = 0;
+  for (let tr = 0; tr < 6 && !res; tr++) {
+    let an = along ? 0 : Math.PI / 2; if (!clean || tr) an += rand(-0.35, 0.35) * (clean && !tr ? 0 : 1);
+    nx = Math.cos(an); ny = Math.sin(an);
+    const ext = Math.abs(nx) * (x1 - x0) / 2 + Math.abs(ny) * (y1 - y0) / 2, off = (tr > 3 ? 0 : rand(-0.14, 0.14)) * ext;
+    const px = (x0 + x1) / 2 + nx * off, py = (y0 + y1) / 2 + ny * off, r = slicePoly(P, px, py, nx, ny);
+    if (r.I.length !== 2 || r.A.length < 3 || r.B.length < 3) continue;
+    const ca = polyCentroid(r.A), cb = polyCentroid(r.B);
+    if (ca[2] < area * 0.18 || cb[2] < area * 0.18) continue;
+    res = r;
+  }
+  if (!res) return out;
+  // a jagged (or clean, for blocks and crystals) fracture line shared by both halves
+  const [I0, I1] = res.I, L = Math.hypot(I1[0] - I0[0], I1[1] - I0[1]), J = [];
+  if (m.cut) { const k = 2 + (Math.random() * 3 | 0); for (let i = 1; i <= k; i++) { const t = i / (k + 1), j = rand(-1, 1) * m.cut * L; J.push([I0[0] + (I1[0] - I0[0]) * t + nx * j, I0[1] + (I1[1] - I0[1]) * t + ny * j]); } }
+  jagInsert(res.A, I0, I1, J); jagInsert(res.B, I0, I1, J);
+  const cut = [I0, ...J, I1], cs = Math.cos(a.rot), sn = Math.sin(a.rot), wnx = nx * cs - ny * sn, wny = nx * sn + ny * cs;
+  for (const [Q, sd] of [[res.A, 1], [res.B, -1]]) {
+    const [cx, cy] = polyCentroid(Q), sp = rand(45, 90) * U;
+    const o = { x: a.x + cx * cs - cy * sn, y: a.y + cx * sn + cy * cs, vx: a.vx + wnx * sp * sd + rand(-12, 12) * U, vy: a.vy + wny * sp * sd + rand(-12, 12) * U, size: ns, rot: a.rot, vr: a.vr + sd * rand(0.3, 1.1), v: a.v, tc: a.tc, m: a.m, hit: 0, bw: -1, dead: false, ck: a.ck };
+    o.pts = Q.map(([x, y]) => [x - cx, y - cy]); o.fx = shiftF(a.fx, -cx, -cy); o.cuts = (a.cuts || []).concat([cut]).map(p => p.map(([x, y]) => [x - cx, y - cy]));
+    let md = 0, sum = 0; for (const [x, y] of o.pts) { const h = Math.hypot(x, y); md = Math.max(md, h); sum += h; }
+    o.R = (md + sum / o.pts.length) / 2;
+    o.hp = o.max = [0, 1, 2, 4][ns] * hpMul() * varHp(a.v);
+    out.push(o);
+  }
+  return out;
 }
 function spawnOrbital(size) {
   for (let t = 0; t < 40; t++) {
@@ -2068,16 +2237,13 @@ function breakAst(j, scored) {
   const a = asts[j]; asts.splice(j, 1); a.dead = true;
   if (a.met && gmode === 'world' && ow) { if (mp) mp.ev.push(['mb', a.met]); if (ow.mt) ow.mt.gone.add(a.met); if (scored) { owDrop('b', a.x, a.y); owDrop(Math.random() < 0.35 ? 'a' : 'b', a.x, a.y); owDrop('d', a.x, a.y); } }
   if (scored) { addScore([0, 100, 50, 20][a.size] * (a.v === 'gold' ? 2 : 1) * (gmode === 'world' && ow && ow.gs ? 2 : 1), a.x, a.y); dropDust(a.x, a.y, [0, Math.random() < 0.6 ? 1 : 0, 1, 2][a.size] * (a.v === 'gold' ? 3 : 1) + (a.v === 'gold' ? 1 : 0)); }
-  burst(a.x, a.y, 8 + a.size * 9, '210,180,255', 70 + a.size * 50, 1.0, 2);
-  burst(a.x, a.y, 4 + a.size * 5, TH.rim, 50 + a.size * 30, 1.3, 3);
-  ring(a.x, a.y, 20 + a.size * 22, '220,190,255', 0.4, 2);
+  const am = amat(a);
+  burst(a.x, a.y, 8 + a.size * 9, am.lite, 70 + a.size * 50, 1.0, 2);
+  burst(a.x, a.y, 4 + a.size * 5, am.edge, 50 + a.size * 30, 1.3, 3);
+  if (am.glow) burst(a.x, a.y, 6 + a.size * 4, am.glow, 90 + a.size * 30, 0.7, 2);
+  ring(a.x, a.y, 20 + a.size * 22, am.edge, 0.4, 2);
   sfx.boom(0.35 + 0.2 * a.size); shake = Math.min(25, shake + a.size * 2);
-  if (a.size > 1) {
-    for (const k of [-1, 1]) {
-      const ang = Math.atan2(a.vy, a.vx) + k * rand(0.5, 1.1), sp = rand(40, 95) * U;
-      const ch = mkAst(a.x, a.y, a.vx + Math.cos(ang) * sp, a.vy + Math.sin(ang) * sp, a.size - 1); ch.v = ''; ch.pts = ch.pts0; ch.craters = ch.cr0; ch.hp = ch.max = [0, 1, 2, 4][ch.size] * hpMul(); if (a.v) { setVar(ch, a.v); ch.max = ch.hp; } ch.ck = a.ck; asts.push(ch);
-    }
-  }
+  if (a.size > 1) for (const ch of splitAst(a)) asts.push(ch);
   if (scored && !tut && dropRoll(0.06 * S.luck)) dropPickup(a.x, a.y);
   if (scored) tutEv('rock');
 }
@@ -6529,29 +6695,20 @@ function drawAst(a) {
     ctx.strokeStyle = L ? 'rgba(255,255,255,0.7)' : 'rgba(230,200,255,0.5)'; ctx.lineWidth = Math.max(1, a.R * 0.05); ctx.beginPath(); ctx.arc(a.x, a.y, a.R * 0.72, -2.6, -1.7); ctx.stroke();
     return;
   }
-  const dx = CX - a.x, dy = CY - a.y, d = Math.hypot(dx, dy) || 1, lx = dx / d, ly = dy / d;
-  const g = ctx.createLinearGradient(a.x + lx * a.R, a.y + ly * a.R, a.x - lx * a.R, a.y - ly * a.R);
-  g.addColorStop(0, a.hit > 0 ? '#fff' : TH.rock); g.addColorStop(0.45, '#2a2032'); g.addColorStop(1, '#0c0a12');
-  const c = Math.cos(a.rot), s = Math.sin(a.rot);
-  ctx.beginPath();
-  for (let i = 0; i < a.pts.length; i++) {
-    const [px, py] = a.pts[i], x = a.x + px * c - py * s, y = a.y + px * s + py * c;
-    i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
-  }
-  ctx.closePath();
-  const V = a.v ? AVS[a.v] : null;
-  if (V) {
-    const g2 = ctx.createLinearGradient(a.x + lx * a.R, a.y + ly * a.R, a.x - lx * a.R, a.y - ly * a.R);
-    g2.addColorStop(0, a.hit > 0 ? '#fff' : V[0]); g2.addColorStop(0.5, V[1]); g2.addColorStop(1, V[2]);
-    ctx.fillStyle = g2; ctx.fill();
-    ctx.strokeStyle = a.hit > 0 ? '#fff' : V[3]; ctx.lineWidth = a.v === 'ice' || a.v === 'crystal' || a.v === 'ion' ? 1.6 : 1.3; ctx.stroke();
-    astFx(a, c, s);
-  } else {
-    ctx.fillStyle = g; ctx.fill();
-    ctx.strokeStyle = a.hit > 0 ? '#fff' : `rgba(${TH.rim},0.4)`; ctx.lineWidth = 1.2; ctx.stroke();
-    ctx.fillStyle = 'rgba(0,0,0,0.35)';
-    for (const [px, py, cr] of a.craters) { ctx.beginPath(); ctx.arc(a.x + px * c - py * s, a.y + px * s + py * c, cr, 0, TAU); ctx.fill(); }
-  }
+  if (!a.spr || a.spr.d !== DPR) astSprite(a);
+  const S = a.spr, h = S.half;
+  if (a.v === 'comet' || a.v === 'dark') astFx(a, 1, 0, true);
+  ctx.save(); ctx.translate(a.x, a.y); ctx.rotate(a.rot);
+  ctx.drawImage(S.c, -h, -h, h * 2, h * 2);
+  if (S.glow) { ctx.globalCompositeOperation = 'lighter'; ctx.globalAlpha = 0.6 + 0.4 * Math.sin(time * (a.v === 'ember' ? 4 : 2) + a.R); ctx.drawImage(S.glow, -h, -h, h * 2, h * 2); ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over'; }
+  // light from the black hole: lit face toward it, shadow on the far side
+  const la = Math.atan2(CY - a.y, CX - a.x) - a.rot, lx = Math.cos(la), ly = Math.sin(la), R = a.R;
+  const lg = ctx.createLinearGradient(lx * R, ly * R, -lx * R, -ly * R);
+  lg.addColorStop(0, `rgba(${TH.rim},0.2)`); lg.addColorStop(0.45, 'rgba(0,0,0,0.04)'); lg.addColorStop(1, 'rgba(0,0,0,0.58)');
+  ctx.beginPath(); a.pts.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.closePath(); ctx.fillStyle = lg; ctx.fill();
+  if (a.hit > 0) { ctx.globalAlpha = 0.9; ctx.drawImage(S.white, -h, -h, h * 2, h * 2); ctx.globalAlpha = 1; }
+  ctx.restore();
+  if (a.v && a.v !== 'comet' && a.v !== 'dark') astFx(a, Math.cos(a.rot), Math.sin(a.rot));
   if (a.max && a.hp < a.max && a.hp > 0) {
     const bw = Math.max(16, a.R * 1.5), bx = a.x - bw / 2, by = a.y + a.R + 5;
     ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(bx - 1, by - 1, bw + 2, 5);
@@ -6566,32 +6723,21 @@ const AVS = {
   ion: ['#d6fbff', '#2ab8e0', '#06243a', 'rgba(120,240,255,0.9)'], monolith: ['#8f84c8', '#2a2350', '#0a0818', 'rgba(200,190,255,0.75)'],
   dark: ['#3a1040', '#080010', '#000000', 'rgba(255,80,220,0.9)'],
 };
-function astFx(a, c, s) {
+function astFx(a, c, s, under) {
   const v = a.v, tr = (px, py) => [a.x + px * c - py * s, a.y + px * s + py * c];
-  if (v === 'ember' || v === 'obsidian') {
-    ctx.strokeStyle = v === 'ember' ? `rgba(255,${150 + 60 * Math.sin(time * 4 + a.R)},60,0.9)` : 'rgba(255,50,70,0.7)'; ctx.lineWidth = 1.4;
-    ctx.beginPath(); let p0 = tr(-a.R * 0.5, -a.R * 0.1), p1 = tr(0, a.R * 0.15), p2 = tr(a.R * 0.45, -a.R * 0.25); ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); ctx.lineTo(p2[0], p2[1]);
-    p0 = tr(0, a.R * 0.15); p1 = tr(-a.R * 0.1, a.R * 0.55); ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); ctx.stroke();
-    if (v === 'ember' && Math.random() < 0.15) part(a.x, a.y, rand(-20, 20) * U, rand(-20, 20) * U, 0.6, '255,140,50', 1.8 * Math.max(1, U), 0, 0.97);
-  } else if (v === 'comet') {
-    const sp = Math.hypot(a.vx, a.vy) || 1, ux = -a.vx / sp, uy = -a.vy / sp, L = a.R * 3.2;
-    const g = ctx.createLinearGradient(a.x, a.y, a.x + ux * L, a.y + uy * L); g.addColorStop(0, 'rgba(190,230,255,0.45)'); g.addColorStop(1, 'rgba(190,230,255,0)');
-    ctx.strokeStyle = g; ctx.lineWidth = a.R * 1.1; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(a.x + ux * a.R * 0.6, a.y + uy * a.R * 0.6); ctx.lineTo(a.x + ux * L, a.y + uy * L); ctx.stroke(); ctx.lineCap = 'butt';
-  } else if (v === 'crystal' || v === 'ice') {
-    ctx.strokeStyle = 'rgba(255,255,255,0.55)'; ctx.lineWidth = 1;
-    const p0 = tr(-a.R * 0.45, -a.R * 0.35), p1 = tr(a.R * 0.1, -a.R * 0.55), p2 = tr(-a.R * 0.2, a.R * 0.3);
-    ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p2[0], p2[1]); ctx.stroke();
+  if (v === 'ember') { if (Math.random() < 0.12) part(a.x + rand(-0.5, 0.5) * a.R, a.y + rand(-0.5, 0.5) * a.R, rand(-20, 20) * U, rand(-20, 20) * U, 0.6, '255,140,50', 1.8 * Math.max(1, U), 0, 0.97); }
+  else if (v === 'comet') {
+    const sp = Math.hypot(a.vx, a.vy) || 1, ux = -a.vx / sp, uy = -a.vy / sp, L = a.R * 3.4;
+    const g = ctx.createLinearGradient(a.x, a.y, a.x + ux * L, a.y + uy * L); g.addColorStop(0, 'rgba(200,236,255,0.42)'); g.addColorStop(1, 'rgba(200,236,255,0)');
+    ctx.strokeStyle = g; ctx.lineWidth = a.R * 1.2; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(a.x + ux * a.R * 0.4, a.y + uy * a.R * 0.4); ctx.lineTo(a.x + ux * L, a.y + uy * L); ctx.stroke();
+    ctx.lineWidth = a.R * 0.4; ctx.beginPath(); ctx.moveTo(a.x + ux * a.R * 0.4, a.y + uy * a.R * 0.4); ctx.lineTo(a.x + ux * L * 0.7, a.y + uy * L * 0.7); ctx.stroke(); ctx.lineCap = 'butt';
   } else if (v === 'gold') {
-    if (Math.sin(time * 3 + a.R * 7) > 0.85) { const p0 = tr(a.R * 0.3, -a.R * 0.3); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(p0[0], p0[1], 2.2 * Math.max(1, U), 0, TAU); ctx.fill(); }
+    if (Math.sin(time * 3 + a.R * 7) > 0.86) { const p0 = tr(a.R * 0.25, -a.R * 0.3), r = 3.2 * Math.max(1, U); ctx.strokeStyle = 'rgba(255,250,220,.95)'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(p0[0] - r, p0[1]); ctx.lineTo(p0[0] + r, p0[1]); ctx.moveTo(p0[0], p0[1] - r); ctx.lineTo(p0[0], p0[1] + r); ctx.stroke(); }
   } else if (v === 'ion') {
-    if (Math.random() < 0.5) { ctx.strokeStyle = 'rgba(160,250,255,0.9)'; ctx.lineWidth = 1.2; ctx.beginPath(); let x = a.x, y = a.y; ctx.moveTo(x, y); for (let i = 0; i < 4; i++) { const an = rand(0, TAU); x += Math.cos(an) * a.R * 0.45; y += Math.sin(an) * a.R * 0.45; ctx.lineTo(x, y); } ctx.stroke(); }
-  } else if (v === 'monolith') {
-    ctx.strokeStyle = `rgba(210,190,255,${0.45 + 0.35 * Math.sin(time * 2 + a.R)})`; ctx.lineWidth = 1.2; ctx.beginPath();
-    for (const yy of [-0.6, -0.15, 0.3, 0.75]) { const p0 = tr(-a.R * 0.22, a.R * yy), p1 = tr(a.R * 0.22, a.R * yy); ctx.moveTo(p0[0], p0[1]); ctx.lineTo(p1[0], p1[1]); }
-    ctx.stroke();
+    if (Math.random() < 0.35) { ctx.strokeStyle = 'rgba(160,250,255,0.85)'; ctx.lineWidth = 1.1; ctx.beginPath(); let x = a.x, y = a.y; ctx.moveTo(x, y); for (let i = 0; i < 4; i++) { const an = rand(0, TAU); x += Math.cos(an) * a.R * 0.45; y += Math.sin(an) * a.R * 0.45; ctx.lineTo(x, y); } ctx.stroke(); }
   } else if (v === 'dark') {
-    const g = ctx.createRadialGradient(a.x, a.y, a.R * 0.5, a.x, a.y, a.R * 1.5); g.addColorStop(0, 'rgba(255,60,220,0.25)'); g.addColorStop(1, 'rgba(255,60,220,0)');
-    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(a.x, a.y, a.R * 1.5, 0, TAU); ctx.fill();
+    const g = ctx.createRadialGradient(a.x, a.y, a.R * 0.6, a.x, a.y, a.R * 1.6); g.addColorStop(0, `rgba(255,60,220,${0.2 + 0.08 * Math.sin(time * 3 + a.R)})`); g.addColorStop(1, 'rgba(255,60,220,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(a.x, a.y, a.R * 1.6, 0, TAU); ctx.fill();
   }
 }
 function drawShip() {
