@@ -753,7 +753,7 @@ body.touch .srow2.nt{display:none}
 <script>
 'use strict';
 // Versioning: next version -> next whole number (4.00), sub version -> +0.01 (3.01)
-const VERSION = '4.50';
+const VERSION = '4.51';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -6051,7 +6051,7 @@ function update(dt, rdt) {
     if (D.teleport && !b.chg) {
       b.cdT -= edt;
       if (b.cdT <= 0 && !b.beams.length) {
-        b.cdT = D.teleport * rate; burst(b.x, b.y, 40, TH.boss, 260, 0.6, 2.4);
+        b.cdT = D.teleport * rate; burst(b.x, b.y, 40, TH.boss, 260, 0.6, 2.4); b.tp = time;
         b.th = rand(0, TAU); b.Rb = rand(0.26, 0.4) * MIN; b.x = CX + Math.cos(b.th) * b.Rb; b.y = CY + Math.sin(b.th) * b.Rb;
         ring(b.x, b.y, 160, TH.boss, 0.5, 4); flash = Math.max(flash, 0.15); flashCol = TH.boss; tone(900, 0.3, 'sine', 0.06, 200);
         for (let k = 0; k < 12; k++) { const a = k / 12 * TAU; eShot(b.x, b.y, Math.cos(a) * 200 * U * eb, Math.sin(a) * 200 * U * eb, 6, 0.35, 5 * U, TH.boss); }
@@ -6707,9 +6707,34 @@ function drawDroneOld(d, c = ctx) {
   c.restore();
 }
 // each story boss has its own silhouette (the Singularity Eye keeps the original look). Drawn around 0,0 at radius ~44.
+// how a live boss moves on screen: swoops in when it appears, hovers and breathes, turns smoothly toward you,
+// stretches a little in the direction it travels, kicks when it attacks and swirls back in after a teleport
+function bossAnim(X, b, D) {
+  if (X !== ctx) return;
+  const now = time;
+  if (b.t0 == null) { b.t0 = now; b.px = b.x; b.py = b.y; b.mvx = 0; b.mvy = 0; b.kick = 0; b.lcd = b.cd; b.lcd2 = b.cd2; b.lt = now; b.trd = 0; b.fa = ship ? Math.atan2(ship.y - b.y, ship.x - b.x) : -Math.PI / 2; ring(b.x, b.y, 260, TH.boss, 0.9, 5); }
+  const dt = Math.min(0.05, Math.max(0.0001, now - b.lt)); b.lt = now;
+  let vx = (b.x - b.px) / dt, vy = (b.y - b.py) / dt;
+  if (Math.hypot(b.x - b.px, b.y - b.py) > 150 * U) vx = vy = 0; // teleports are not movement
+  b.px = b.x; b.py = b.y;
+  const kf = Math.min(1, dt * 8); b.mvx += (vx - b.mvx) * kf; b.mvy += (vy - b.mvy) * kf;
+  b.spd = clamp(Math.hypot(b.mvx, b.mvy) / (500 * U), 0, 1); b.trd += dt * (30 + b.spd * 260);
+  if (b.cd > b.lcd + 0.3 || b.cd2 > b.lcd2 + 0.3) b.kick = 1;
+  b.lcd = b.cd; b.lcd2 = b.cd2; b.kick = Math.max(0, b.kick - dt * 5);
+  const tgt = b.chg ? b.chg.a : ship ? Math.atan2(ship.y - b.y, ship.x - b.x) : b.fa;
+  let da = tgt - b.fa; da = Math.atan2(Math.sin(da), Math.cos(da)); b.fa += da * Math.min(1, dt * (b.chg ? 12 : 3.5));
+  const fin = clamp((now - b.t0) / 0.9, 0, 1), tp = b.tp ? clamp((now - b.tp) / 0.5, 0, 1) : 1;
+  let sc = Math.max(0.02, easeOutBack(fin)) * (0.35 + 0.65 * Math.max(0, easeOutBack(tp)));
+  sc *= 1 + 0.022 * Math.sin(now * 2.2 + (b.sec || 0)) + 0.06 * b.kick + (b.hit > 0 ? 0.04 : 0);
+  X.translate(0, Math.sin(now * 1.6 + (b.sec || 0)) * 3 * U * (D.name === 'Wraith' ? 2.4 : 1));
+  if (fin < 1) { X.rotate((1 - fin) * 2.5); X.globalAlpha *= fin; }
+  if (tp < 1) { X.rotate((1 - tp) * 3); X.globalAlpha *= 0.25 + 0.75 * tp; }
+  if (b.spd > 0.02) { const ma = Math.atan2(b.mvy, b.mvx), st = b.spd * 0.09; X.rotate(ma); X.scale(1 + st, 1 - st * 0.6); X.rotate(-ma); }
+  X.scale(sc, sc);
+}
 function drawBossBody(X, b, D, k, c, enr) {
   const fill = b.hit > 0 ? '#fff' : 'rgba(30,14,10,0.95)', stroke = `rgb(${c})`, glow = enr ? '255,60,40' : c, pulse = 0.6 + 0.4 * Math.sin(time * (enr ? 14 : 6)), t = time;
-  const face = X === ctx && ship ? Math.atan2(ship.y - b.y, ship.x - b.x) : -Math.PI / 2;
+  const face = X === ctx && b.fa != null ? b.fa : X === ctx && ship ? Math.atan2(ship.y - b.y, ship.x - b.x) : -Math.PI / 2, spd = X === ctx ? b.spd || 0 : 0;
   const P = (x, y) => [x * k, y * k];
   const poly = pts => { X.beginPath(); pts.forEach(([x, y], i) => i ? X.lineTo(x * k, y * k) : X.moveTo(x * k, y * k)); X.closePath(); };
   const sty = (lw = 2) => { X.fillStyle = fill; X.strokeStyle = stroke; X.lineWidth = lw; };
@@ -6731,7 +6756,7 @@ function drawBossBody(X, b, D, k, c, enr) {
     case 'Brood Mother': { // a swollen insect queen carrying glowing eggs
       X.rotate(face + Math.PI / 2);
       X.strokeStyle = stroke; X.lineWidth = 3;
-      for (let i = 0; i < 6; i++) { const sd = i < 3 ? -1 : 1, j = i % 3, w = Math.sin(t * 6 + i * 1.3) * 4; const x0 = sd * 16, y0 = -8 + j * 12, x1 = sd * 38, y1 = -18 + j * 18 + w; X.beginPath(); X.moveTo(x0 * k, y0 * k); X.quadraticCurveTo(sd * 34 * k, (y0 - 12) * k, x1 * k, y1 * k); X.stroke(); }
+      for (let i = 0; i < 6; i++) { const sd = i < 3 ? -1 : 1, j = i % 3, w = Math.sin((b.trd || t * 6) * 0.25 + i * 1.3 + (i % 2) * Math.PI) * (4 + spd * 4); const x0 = sd * 16, y0 = -8 + j * 12, x1 = sd * 38, y1 = -18 + j * 18 + w; X.beginPath(); X.moveTo(x0 * k, y0 * k); X.quadraticCurveTo(sd * 34 * k, (y0 - 12) * k, x1 * k, y1 * k); X.stroke(); }
       sty(2.5); X.beginPath(); X.ellipse(0, 10 * k, 22 * k, 28 * k, 0, 0, TAU); fs();
       X.strokeStyle = `rgba(${c},0.4)`; X.lineWidth = 1.5; for (let i = 0; i < 3; i++) { X.beginPath(); X.ellipse(0, (6 + i * 11) * k, (19 - i * 3) * k, 4 * k, 0, 0, Math.PI); X.stroke(); }
       for (let i = 0; i < 6; i++) { const a = i / 6 * TAU + t * 0.5, p = 0.5 + 0.5 * Math.sin(t * 4 + i); dot(Math.cos(a) * 11, 12 + Math.sin(a) * 15, 3.4 + p, `rgba(${glow},${0.35 + 0.55 * p})`); }
@@ -6760,11 +6785,11 @@ function drawBossBody(X, b, D, k, c, enr) {
     }
     case 'Juggernaut': { // an armoured battering ram on treads
       X.rotate(face);
-      for (const sd of [-1, 1]) { sty(2); poly([[-34, sd * 26], [24, sd * 26], [24, sd * 38], [-34, sd * 38]]); fs(); X.strokeStyle = `rgba(${c},0.5)`; X.lineWidth = 1.5; for (let i = 0; i < 6; i++) { const x = -34 + ((i * 10 + t * 60) % 58); X.beginPath(); X.moveTo(x * k, sd * 27 * k); X.lineTo(x * k, sd * 37 * k); X.stroke(); } }
+      for (const sd of [-1, 1]) { sty(2); poly([[-34, sd * 26], [24, sd * 26], [24, sd * 38], [-34, sd * 38]]); fs(); X.strokeStyle = `rgba(${c},0.5)`; X.lineWidth = 1.5; for (let i = 0; i < 6; i++) { const x = -34 + ((i * 10 + (b.trd || t * 60)) % 58); X.beginPath(); X.moveTo(x * k, sd * 27 * k); X.lineTo(x * k, sd * 37 * k); X.stroke(); } }
       sty(2.5); poly([[44, 0], [24, -26], [-32, -28], [-42, 0], [-32, 28], [24, 26]]); fs();
       sty(2); poly([[44, -11], [64, 0], [44, 11]]); fs(); poly([[30, -22], [46, -30], [38, -16]]); fs(); poly([[30, 22], [46, 30], [38, 16]]); fs();
       X.strokeStyle = `rgba(${c},0.5)`; X.lineWidth = 1.5; for (const x of [-18, 0, 16]) { X.beginPath(); X.moveTo(x * k, -22 * k); X.lineTo(x * k, 22 * k); X.stroke(); }
-      X.save(); X.globalCompositeOperation = 'lighter'; const g = X.createRadialGradient(-44 * k, 0, 0, -44 * k, 0, 18 * k); g.addColorStop(0, `rgba(${glow},${0.6 * pulse})`); g.addColorStop(1, 'rgba(0,0,0,0)'); X.fillStyle = g; X.beginPath(); X.arc(-44 * k, 0, 18 * k, 0, TAU); X.fill(); X.restore();
+      X.save(); X.globalCompositeOperation = 'lighter'; const fl = 18 * (1 + spd * 1.4 + (b.chg && b.chg.st === 'dash' ? 1.5 : 0)), g = X.createRadialGradient(-44 * k, 0, 0, -44 * k, 0, fl * k); g.addColorStop(0, `rgba(${glow},${Math.min(1, 0.6 * pulse + spd * 0.4)})`); g.addColorStop(1, 'rgba(0,0,0,0)'); X.fillStyle = g; X.beginPath(); X.arc(-44 * k, 0, fl * k, 0, TAU); X.fill(); X.restore();
       X.fillStyle = `rgba(${glow},${pulse})`; poly([[30, -4], [38, 0], [30, 4], [26, 0]]); X.fill();
       break;
     }
@@ -6780,7 +6805,7 @@ function drawBossBody(X, b, D, k, c, enr) {
     case 'Hydra': { // three swaying serpent heads on one body
       for (let i = 0; i < 3; i++) {
         const a = face + (i - 1) * 0.85, ux = Math.cos(a), uy = Math.sin(a), px = -uy, py = ux, pts = [];
-        for (let q = 0; q <= 10; q++) { const s_ = q / 10, w = Math.sin(t * 3 + i * 2.1 + s_ * 5) * 9 * s_; pts.push([(ux * (16 + s_ * 34) + px * w) * k, (uy * (16 + s_ * 34) + py * w) * k]); }
+        for (let q = 0; q <= 10; q++) { const s_ = q / 10, w = Math.sin(t * (3 + spd * 3) + i * 2.1 + s_ * 5) * 9 * (1 + spd * 0.6) * s_; pts.push([(ux * (16 + s_ * 34) + px * w) * k, (uy * (16 + s_ * 34) + py * w) * k]); }
         X.strokeStyle = stroke; X.lineWidth = 11 * k; X.beginPath(); pts.forEach(([x, y], j) => j ? X.lineTo(x, y) : X.moveTo(x, y)); X.stroke();
         X.strokeStyle = fill; X.lineWidth = 7 * k; X.stroke();
         const [hx, hy] = pts[10], ha = Math.atan2(pts[10][1] - pts[9][1], pts[10][0] - pts[9][0]);
@@ -6803,7 +6828,7 @@ function drawBossBody(X, b, D, k, c, enr) {
     }
     case 'Dreadnought': { // a capital ship: long hull, four turrets, bridge tower, engines
       X.rotate(face);
-      X.save(); X.globalCompositeOperation = 'lighter'; for (const y of [-8, 8]) { const g = X.createRadialGradient(-54 * k, y * k, 0, -54 * k, y * k, 14 * k); g.addColorStop(0, `rgba(${glow},${0.7 * pulse})`); g.addColorStop(1, 'rgba(0,0,0,0)'); X.fillStyle = g; X.beginPath(); X.arc(-54 * k, y * k, 14 * k, 0, TAU); X.fill(); } X.restore();
+      X.save(); X.globalCompositeOperation = 'lighter'; for (const y of [-8, 8]) { const er = 14 * (1 + spd * 1.2), g = X.createRadialGradient(-54 * k, y * k, 0, -54 * k, y * k, er * k); g.addColorStop(0, `rgba(${glow},${0.7 * pulse})`); g.addColorStop(1, 'rgba(0,0,0,0)'); X.fillStyle = g; X.beginPath(); X.arc(-54 * k, y * k, er * k, 0, TAU); X.fill(); } X.restore();
       sty(2.5); poly([[58, 0], [38, -17], [-40, -18], [-52, -10], [-52, 10], [-40, 18], [38, 17]]); fs();
       X.strokeStyle = `rgba(${c},0.45)`; X.lineWidth = 1.5; X.beginPath(); X.moveTo(-40 * k, 0); X.lineTo(44 * k, 0); X.stroke();
       sty(2); poly([[-16, -9], [4, -9], [6, 0], [4, 9], [-16, 9]]); fs(); dot(-2, 0, 2.5, `rgba(${glow},${pulse})`);
@@ -6837,6 +6862,7 @@ function drawBoss(b, X = ctx) {
   if (b.chg && b.chg.st === 'wind') { const pr = 1 - b.chg.t / 0.9; X.save(); X.strokeStyle = `rgba(${c},${(Math.sin(time * 30) > 0 ? 0.5 : 0.15) * (0.4 + pr)})`; X.lineWidth = b.R * 1.6; X.lineCap = 'round'; X.beginPath(); X.moveTo(b.x, b.y); X.lineTo(b.x + Math.cos(b.chg.a) * 620 * k, b.y + Math.sin(b.chg.a) * 620 * k); X.stroke(); X.restore(); }
   if (D.shield) { X.save(); X.translate(b.x, b.y); X.lineCap = 'round'; for (let i = 0; i < D.shield; i++) { const a = b.sh + i * TAU / D.shield; X.strokeStyle = `rgba(${c},0.25)`; X.lineWidth = 12 * k; X.beginPath(); X.arc(0, 0, b.R + 20 * k, a - 0.6, a + 0.6); X.stroke(); X.strokeStyle = `rgba(255,255,255,0.85)`; X.lineWidth = 3 * k; X.beginPath(); X.arc(0, 0, b.R + 20 * k, a - 0.6, a + 0.6); X.stroke(); } X.restore(); }
   X.save(); X.translate(b.x, b.y);
+  bossAnim(X, b, D);
   if (!D.eye) { X.scale(b.R / (44 * k), b.R / (44 * k)); drawBossBody(X, b, D, k, c, enr); X.restore(); return; }
   X.rotate(b.spin);
   const arms = D.arms, sides = D.sides, sz = b.R / (44 * k);
