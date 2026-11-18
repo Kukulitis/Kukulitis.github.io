@@ -624,7 +624,7 @@ body.paused .tbtn{display:none!important}
 <script>
 'use strict';
 // Versioning: next version -> next whole number (4.00), sub version -> +0.01 (3.01)
-const VERSION = '4.30';
+const VERSION = '4.31';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -859,6 +859,31 @@ const SKINS = [
   { id: 'nebulaw', name: 'Nebula Weaver', rar: 'mythic', cost: 0, info: 'Trails a glowing cloud of pink and violet gas.', shape: 'wing', fill: '#1a0622', stroke: 'hue:280-340', cockpit: '#ffe6ff', trail: '255,120,230', eng: ['255,120,230', '150,110,255'], fx: 'cloud' },
   { id: 'quasar', name: 'Quasar', rar: 'mythic', cost: 0, info: 'Fires twin jets of blue-white light from its core.', shape: 'dart', fill: '#03081a', stroke: '#bfe3ff', cockpit: '#ffffff', trail: '150,200,255', eng: ['200,230,255', '120,170,255'], fx: 'jets', px: ['200,230,255', '120,170,255'] },
 ];
+SKINS.push(
+  { id: 'mint', name: 'Mint Racer', rar: 'common', cost: 200, info: 'Fresh mint lines on a low racing hull.', shape: 'arrow', fill: '#06201a', stroke: '#7dffd8', cockpit: '#e8fff8', trail: '120,255,215', eng: ['120,255,215', '200,255,240'], fx: 'accent' },
+  { id: 'slate', name: 'Slate Needle', rar: 'common', cost: 200, info: 'A thin grey needle built for speed.', shape: 'needle', fill: '#14181e', stroke: '#c9d3e0', cockpit: '#ffffff', trail: '190,200,215', eng: ['200,210,225', '150,170,190'], fx: null },
+  { id: 'sunset', name: 'Sunset', rar: 'common', cost: 300, info: 'Warm orange and peach, like the last light of day.', shape: 'dart', fill: '#2a1606', stroke: '#ffb347', cockpit: '#fff0d8', trail: '255,170,80', eng: ['255,170,80', '255,110,90'], fx: 'accent' },
+  { id: 'cobalt', name: 'Cobalt Kite', rar: 'common', cost: 300, info: 'A deep blue kite that slices through space.', shape: 'kite', fill: '#070f2a', stroke: '#5c8dff', cockpit: '#dfe8ff', trail: '100,140,255', eng: ['110,150,255', '170,200,255'], fx: 'accent' },
+  { id: 'bubble', name: 'Bubblegum', rar: 'common', cost: 400, info: 'Sweet pink lines on a playful kite.', shape: 'kite', fill: '#2a0c1e', stroke: '#ff9ad5', cockpit: '#ffe6f4', trail: '255,150,210', eng: ['255,150,210', '255,220,240'], fx: 'accent' },
+  { id: 'hornet', name: 'Hornet', rar: 'rare', cost: 650, info: 'Yellow-black needle with a stinging flame.', shape: 'needle', fill: '#1e1904', stroke: '#ffd23a', cockpit: '#fff6c0', trail: '255,210,60', eng: ['255,210,60', '255,140,30'], fx: 'flame' },
+  { id: 'reef', name: 'Coral Reef', rar: 'rare', cost: 700, info: 'A coral manta drifting through warm currents.', shape: 'manta', fill: '#240a08', stroke: '#ff7f6a', cockpit: '#ffe4dc', trail: '255,130,110', eng: ['255,130,110', '255,200,150'], fx: 'sparkle', px: ['255,150,130', '255,220,190'] },
+  { id: 'frostbat', name: 'Frostbat', rar: 'rare', cost: 850, info: 'Icy bat wings that leave a trail of snow.', shape: 'bat', fill: '#061520', stroke: '#9fe8ff', cockpit: '#ffffff', trail: '170,230,255', eng: ['180,235,255', '120,200,255'], fx: 'sparkle', px: ['220,245,255', '160,220,255'] },
+  { id: 'circuit', name: 'Circuit', rar: 'rare', cost: 900, info: 'Data races along the lines of this hex hull.', shape: 'hex', fill: '#04140c', stroke: '#3dff9e', cockpit: '#d8ffe8', trail: '60,255,160', eng: ['60,255,160', '160,255,210'], fx: 'circuit' },
+  { id: 'shadowc', name: 'Shadowclaw', rar: 'rare', cost: 950, info: 'A flickering claw that is hard to keep your eyes on.', shape: 'claw', fill: '#0b0820', stroke: '#8a7dff', cockpit: '#e6e2ff', trail: '140,125,255', eng: ['140,125,255', '200,160,255'], fx: 'ghost' },
+  { id: 'trident', name: 'Sea Trident', rar: 'epic', cost: 1500, info: 'Three prongs of ocean blue, bubbling as it goes.', shape: 'trident', fill: '#031420', stroke: '#4fd8ff', cockpit: '#e0faff', trail: '80,210,255', eng: ['80,210,255', '170,240,255'], fx: 'sparkle', px: ['150,230,255', '230,250,255'] },
+  { id: 'glitch', name: 'Glitch', rar: 'epic', cost: 1700, info: 'This ship is not rendering correctly. On purpose.', shape: 'kite', fill: '#0c0410', stroke: '#ff3df0', cockpit: '#ffffff', trail: '255,60,240', eng: ['255,60,240', '60,240,255'], fx: 'glitch' },
+  { id: 'venom', name: 'Venom', rar: 'epic', cost: 1800, info: 'A toxic claw dripping with green fire.', shape: 'claw', fill: '#0c1804', stroke: '#9dff3a', cockpit: '#efffd8', trail: '150,255,60', eng: ['150,255,60', '220,255,120'], fx: 'flame' },
+  { id: 'moon', name: 'Moon Rider', rar: 'epic', cost: 1900, info: 'Silver wings with two little moons in orbit.', shape: 'wing', fill: '#10141c', stroke: '#e8eef8', cockpit: '#ffffff', trail: '220,230,250', eng: ['230,235,255', '170,190,230'], fx: 'orbit' },
+  { id: 'solarw', name: 'Solar Wind', rar: 'epic', cost: 2100, info: 'A golden manta beating wings of light.', shape: 'manta', fill: '#241604', stroke: '#ffcc4d', cockpit: '#fff6d8', trail: '255,200,90', eng: ['255,210,100', '255,150,60'], fx: 'wings' },
+  { id: 'hexguard', name: 'Hexguard', rar: 'legendary', cost: 2900, info: 'Wrapped in a slowly turning hexagonal shield.', shape: 'hex', fill: '#061624', stroke: '#7fd4ff', cockpit: '#ffffff', trail: '130,210,255', eng: ['130,210,255', '200,240,255'], fx: 'shield' },
+  { id: 'phoenix', name: 'Phoenix', rar: 'legendary', cost: 3000, info: 'Burning wings that flicker through every shade of fire.', shape: 'bat', fill: '#200802', stroke: 'hue:0-50', cockpit: '#fff2c8', trail: 'hue:0-50', eng: ['255,120,40', '255,210,90'], fx: 'wings' },
+  { id: 'oni', name: 'Oni', rar: 'legendary', cost: 3100, info: 'A demon-red trident with lava in its veins.', shape: 'trident', fill: '#1a0404', stroke: '#ff4040', cockpit: '#ffd0c8', trail: '255,70,50', eng: ['255,60,40', '255,160,60'], fx: 'magma' },
+  { id: 'starling', name: 'Starling', rar: 'legendary', cost: 3400, info: 'A shifting star circled by tiny moons.', shape: 'star', fill: '#060a1e', stroke: 'hue:180-260', cockpit: '#ffffff', trail: 'hue:180-260', eng: 'hue:180-260', fx: 'orbit' },
+  { id: 'pulsar', name: 'Pulsar', rar: 'mythic', cost: 0, info: 'A spinning neutron star blasting icy shockwaves.', shape: 'star', fill: '#03101e', stroke: '#c4ecff', cockpit: '#ffffff', trail: '170,225,255', eng: ['200,240,255', '120,200,255'], fx: 'pulse' },
+  { id: 'darkstar', name: 'Dark Star', rar: 'mythic', cost: 0, info: 'A violet vortex that bends the light around it.', shape: 'star', fill: '#000000', stroke: '#c08cff', cockpit: '#000000', trail: '180,120,255', eng: ['180,120,255', '255,120,220'], fx: 'vortex' },
+  { id: 'galaxy', name: 'Galaxy Spiral', rar: 'mythic', cost: 0, info: 'Carries a whole spiral galaxy on its back.', shape: 'wing', fill: '#060418', stroke: 'hue:200-320', cockpit: '#ffffff', trail: 'hue:200-320', eng: 'hue:200-320', fx: 'vortex' },
+  { id: 'kraken', name: 'Cosmic Kraken', rar: 'mythic', cost: 0, info: 'A manta of living nebula gas.', shape: 'manta', fill: '#0c0420', stroke: 'hue:180-320', cockpit: '#ffffff', trail: '200,140,255', eng: ['255,120,230', '120,200,255'], fx: 'cloud' },
+);
 const SK = () => SKINS.find(x => x.id === save.skin) || SKINS[0];
 function hsl2rgb(h, s, l) {
   const f = n => { const k = (n + h * 12) % 12, a = s * Math.min(l, 1 - l); return Math.round(255 * (l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1)))); };
@@ -881,6 +906,13 @@ const SHAPES = {
   wing: [[18, 0], [2, 5], [-12, 15], [-6, 0], [-12, -15], [2, -5]],
   stealth: [[20, 0], [-2, 9], [-12, 5], [-8, 0], [-12, -5], [-2, -9]],
   star: [[21, 0], [5, 5], [0, 15], [-6, 5], [-14, 0], [-6, -5], [0, -15], [5, -5]],
+  needle: [[27, 0], [-4, 5], [-12, 3], [-9, 0], [-12, -3], [-4, -5]],
+  manta: [[16, 0], [6, 6], [-4, 17], [-10, 10], [-7, 0], [-10, -10], [-4, -17], [6, -6]],
+  claw: [[21, 0], [7, 3], [12, 12], [-8, 9], [-12, 0], [-8, -9], [12, -12], [7, -3]],
+  trident: [[23, 0], [3, 3], [11, 10], [-10, 8], [-6, 0], [-10, -8], [11, -10], [3, -3]],
+  kite: [[20, 0], [0, 10], [-14, 0], [0, -10]],
+  hex: [[18, 0], [8, 11], [-8, 11], [-14, 0], [-8, -11], [8, -11]],
+  bat: [[18, 0], [4, 4], [0, 15], [-6, 8], [-10, 13], [-8, 0], [-10, -13], [-6, -8], [0, -15], [4, -4]],
 };
 function hullPath(c, shape, k) { const p = SHAPES[shape]; c.beginPath(); c.moveTo(p[0][0] * k, p[0][1] * k); for (let i = 1; i < p.length; i++) c.lineTo(p[i][0] * k, p[i][1] * k); c.closePath(); }
 function drawShipModel(c, sk, x, y, ang, k, t, pods) {
@@ -898,7 +930,29 @@ function drawShipModel(c, sk, x, y, ang, k, t, pods) {
     c.strokeStyle = 'rgba(255,170,80,0.85)'; c.lineWidth = 1.8; c.lineCap = 'round';
     for (let i = 0; i < 12; i++) { const a = i / 12 * TAU + t * 0.6, l1 = 11 * k, l2 = l1 + (8 + 7 * Math.sin(t * 5 + i * 1.7)) * k; c.beginPath(); c.moveTo(Math.cos(a) * l1, Math.sin(a) * l1); c.lineTo(Math.cos(a) * l2, Math.sin(a) * l2); c.stroke(); }
   }
+  if (sk.fx === 'shield') {
+    c.save(); c.rotate(t * 0.5); c.strokeStyle = `rgba(150,220,255,${0.35 + 0.25 * Math.sin(t * 3)})`; c.lineWidth = 1.6;
+    c.beginPath(); for (let i = 0; i <= 6; i++) { const a = i / 6 * TAU, r = 25 * k; i ? c.lineTo(Math.cos(a) * r, Math.sin(a) * r) : c.moveTo(Math.cos(a) * r, Math.sin(a) * r); } c.stroke();
+    c.fillStyle = 'rgba(120,200,255,0.06)'; c.fill(); c.restore();
+  }
+  if (sk.fx === 'vortex') {
+    c.save(); c.rotate(-t * 1.6);
+    for (let arm = 0; arm < 3; arm++) { c.beginPath(); for (let i = 0; i <= 14; i++) { const f = i / 14, a = arm / 3 * TAU + f * 2.6, r = (6 + f * 22) * k; i ? c.lineTo(Math.cos(a) * r, Math.sin(a) * r) : c.moveTo(Math.cos(a) * r, Math.sin(a) * r); } c.strokeStyle = sk.stroke.startsWith('hue') ? `hsla(${hueOf(sk.stroke, t, arm * 40)},100%,70%,0.45)` : 'rgba(190,140,255,0.45)'; c.lineWidth = 2.2 * k * 0.6; c.stroke(); }
+    c.restore();
+  }
   c.save(); c.rotate(ang);
+  if (sk.fx === 'glitch') {
+    const j = Math.sin(t * 23) > 0.55 ? 1 : 0.35;
+    for (const [col, ox] of [['255,40,80', 2.5], ['40,240,255', -2.5]]) { c.save(); c.translate((ox + (Math.random() - 0.5) * 3 * j) * k, (Math.random() - 0.5) * 3 * j * k); c.strokeStyle = `rgba(${col},${0.55 * j})`; c.lineWidth = 1.6; hullPath(c, sk.shape, k); c.stroke(); c.restore(); }
+  }
+  if (sk.fx === 'wings') {
+    const fl = Math.sin(t * 7) * 5; c.lineCap = 'round';
+    for (const sg of [1, -1]) {
+      c.strokeStyle = sk.stroke.startsWith('hue') ? `hsla(${hueOf(sk.stroke, t, sg * 30)},100%,65%,0.75)` : `${cssOf(sk.stroke, t)}`; c.globalAlpha *= 0.8; c.lineWidth = 2;
+      c.beginPath(); c.moveTo(0, sg * 5 * k); c.quadraticCurveTo(-8 * k, sg * (16 + fl) * k, -18 * k, sg * (20 + fl * 1.4) * k); c.stroke();
+      c.lineWidth = 1; c.beginPath(); c.moveTo(-3 * k, sg * 5 * k); c.quadraticCurveTo(-12 * k, sg * (12 + fl) * k, -20 * k, sg * (13 + fl) * k); c.stroke(); c.globalAlpha /= 0.8;
+    }
+  }
   if (sk.fx === 'jets') {
     const L = (26 + 8 * Math.sin(t * 9)) * k;
     for (const sg of [1, -1]) {
@@ -920,6 +974,7 @@ function drawShipModel(c, sk, x, y, ang, k, t, pods) {
     c.beginPath(); c.moveTo(14 * k, 0); c.lineTo(4 * k, 2 * k); c.lineTo(-2 * k, -1 * k); c.lineTo(-8 * k, 3 * k); c.moveTo(4 * k, 2 * k); c.lineTo(0, 6 * k); c.moveTo(-2 * k, -1 * k); c.lineTo(-4 * k, -6 * k); c.stroke();
   }
   if (sk.fx === 'sparkle' || sk.fx === 'pulse' || sk.fx === 'halo') { c.strokeStyle = 'rgba(255,255,240,0.75)'; c.lineWidth = 1; hullPath(c, sk.shape, k * 0.7); c.stroke(); }
+  if (sk.fx === 'circuit') { c.save(); c.strokeStyle = 'rgba(200,255,225,0.95)'; c.lineWidth = 1.2; c.setLineDash([3 * k, 5 * k]); c.lineDashOffset = -t * 40; hullPath(c, sk.shape, k * 0.68); c.stroke(); c.lineDashOffset = t * 30; hullPath(c, sk.shape, k * 0.4); c.stroke(); c.restore(); }
   if (pods) { c.fillStyle = '#ffb070'; c.fillRect(-6 * k, 6 * k, 6 * k, 2.5 * k); c.fillRect(-6 * k, -8.5 * k, 6 * k, 2.5 * k); }
   if (sk.fx === 'hole' || sk.fx === 'corona') { c.strokeStyle = sk.fx === 'corona' ? '#ffb070' : '#fff'; c.lineWidth = 1.4; c.fillStyle = '#000'; c.beginPath(); c.arc(4 * k, 0, 3.2 * k, 0, TAU); c.fill(); c.stroke(); }
   else { c.fillStyle = sk.cockpit; c.beginPath(); c.arc(5 * k, 0, (sk.fx ? 2.4 : 2) * k, 0, TAU); c.fill(); }
@@ -930,8 +985,12 @@ function drawShipModel(c, sk, x, y, ang, k, t, pods) {
     c.beginPath(); c.arc(hx, hy, (17 + Math.sin(t * 3) * 1.2) * k, 0, TAU); c.stroke();
     c.strokeStyle = 'rgba(255,245,210,0.5)'; c.lineWidth = 1; c.beginPath(); c.arc(hx, hy, 21 * k, t * 2, t * 2 + 1.6); c.stroke(); c.beginPath(); c.arc(hx, hy, 21 * k, t * 2 + Math.PI, t * 2 + Math.PI + 1.6); c.stroke();
   }
+  if (sk.fx === 'orbit') {
+    for (let i = 0; i < 2; i++) { const a = t * (2.4 + i * 0.9) + i * Math.PI, rx = (22 + i * 5) * k, mx_ = Math.cos(a) * rx, my_ = Math.sin(a) * rx * 0.55; c.strokeStyle = 'rgba(220,230,255,0.18)'; c.lineWidth = 1; c.beginPath(); c.ellipse(0, 0, rx, rx * 0.55, 0, 0, TAU); c.stroke(); c.fillStyle = i ? cssOf(sk.stroke, t) : '#f2f5ff'; c.beginPath(); c.arc(mx_, my_, (2.4 - i * 0.6) * Math.max(1, k * 0.9), 0, TAU); c.fill(); }
+  }
   if (sk.fx === 'pulse') {
-    for (let j = 0; j < 2; j++) { const f = (t * 1.1 + j * 0.5) % 1; c.strokeStyle = `rgba(255,236,180,${(1 - f) * 0.85})`; c.lineWidth = 2 * (1 - f) + 0.5; c.beginPath(); c.arc(0, 0, (10 + f * 30) * k, 0, TAU); c.stroke(); }
+    const pc_ = sk.id === 'pulsar' ? '190,235,255' : '255,236,180';
+    for (let j = 0; j < 2; j++) { const f = (t * 1.1 + j * 0.5) % 1; c.strokeStyle = `rgba(${pc_},${(1 - f) * 0.85})`; c.lineWidth = 2 * (1 - f) + 0.5; c.beginPath(); c.arc(0, 0, (10 + f * 30) * k, 0, TAU); c.stroke(); }
   }
   if (sk.fx === 'hole') {
     c.save(); c.rotate(-0.5); c.scale(1, 0.36);
@@ -967,6 +1026,25 @@ const BSKINS = [
   { id: 'lance', name: 'Quasar Lance', rar: 'mythic', cost: 0, info: 'Long lances of pure light with a lens flare.', col: '170,210,255', style: 'lance' },
 ];
 const BPX = { fire: ['255,120,40', '255,200,90'], star: ['255,235,160'], void: ['255,190,120'], shard: ['210,240,255'], drop: ['150,255,70', '90,220,60'], comet: ['190,225,255', '255,255,255'], sun: ['255,200,90', '255,140,50'], cloud: ['255,140,230', '170,110,255'], lance: ['170,210,255'], storm: ['150,200,255', '255,255,255'], magma: ['255,120,40', '255,70,20', '255,190,80'], rainbow: 1, aorb: 1 };
+BSKINS.push(
+  { id: 'mintb', name: 'Mint Streak', rar: 'common', cost: 200, info: 'Cool mint laser streaks.', col: '120,255,215', style: 'streak' },
+  { id: 'goldp', name: 'Gold Pellets', rar: 'common', cost: 200, info: 'Shiny gold slugs.', col: '255,210,110', style: 'dot' },
+  { id: 'sky', name: 'Sky Orb', rar: 'common', cost: 300, info: 'Soft blue orbs of light.', col: '120,190,255', style: 'orb' },
+  { id: 'needleb', name: 'Needle', rar: 'common', cost: 400, info: 'Long, thin silver needles.', col: '230,235,245', style: 'needle' },
+  { id: 'bubbleb', name: 'Bubbles', rar: 'rare', cost: 650, info: 'Wobbly soap bubbles that pop on impact.', col: '160,230,255', style: 'bubble' },
+  { id: 'sakura', name: 'Sakura', rar: 'rare', cost: 750, info: 'Spinning cherry blossom petals.', col: '255,170,210', style: 'petal' },
+  { id: 'hexb', name: 'Hex Bolts', rar: 'rare', cost: 850, info: 'Spinning green hexagons.', col: '120,255,200', style: 'hex' },
+  { id: 'triad', name: 'Triad', rar: 'rare', cost: 950, info: 'Three orange sparks orbiting each other.', col: '255,150,90', style: 'triad' },
+  { id: 'helixb', name: 'Double Helix', rar: 'epic', cost: 1500, info: 'Two strands twisting around each other.', col: '120,255,230', style: 'helix' },
+  { id: 'ringb', name: 'Halo Rings', rar: 'epic', cost: 1700, info: 'Pulsing golden rings.', col: '255,225,140', style: 'ring' },
+  { id: 'glitchb', name: 'Glitch', rar: 'epic', cost: 1900, info: 'Broken pixels flying at your enemies.', col: '255,60,240', style: 'glitchb' },
+  { id: 'feather', name: 'Phoenix Feather', rar: 'legendary', cost: 2900, info: 'Burning petals in every shade of fire.', col: 'hue:0-50', style: 'petal' },
+  { id: 'prismring', name: 'Prism Rings', rar: 'legendary', cost: 3100, info: 'Rings that shift through the whole rainbow.', col: 'rainbow', style: 'ring' },
+  { id: 'galaxyb', name: 'Galaxy', rar: 'mythic', cost: 0, info: 'Tiny spiral galaxies, still spinning.', col: 'hue:200-320', style: 'spiral' },
+  { id: 'eclipseb', name: 'Eclipse', rar: 'mythic', cost: 0, info: 'Black suns with a burning corona.', col: '255,150,60', style: 'eclipse' },
+  { id: 'hexstorm', name: 'Hex Storm', rar: 'mythic', cost: 0, info: 'Hexagons cycling through every color.', col: 'rainbow', style: 'hex' },
+);
+Object.assign(BPX, { bubble: ['200,240,255'], petal: ['255,190,220', '255,240,250'], hex: ['140,255,210'], triad: ['255,170,110'], helix: ['140,255,235', '255,255,255'], ring: ['255,230,160'], glitchb: ['255,60,240', '60,240,255'], spiral: ['200,160,255', '140,200,255'], eclipse: ['255,150,60', '255,90,30'] });
 const BS = () => BSKINS.find(x => x.id === save.bskin) || BSKINS[0];
 function drawBullet(c, bs, b, t, k) {
   const seed = b.seed || (b.seed = Math.random() * 1000), sp = Math.hypot(b.vx, b.vy) || 1, ux = b.vx / sp, uy = b.vy / sp, px = -uy, py = ux;
@@ -1049,6 +1127,59 @@ function drawBullet(c, bs, b, t, k) {
       c.fillStyle = 'rgba(170,110,255,0.22)'; c.beginPath(); c.arc(b.x - ux * 3 * k, b.y - uy * 3 * k, 8 * k, 0, TAU); c.fill();
       c.fillStyle = 'rgba(255,140,230,0.32)'; c.beginPath(); c.arc(b.x, b.y, 5.5 * k, 0, TAU); c.fill();
       c.fillStyle = '#fff0fb'; c.beginPath(); c.arc(b.x, b.y, 1.8 * k, 0, TAU); c.fill(); break;
+    }
+    case 'needle': {
+      const L = 22 * k; c.strokeStyle = `rgb(${rgbOf(bs.col, seed, t)})`; c.lineWidth = 1.3 * k; c.lineCap = 'round';
+      c.beginPath(); c.moveTo(b.x - ux * L, b.y - uy * L); c.lineTo(b.x, b.y); c.stroke(); c.fillStyle = '#fff'; c.beginPath(); c.arc(b.x, b.y, 1.3 * k, 0, TAU); c.fill(); break;
+    }
+    case 'bubble': {
+      const col = rgbOf(bs.col, seed, t), r = (4.5 + 0.6 * Math.sin(t * 9 + seed)) * k;
+      c.strokeStyle = `rgba(${col},0.95)`; c.lineWidth = 1.3 * k; c.beginPath(); c.arc(b.x, b.y, r, 0, TAU); c.stroke();
+      c.fillStyle = `rgba(${col},0.15)`; c.fill(); c.fillStyle = '#fff'; c.beginPath(); c.arc(b.x - r * 0.35, b.y - r * 0.35, 1.2 * k, 0, TAU); c.fill(); break;
+    }
+    case 'petal': {
+      const col = rgbOf(bs.col, seed, t); c.save(); c.translate(b.x, b.y); c.rotate(t * 8 + seed);
+      c.fillStyle = `rgba(${col},0.95)`; c.beginPath(); c.ellipse(0, 0, 5.5 * k, 2.4 * k, 0, 0, TAU); c.fill();
+      c.fillStyle = 'rgba(255,255,255,0.7)'; c.beginPath(); c.ellipse(1.5 * k, 0, 2 * k, 0.8 * k, 0, 0, TAU); c.fill(); c.restore(); break;
+    }
+    case 'hex': {
+      const col = rgbOf(bs.col, seed, t); c.save(); c.translate(b.x, b.y); c.rotate(t * 6 + seed);
+      c.strokeStyle = `rgb(${col})`; c.lineWidth = 1.5 * k; c.beginPath(); for (let i = 0; i <= 6; i++) { const a = i / 6 * TAU, r = 4.6 * k; i ? c.lineTo(Math.cos(a) * r, Math.sin(a) * r) : c.moveTo(Math.cos(a) * r, Math.sin(a) * r); } c.stroke();
+      c.fillStyle = `rgba(${col},0.3)`; c.fill(); c.fillStyle = '#fff'; c.beginPath(); c.arc(0, 0, 1.4 * k, 0, TAU); c.fill(); c.restore(); break;
+    }
+    case 'triad': {
+      const col = rgbOf(bs.col, seed, t); c.fillStyle = `rgb(${col})`;
+      for (let i = 0; i < 3; i++) { const a = t * 14 + seed + i / 3 * TAU; c.beginPath(); c.arc(b.x + Math.cos(a) * 3.6 * k, b.y + Math.sin(a) * 3.6 * k, 1.9 * k, 0, TAU); c.fill(); }
+      c.fillStyle = '#fff'; c.beginPath(); c.arc(b.x, b.y, 1.2 * k, 0, TAU); c.fill(); break;
+    }
+    case 'helix': {
+      const col = rgbOf(bs.col, seed, t);
+      for (let j = 0; j < 7; j++) { const f = j / 7, bx = b.x - ux * f * 20 * k, by = b.y - uy * f * 20 * k, w = Math.sin(t * 20 + seed + f * 6) * 4 * k;
+        c.globalAlpha = 1 - f * 0.8; c.fillStyle = `rgb(${col})`; c.beginPath(); c.arc(bx + px * w, by + py * w, 1.6 * k, 0, TAU); c.fill(); c.fillStyle = '#fff'; c.beginPath(); c.arc(bx - px * w, by - py * w, 1.3 * k, 0, TAU); c.fill(); }
+      c.globalAlpha = 1; break;
+    }
+    case 'ring': {
+      const col = rgbOf(bs.col, seed, t), r = (4 + 1.4 * Math.sin(t * 12 + seed)) * k;
+      c.strokeStyle = `rgba(${col},0.95)`; c.lineWidth = 2 * k; c.beginPath(); c.ellipse(b.x, b.y, r, r * 0.55, Math.atan2(uy, ux) + Math.PI / 2, 0, TAU); c.stroke();
+      c.fillStyle = `rgba(${col},0.25)`; c.beginPath(); c.arc(b.x, b.y, 6 * k, 0, TAU); c.fill(); break;
+    }
+    case 'glitchb': {
+      const on = Math.random() < 0.8;
+      c.fillStyle = 'rgba(255,40,200,0.9)'; c.fillRect(b.x - 3 * k + (on ? 0 : 2 * k), b.y - 2 * k, 6 * k, 4 * k);
+      c.fillStyle = 'rgba(40,240,255,0.85)'; c.fillRect(b.x - 2 * k - (on ? 0 : 2 * k), b.y - 1 * k + (Math.random() - 0.5) * 2 * k, 5 * k, 2 * k);
+      if (Math.random() < 0.3) { c.fillStyle = '#fff'; c.fillRect(b.x - ux * 8 * k, b.y - uy * 8 * k, 3 * k, 1.5 * k); }
+      break;
+    }
+    case 'spiral': {
+      c.save(); c.translate(b.x, b.y); c.rotate(-t * 10 - seed);
+      for (let arm = 0; arm < 3; arm++) { c.beginPath(); for (let i = 0; i <= 8; i++) { const f = i / 8, a = arm / 3 * TAU + f * 2.4, r = (1 + f * 6.5) * k; i ? c.lineTo(Math.cos(a) * r, Math.sin(a) * r) : c.moveTo(Math.cos(a) * r, Math.sin(a) * r); } c.strokeStyle = `hsla(${hueOf(bs.col, t, arm * 60 + seed)},100%,70%,0.95)`; c.lineWidth = 1.3 * k; c.stroke(); }
+      c.fillStyle = '#fff'; c.beginPath(); c.arc(0, 0, 1.6 * k, 0, TAU); c.fill(); c.restore(); break;
+    }
+    case 'eclipse': {
+      const g = c.createRadialGradient(b.x, b.y, 2 * k, b.x, b.y, 8 * k); g.addColorStop(0, 'rgba(255,150,60,0.9)'); g.addColorStop(1, 'rgba(255,60,20,0)');
+      c.fillStyle = g; c.beginPath(); c.arc(b.x, b.y, 8 * k, 0, TAU); c.fill();
+      c.strokeStyle = 'rgba(255,200,120,0.9)'; c.lineWidth = 1 * k; for (let i = 0; i < 8; i++) { const a = i / 8 * TAU + t * 3 + seed, l = (5 + 2 * Math.sin(t * 9 + i)) * k; c.beginPath(); c.moveTo(b.x + Math.cos(a) * 3.6 * k, b.y + Math.sin(a) * 3.6 * k); c.lineTo(b.x + Math.cos(a) * l, b.y + Math.sin(a) * l); c.stroke(); }
+      const pc = c.globalCompositeOperation; c.globalCompositeOperation = 'source-over'; c.fillStyle = '#000'; c.beginPath(); c.arc(b.x, b.y, 3.2 * k, 0, TAU); c.fill(); c.globalCompositeOperation = pc; break;
     }
     case 'lance': {
       const L = 36 * k, g = c.createLinearGradient(b.x - ux * L, b.y - uy * L, b.x, b.y);
@@ -4494,7 +4625,7 @@ function update(dt, rdt) {
     }
     b.x += b.vx * dt; b.y += b.vy * dt; b.life -= dt;
     if (BPX[bst] && Math.random() < (LOW ? 0.18 : 0.35)) {
-      const L = BPX[bst], pc = bst === 'rainbow' ? rainbow(rand(0, 360)) : bst === 'aorb' ? rgbOf(BS().col, rand(0, 200)) : L[Math.random() * L.length | 0];
+      const L = BPX[bst], pc = bst === 'rainbow' ? rainbow(rand(0, 360)) : bst === 'aorb' || dyn(BS().col) ? rgbOf(BS().col, rand(0, 200)) : L[Math.random() * L.length | 0];
       part(b.x, b.y, rand(-30, 30) * U - b.vx * 0.05, rand(-30, 30) * U - b.vy * 0.05, rand(0.2, bst === 'cloud' ? 0.8 : 0.45), pc, (bst === 'cloud' ? rand(5, 8) : 1.8) * Math.max(1, U), 0.1, 0.93);
     }
     if (r < rh) { bullets.splice(i, 1); burst(b.x, b.y, 3, TH.glow[0], 40, 0.3, 2); continue; }
