@@ -624,7 +624,7 @@ body.paused .tbtn{display:none!important}
 <script>
 'use strict';
 // Versioning: next version -> next whole number (4.00), sub version -> +0.01 (3.01)
-const VERSION = '4.31';
+const VERSION = '4.32';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -812,7 +812,7 @@ const UPG = [
   { k: 'damage', cat: 'WEAPON', name: 'Plasma rounds', info: 'Every shot hits harder.', stat: 'Damage', val: t => '×' + [1, 1.17, 1.35, 1.52, 1.7, 1.9, 2.1][t], max: 6, cost: gcost(140, 1400, 6) },
   { k: 'pierce', cat: 'WEAPON', name: 'Neutron core', info: 'Bullets can punch through enemies.', stat: 'Pierce', val: t => ['Off', '50% chance +1', '+1 target', '+1, 50% +2', '+2 targets'][t], max: 4, cost: gcost(240, 1100, 4) },
   { k: 'missile', cat: 'WEAPON', name: 'Missile pods', info: 'Homing missiles fire on their own.', stat: 'Missiles', val: t => ['None', '1 every 3.6s', '1 every 3s', '2 every 3s', '2 every 2.6s', '3 every 2.6s', '3 every 2.2s'][t], max: 6, cost: gcost(300, 1900, 6) },
-  { k: 'multi', cat: 'POWER', name: 'Multishot', info: 'Upgrades the spread shot drop.', stat: 'Spread shot', val: t => ['Triple 12s', 'Triple 15s', 'Quad 15s', 'Quad 18s', 'Penta 18s'][t], max: 4, cost: gcost(150, 600, 4) },
+  { k: 'multi', cat: 'POWER', name: 'Multishot', info: 'Upgrades the spread shot drop.', stat: 'Spread shot', val: t => ['Double 12s', 'Triple 12s', 'Triple 15s', 'Quad 15s', 'Penta 18s'][t], max: 4, cost: gcost(150, 600, 4) },
   { k: 'rapid', cat: 'POWER', name: 'Overclock', info: 'Rapid fire lasts longer and shoots faster.', stat: 'Rapid fire', val: t => (12 + 2.5 * t) + 's', max: 4, cost: gcost(380, 1200, 4) },
   { k: 'shieldpk', cat: 'POWER', name: 'Hardlight shield', info: 'Shield drops absorb more hits and keep you safe longer when they break.', stat: 'Shield hits', val: t => (1 + Math.floor(t / 2)) + (t % 2 ? ' + longer safety' : ''), max: 4, cost: gcost(120, 700, 4) },
   { k: 'vacpk', cat: 'POWER', name: 'Vacuum', info: 'A power-up that pulls every bit of stardust and every power-up around you straight into your ship.', stat: 'Pull range', val: t => ['Large', 'Huge', 'Massive', 'Whole map'][t], max: 3, cost: gcost(100, 500, 3) },
@@ -1238,7 +1238,7 @@ function calcStats() {
     bspeed: 1 + 0.075 * t('velocity'), rate: 1 / (1 + [0, 0.05, 0.11, 0.18, 0.25, 0.34, 0.43][t('rate')]),
     dmg: [1, 1.17, 1.35, 1.52, 1.7, 1.9, 2.1][t('damage')], homing: 0, pierce: t('pierce') * 0.5,
     missiles: [0, 1, 1, 2, 2, 3, 3][t('missile')], missileT: [0, 3.6, 3, 3, 2.6, 2.6, 2.2][t('missile')],
-    multi: [0, 0, 1, 1, 2][t('multi')], multiDur: [12, 15, 15, 18, 18][t('multi')], rapidDur: 12 + 2.5 * t('rapid'), rapidRate: 1 - 0.06 * t('rapid'),
+    multi: [0, 1, 1, 2, 3][t('multi')], multiDur: [12, 12, 15, 15, 18][t('multi')], rapidDur: 12 + 2.5 * t('rapid'), rapidRate: 1 - 0.06 * t('rapid'),
     shieldHits: 1 + Math.floor(t('shieldpk') / 2), shieldInv: 1.2 + 0.5 * Math.ceil(t('shieldpk') / 2), luck: 1, vacR: [450, 650, 900, 99999][t('vacpk')],
     satsDur: 15 + 3 * t('u_drones'), beamDur: 7 + 1.5 * t('u_beam'), slowDur: 7 + 1.5 * t('u_time'), novaN: 20 + 6 * t('u_nova'), seekDur: 10 + 2 * t('seekpk'), deflDur: 9 + 2 * t('deflpk'), barrDur: 7 + 1.5 * t('barrpk'), wellDur: 6 + 1.5 * t('wellpk'),
   };
@@ -1562,7 +1562,7 @@ function mkBoss(sec) {
 }
 function eShot(x, y, vx, vy, life, k, R, col, mine) { ebullets.push({ x, y, vx, vy, life, k, R, mine: !!mine, fh: `rgba(${col},0.2)`, fc: `rgb(${col})` }); }
 const PICK = {
-  multi: { c: '90,230,255', ic: 'multi', name: () => ['Triple shot', 'Quad shot', 'Penta shot'][S.multi] },
+  multi: { c: '90,230,255', ic: 'multi', name: () => ['Double shot', 'Triple shot', 'Quad shot', 'Penta shot'][S.multi] },
   rapid: { c: '255,214,90', ic: 'rapid', name: () => 'Rapid fire' },
   seek: { c: '255,120,210', ic: 'homing', name: () => 'Seeker rounds' },
   shield: { c: '100,255,160', ic: 'shieldpk', name: () => S.shieldHits > 1 ? 'Shield ×' + S.shieldHits : 'Shield' },
@@ -2200,7 +2200,7 @@ function statsWith(k, tv) {
   if (had) save.up[k] = old; else delete save.up[k];
   calcStats(); return r;
 }
-const SPREADS = [[0], [-0.14, 0, 0.14], [-0.2, -0.07, 0.07, 0.2], [-0.26, -0.13, 0, 0.13, 0.26]];
+const SPREADS = [[0], [-0.07, 0.07], [-0.14, 0, 0.14], [-0.2, -0.07, 0.07, 0.2], [-0.26, -0.13, 0, 0.13, 0.26]];
 const laneSt = (s, o) => Object.assign({ iv: 0.12 * s.rate, bs: 820 * 0.45 * s.bspeed, dmg: s.dmg, pierce: s.pierce, hom: s.homing, spread: [0], mis: s.missiles, misT: s.missileT, drop: 0, layout: 'scatter', aim: true }, o || {});
 function pvSig() { const s = selInfo(); return (shopSel.G || '') + '|' + (s.type === 'upg' ? tier(s.it.k) : '') + '|' + save.skin + '|' + save.bskin; }
 function pvSetup(w, h) {
@@ -3302,7 +3302,7 @@ const BIOMES = [
   { n: 'Void Reaches', th: 8, rocks: [3, 6], bh: 0.3, wh: 0.3, en: 1.6, orb: 0.3, v: 'monolith' },
 ];
 const OWA = {
-  multi: { n: 'Spread shot', ic: 'multi', max: 3, d: l => ['Triple', 'Quad', 'Penta'][l - 1] + ' shot, always on' },
+  multi: { n: 'Spread shot', ic: 'multi', max: 4, d: l => ['Double', 'Triple', 'Quad', 'Penta'][l - 1] + ' shot, always on' },
   seek: { n: 'Seeker rounds', ic: 'seekpk', max: 3, d: l => ['Slight', 'Strong', 'Fierce'][l - 1] + ' homing on every bullet' },
   missile: { n: 'Missile pods', ic: 'missile', max: 3, d: l => l + ' homing missile' + (l > 1 ? 's' : '') + ' every ' + [3, 2.6, 2.2][l - 1] + 's' },
   sats: { n: 'Orbital drones', ic: 'u_drones', max: 1, d: () => 'Two drones orbit you and shoot' },
@@ -4559,7 +4559,7 @@ function update(dt, rdt) {
       traceBeam(TG, dt);
     } else if (firing && fireCD <= 0) {
       fireCD = (pw.rapid > 0 ? 0.055 * S.rapidRate : 0.12) * S.rate;
-      const spreads = [[0], [-0.14, 0, 0.14], [-0.2, -0.07, 0.07, 0.2], [-0.26, -0.13, 0, 0.13, 0.26]];
+      const spreads = SPREADS;
       const angs = pw.multi > 0 ? spreads[1 + S.multi] : spreads[0];
       for (const da of angs) {
         const a = ship.ang + da, s = 820 * U * S.bspeed;
