@@ -720,7 +720,7 @@ body.touch .srow2.nt{display:none}
 <script>
 'use strict';
 // Versioning: next version -> next whole number (4.00), sub version -> +0.01 (3.01)
-const VERSION = '4.40';
+const VERSION = '4.41';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -1950,7 +1950,8 @@ function hitObj(o, dmg) {
 }
 function breakAst(j, scored) {
   const a = asts[j]; asts.splice(j, 1); a.dead = true;
-  if (scored) { addScore([0, 100, 50, 20][a.size] * (a.v === 'gold' ? 2 : 1), a.x, a.y); dropDust(a.x, a.y, [0, Math.random() < 0.6 ? 1 : 0, 1, 2][a.size] * (a.v === 'gold' ? 3 : 1) + (a.v === 'gold' ? 1 : 0)); }
+  if (a.met && gmode === 'world' && ow) { if (mp) mp.ev.push(['mb', a.met]); if (ow.mt) ow.mt.gone.add(a.met); if (scored) { owDrop('b', a.x, a.y); owDrop(Math.random() < 0.35 ? 'a' : 'b', a.x, a.y); owDrop('d', a.x, a.y); } }
+  if (scored) { addScore([0, 100, 50, 20][a.size] * (a.v === 'gold' ? 2 : 1) * (gmode === 'world' && ow && ow.gs ? 2 : 1), a.x, a.y); dropDust(a.x, a.y, [0, Math.random() < 0.6 ? 1 : 0, 1, 2][a.size] * (a.v === 'gold' ? 3 : 1) + (a.v === 'gold' ? 1 : 0)); }
   burst(a.x, a.y, 8 + a.size * 9, '210,180,255', 70 + a.size * 50, 1.0, 2);
   burst(a.x, a.y, 4 + a.size * 5, TH.rim, 50 + a.size * 30, 1.3, 3);
   ring(a.x, a.y, 20 + a.size * 22, '220,190,255', 0.4, 2);
@@ -3651,7 +3652,7 @@ function startWorld(seed, sx, sy) {
   if (!cloudUser) { goMenu(); return; }
   closeLobby();
   gmode = 'world'; tut = null; $('tutBox').classList.add('hidden');
-  ow = { ab: {}, bs: {}, drops: [], sk: [], hm: { rm: [], add: [], so: [] }, bh: null, bhNext: rand(70, 140), dc: 0, miniT: 25, chunks: new Map(), taken: {}, cx: 9999, cy: 9999, biome: -1, spawnT: 3, timers: {}, dist: 0, orbs: 0, kills0: 0, dx: 0, dy: 0, seed: seed | 0, CH: owCH(), safe: 0, pickT: 0, sig: '' };
+  ow = { ab: {}, bs: {}, drops: [], sk: [], hm: { rm: [], add: [], so: [] }, bh: null, cm: null, gs: null, mt: null, lastEv: '', bhNext: rand(70, 140), dc: 0, miniT: 25, chunks: new Map(), taken: {}, cx: 9999, cy: 9999, biome: -1, spawnT: 3, timers: {}, dist: 0, orbs: 0, kills0: 0, dx: 0, dy: 0, seed: seed | 0, CH: owCH(), safe: 0, pickT: 0, sig: '' };
   ow.R = OWM * ow.CH;
   owPre();
   owHoles.length = 0; owOrbs.length = 0;
@@ -3729,7 +3730,7 @@ function worldGravity(o, k, dt) {
   for (const h of owHoles) {
     const dx = h.x - o.x, dy = h.y - o.y, r2 = dx * dx + dy * dy;
     if (r2 > ((h.big ? 2600 : 1300) * U) ** 2) continue;
-    const r = Math.sqrt(r2) + 1e-6, a = GMv * h.m * k / (r2 + 36 * U * U);
+    const r = Math.sqrt(r2) + 1e-6, a = GMv * h.m * k / (r2 + 36 * U * U) * (ow && ow.gs ? 2 : 1);
     if (h.white) { o.vx -= dx / r * a * 1.3 * dt; o.vy -= dy / r * a * 1.3 * dt; continue; }
     o.vx += dx / r * a * dt; o.vy += dy / r * a * dt;
     const eff = r / h.rh * rh; if (eff < best) { best = eff; gHole = h; }
@@ -3795,22 +3796,46 @@ function owHmApply(hm) {
   for (const q of hm.so || []) if (!ow.taken[q[0]] && ORBS[q[1]] && !ow.sk.some(o => o.ck === q[0])) ow.sk.push({ ck: q[0], k: q[1], x: q[2] * U, y: q[3] * U, ph: rand(0, 6) });
   ow.hm = { rm: hm.rm.slice(), add: (hm.add || []).slice(), so: [] };
 }
-function owEvHost(dt, pl) {
-  if (!ow.bh) {
-    ow.bhNext -= dt;
-    if (ow.bhNext <= 0) {
-      ow.bhNext = rand(150, 270);
-      const c = []; for (const P of ow.all.values()) for (const h of P.holes) if (!h.big && Math.hypot(h.x, h.y) > owSafeR() + 600 * U) c.push(h);
-      if (c.length) { const h = c[Math.random() * c.length | 0]; owEvBegin(h.id, BHEV); if (mp) mp.ev.push(['bh', h.id, BHEV]); }
+const owEvBusy = () => !!(ow.bh || ow.cm || ow.gs || ow.mt);
+function owEvLaunch(k, pl) {
+  const R_ = Math.round, send = e => { if (mp) mp.ev.push(e); };
+  if (k === 'bh') {
+    const c = []; for (const P of ow.all.values()) for (const h of P.holes) if (!h.big && Math.hypot(h.x, h.y) > owSafeR() + 600 * U) c.push(h);
+    if (c.length) { const h = c[Math.random() * c.length | 0]; owEvBegin(h.id, BHEV); send(['bh', h.id, BHEV]); }
+  } else if (k === 'cm') {
+    // a straight chord across the galaxy that misses the safe zone
+    const a = rand(0, TAU), d = rand(0.3, 0.6) * ow.R * (Math.random() < 0.5 ? -1 : 1), Rr = ow.R * 0.97, L = Math.sqrt(Rr * Rr - d * d);
+    const cx = Math.cos(a + Math.PI / 2) * d, cy = Math.sin(a + Math.PI / 2) * d, ux = Math.cos(a), uy = Math.sin(a), dur = Math.round(2 * L / (230 * U) * 1000);
+    const e = ['cm', R_((cx - ux * L) / U), R_((cy - uy * L) / U), R_((cx + ux * L) / U), R_((cy + uy * L) / U), dur, dur];
+    owCometBegin(e); send(e);
+  } else if (k === 'gs') { owStormBegin(GSEV); send(['gs', GSEV]); }
+  else if (k === 'mt') {
+    // somewhere near a pilot out in the danger zones, otherwise anywhere out there
+    const out = pl.filter(P => Math.hypot(P.x, P.y) > owSafeR() + 400 * U);
+    let x, y;
+    for (let t = 0; t < 30; t++) {
+      if (out.length && t < 20) { const P = out[Math.random() * out.length | 0], a = rand(0, TAU), r = rand(350, 900) * U; x = P.x + Math.cos(a) * r; y = P.y + Math.sin(a) * r; }
+      else { const a = rand(0, TAU), r = rand(0.35, 0.85) * ow.R; x = Math.cos(a) * r; y = Math.sin(a) * r; }
+      const d = Math.hypot(x, y); if (d > owSafeR() + 1000 * U && d < ow.R - 900 * U) break;
     }
+    const e = ['mt', R_(x / U), R_(y / U), Math.random() * 1e9 | 0, MTEV, MTEV];
+    owMeteorBegin(e); send(e);
+  }
+}
+function owEvHost(dt, pl) {
+  if (!owEvBusy()) {
+    ow.bhNext -= dt;
+    if (ow.bhNext <= 0) { ow.bhNext = rand(110, 200); const ks = ['bh', 'cm', 'gs', 'mt'].filter(k => k !== ow.lastEv), k = ks[Math.random() * ks.length | 0]; ow.lastEv = k; owEvLaunch(k, pl); }
     return;
   }
+  if (ow.cm) owCometHost(dt, pl);
+  if (!ow.bh) return;
   const B = ow.bh, h = B.h;
   if (performance.now() >= B.end) {
     const r = Math.random() * 100, kind = r < 75 ? 'void' : r < 95 ? 'stellar' : r < 99.5 ? 'quasar' : 'holy';
     const e = ['bx', B.id, kind, 'so.' + (mp ? mp.id : 'L') + '.' + (++ow.dc), Math.round(h.x / U), Math.round(h.y / U), owNewHoleSpot()];
     owEvApply(e); if (mp) mp.ev.push(e);
-    ow.bhNext = rand(150, 270); return;
+    ow.bhNext = rand(110, 200); return;
   }
   // extra drones gather around the collapsing hole while pilots are near it
   ow.bhSp = (ow.bhSp || 0) - dt;
@@ -3864,6 +3889,128 @@ function owEvDraw() {
   }
 }
 const mmss = s => Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0');
+const GSEV = 40000, MTEV = 45000, MT_R = 900;
+// ---- comet run: a comet crosses the galaxy and its tail sheds stardust and orbs for whoever keeps up ----
+function owCometBegin(e) {
+  const [, sx, sy, ex, ey, dur, rem] = e; if (ow.cm || !(dur > 0)) return;
+  const now = performance.now();
+  ow.cm = { sx: sx * U, sy: sy * U, ex: ex * U, ey: ey * U, dur, t0: now - (dur - rem), end: now + rem, dT: 0, oT: 2, e };
+  announce('Comet run', { big: true, kick: 'Event', sub: 'A comet is crossing the galaxy - chase its tail for stardust and orbs', col: '150,230,255', dur: 4, now: true });
+  [523, 659, 784, 1046].forEach((f, i) => setTimeout(() => tone(f, 0.3, 'sine', 0.05, f * 1.5), i * 110));
+}
+function owCometPos(now) {
+  const C = ow.cm, f = clamp((now - C.t0) / C.dur, 0, 1);
+  return { x: C.sx + (C.ex - C.sx) * f, y: C.sy + (C.ey - C.sy) * f, f, ux: (C.ex - C.sx) / (Math.hypot(C.ex - C.sx, C.ey - C.sy) || 1), uy: (C.ey - C.sy) / (Math.hypot(C.ex - C.sx, C.ey - C.sy) || 1) };
+}
+function owCometHost(dt, pl) {
+  const C = ow.cm, p = owCometPos(performance.now());
+  // drops only fall while somebody is chasing it
+  if (!pl.some(P => Math.hypot(P.x - p.x, P.y - p.y) < 1700 * U)) return;
+  C.dT -= dt; C.oT -= dt;
+  const bx = p.x - p.ux * rand(60, 160) * U, by = p.y - p.uy * rand(60, 160) * U;
+  if (C.dT <= 0) { C.dT = 0.55; owDrop('d', bx, by); }
+  if (C.oT <= 0) { C.oT = rand(2.6, 4); owDrop(Math.random() < 0.3 ? 'a' : 'b', bx, by); }
+}
+// ---- gravity storm: holes pull twice as hard, rocks get flung about, rock kills score double ----
+function owStormBegin(ms) {
+  if (ow.gs) return; ow.gs = { end: performance.now() + ms, kT: 0 };
+  announce('Gravity storm', { big: true, kick: 'Event', sub: 'Every hole pulls twice as hard for ' + Math.round(ms / 1000) + 's - rocks score double', col: '190,140,255', dur: 4, now: true });
+  tone(80, 1.2, 'sawtooth', 0.06, 40); shake = Math.min(25, shake + 8);
+}
+// ---- meteor shower: big rocks rain into one area; they hit hard, and breaking them drops extra orbs ----
+// every pilot builds the same schedule from the seed, so the rocks land in the same places for everyone
+function owMeteorBegin(e) {
+  const [, x, y, seed, dur, rem] = e; if (ow.mt || !(dur > 0)) return;
+  const now = performance.now(), R = rng(hash2(seed, 7, 11)), list = [], n = Math.round(dur / 1000 * 0.75);
+  for (let i = 0; i < n; i++) {
+    const t = 2.5 + i * (dur / 1000 - 4) / n + R() * 0.8, a = R() * TAU, r = Math.sqrt(R()) * MT_R, ai = R() * TAU;
+    list.push({ id: 'm' + seed + '.' + i, t, x: x * U + Math.cos(a) * r * U, y: y * U + Math.sin(a) * r * U, ux: Math.cos(ai), uy: Math.sin(ai), land: false });
+  }
+  ow.mt = { x: x * U, y: y * U, r: MT_R * U, seed, dur, t0: now - (dur - rem), end: now + rem, list, gone: new Set(), e };
+  for (const m of list) if (m.t < (dur - rem) / 1000) m.land = true; // joined late: the rocks that already fell are not replayed
+  announce('Meteor shower', { big: true, kick: 'Event', sub: 'Big rocks are raining down - they hit hard, but break them for extra orbs', col: '255,150,80', dur: 4, now: true });
+  tone(110, 0.8, 'sawtooth', 0.05, 60);
+}
+// runs on every pilot: timers, meteors in flight and landing, flung rocks
+function owEvTick(dt) {
+  const now = performance.now();
+  if (ow.cm && now >= ow.cm.end) { ow.cm = null; announce('The comet is gone', { kick: 'Event', col: '150,230,255', dur: 2 }); }
+  if (ow.gs) {
+    if (now >= ow.gs.end) { ow.gs = null; announce('The storm has passed', { kick: 'Event', col: '190,140,255', dur: 2 }); }
+    else {
+      ow.gs.kT -= dt;
+      if (ow.gs.kT <= 0) { ow.gs.kT = 0.35; for (const a of asts) if (Math.random() < 0.18 && Math.abs(a.x - camX) < 1500 * U && Math.abs(a.y - camY) < 1500 * U) { const an = rand(0, TAU), sp = rand(90, 220) * U; a.vx += Math.cos(an) * sp; a.vy += Math.sin(an) * sp; } }
+    }
+  }
+  const M = ow.mt; if (!M) return;
+  if (now >= M.end && M.list.every(m => m.land)) { ow.mt = null; announce('The shower is over', { kick: 'Event', col: '255,150,80', dur: 2 }); return; }
+  const el = (now - M.t0) / 1000;
+  for (const m of M.list) {
+    if (m.land || el < m.t - 1.1) continue;
+    if (el < m.t) {
+      // in flight: anything it touches on the way down gets hit
+      const f = (el - (m.t - 1.1)) / 1.1, hx = m.x - m.ux * 1400 * U * (1 - f), hy = m.y - m.uy * 1400 * U * (1 - f);
+      if (ship && ship.inv <= 0 && !(ow.safe > 0) && Math.hypot(ship.x - hx, ship.y - hy) < 30 * U) hurt();
+      continue;
+    }
+    m.land = true;
+    if (M.gone.has(m.id)) continue;
+    const a = mkAst(m.x, m.y, m.ux * 30 * U, m.uy * 30 * U, 3); a.v = ''; a.met = m.id; a.max = a.hp = a.hp * 1.6; asts.push(a);
+    if (ship) {
+      const d = Math.hypot(ship.x - m.x, ship.y - m.y);
+      if (d < 80 * U && ship.inv <= 0 && !(ow.safe > 0)) hurt();
+      if (d < 320 * U) { const f = (1 - d / (320 * U)) * 520 * U; ship.vx += (ship.x - m.x) / (d || 1) * f; ship.vy += (ship.y - m.y) / (d || 1) * f; }
+    }
+    if (Math.abs(m.x - camX) < W && Math.abs(m.y - camY) < H) { burst(m.x, m.y, 50, '255,150,80', 300, 0.9, 2.6); burst(m.x, m.y, 30, '255,240,200', 200, 0.5, 2); ring(m.x, m.y, 150, '255,170,90', 0.6, 4); shake = Math.min(25, shake + 6); sfx.boom(0.7); }
+  }
+}
+function owMeteorGone(id) {
+  if (!ow.mt) return; ow.mt.gone.add(id);
+  const i = asts.findIndex(a => a.met === id); if (i >= 0) { const a = asts[i]; asts.splice(i, 1); a.dead = true; burst(a.x, a.y, 30, '210,180,255', 160, 0.9, 2); }
+}
+function owEvDraw2() {
+  const now = performance.now(), big = Math.max(1, U);
+  if (ow.cm) {
+    const p = owCometPos(now), on = Math.abs(p.x - camX) < W / 2 + 1200 * U && Math.abs(p.y - camY) < H / 2 + 1200 * U;
+    if (on) {
+      const L = 1100 * U, w = 70 * U, tx = p.x - p.ux * L, ty = p.y - p.uy * L, nx = -p.uy, ny = p.ux;
+      ctx.save(); ctx.globalCompositeOperation = 'lighter';
+      for (const [wm, col, al] of [[1, '90,170,255', 0.28], [0.45, '200,240,255', 0.45]]) {
+        const g = ctx.createLinearGradient(p.x, p.y, tx, ty); g.addColorStop(0, `rgba(${col},${al})`); g.addColorStop(1, `rgba(${col},0)`);
+        ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(p.x + nx * w * 0.35 * wm, p.y + ny * w * 0.35 * wm); ctx.lineTo(tx + nx * w * 2.2 * wm, ty + ny * w * 2.2 * wm); ctx.lineTo(tx - nx * w * 2.2 * wm, ty - ny * w * 2.2 * wm); ctx.lineTo(p.x - nx * w * 0.35 * wm, p.y - ny * w * 0.35 * wm); ctx.closePath(); ctx.fill();
+      }
+      const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, 90 * U); g.addColorStop(0, 'rgba(255,255,255,0.95)'); g.addColorStop(0.18, 'rgba(190,235,255,0.7)'); g.addColorStop(1, 'rgba(90,170,255,0)');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p.x, p.y, 90 * U, 0, TAU); ctx.fill();
+      ctx.restore();
+      if (Math.random() < 0.9) part(p.x + rand(-20, 20) * U, p.y + rand(-20, 20) * U, -p.ux * rand(60, 200) * U + rand(-40, 40) * U, -p.uy * rand(60, 200) * U + rand(-40, 40) * U, rand(0.8, 1.6), Math.random() < 0.5 ? '200,240,255' : '120,200,255', rand(2, 4) * big, 0, 0.97);
+      ctx.save(); ctx.font = `700 ${Math.round(11 * big)}px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = 'rgba(200,240,255,0.9)'; spaced('COMET', p.x, p.y - 70 * U, 2.4, 'center'); ctx.restore();
+    }
+  }
+  // meteor rocks stay hot: an ember glow around them
+  for (const a of asts) if (a.met && Math.abs(a.x - camX) < W / 2 + 100 && Math.abs(a.y - camY) < H / 2 + 100) { ctx.save(); ctx.globalCompositeOperation = 'lighter'; const g = ctx.createRadialGradient(a.x, a.y, a.R * 0.6, a.x, a.y, a.R * 1.6); g.addColorStop(0, 'rgba(255,120,50,0.28)'); g.addColorStop(1, 'rgba(255,120,50,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(a.x, a.y, a.R * 1.6, 0, TAU); ctx.fill(); ctx.restore(); }
+  const M = ow.mt;
+  if (M && Math.abs(M.x - camX) < W / 2 + M.r + 1400 * U && Math.abs(M.y - camY) < H / 2 + M.r + 1400 * U) {
+    const el = (now - M.t0) / 1000;
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255,150,80,0.35)'; ctx.lineWidth = 2.5 * big; ctx.setLineDash([18 * U, 12 * U]); ctx.lineDashOffset = -time * 30 * U; ctx.beginPath(); ctx.arc(M.x, M.y, M.r, 0, TAU); ctx.stroke(); ctx.setLineDash([]);
+    const g = ctx.createRadialGradient(M.x, M.y, M.r * 0.2, M.x, M.y, M.r); g.addColorStop(0, 'rgba(255,120,60,0)'); g.addColorStop(1, 'rgba(255,120,60,0.07)'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(M.x, M.y, M.r, 0, TAU); ctx.fill();
+    for (const m of M.list) {
+      if (m.land || el < m.t - 1.5) continue;
+      // target marker, then the burning rock coming in
+      const w = clamp((el - (m.t - 1.5)) / 1.5, 0, 1), pr = 1 - w;
+      ctx.strokeStyle = `rgba(255,${120 + 80 * pr},80,${0.35 + 0.5 * w})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(m.x, m.y, (40 + 50 * pr) * U, 0, TAU); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(m.x - 10 * U, m.y); ctx.lineTo(m.x + 10 * U, m.y); ctx.moveTo(m.x, m.y - 10 * U); ctx.lineTo(m.x, m.y + 10 * U); ctx.stroke();
+      if (el < m.t - 1.1) continue;
+      const f = (el - (m.t - 1.1)) / 1.1, hx = m.x - m.ux * 1400 * U * (1 - f), hy = m.y - m.uy * 1400 * U * (1 - f);
+      ctx.save(); ctx.globalCompositeOperation = 'lighter';
+      const tg = ctx.createLinearGradient(hx, hy, hx - m.ux * 260 * U, hy - m.uy * 260 * U); tg.addColorStop(0, 'rgba(255,190,110,0.8)'); tg.addColorStop(1, 'rgba(255,90,40,0)');
+      ctx.strokeStyle = tg; ctx.lineWidth = 26 * U; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(hx - m.ux * 260 * U, hy - m.uy * 260 * U); ctx.stroke();
+      ctx.restore();
+      ctx.fillStyle = 'rgb(70,50,45)'; ctx.strokeStyle = 'rgb(255,170,90)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(hx, hy, 24 * U, 0, TAU); ctx.fill(); ctx.stroke();
+    }
+    ctx.restore();
+  }
+}
 function owOffer() {
   const L = ow.ab, ups = Object.keys(L).filter(k => L[k] < OWA[k].max), news = Object.keys(OWA).filter(k => !L[k]);
   const out = [];
@@ -4051,6 +4198,7 @@ function owTick(dt) {
   if (owChoosing) ow.safe = 2; else ow.safe = Math.max(0, ow.safe - dt);
   if (ship && ow.safe > 0) ship.inv = Math.max(ship.inv, 0.3);
   if (mp) mpWorld(dt);
+  owEvTick(dt);
   if (Math.random() < 0.02) { const now = performance.now(); for (const k in ow.taken) if (now - ow.taken[k] > 150000) delete ow.taken[k]; }
   if (!ship) return;
   ow.dist = Math.max(ow.dist, Math.hypot(ship.x, ship.y) / U);
@@ -4145,7 +4293,7 @@ function drawHoles() {
     if (h.born && performance.now() - h.born < 3000) ctx.restore();
     if (evh) ctx.restore();
   }
-  owEvDraw();
+  owEvDraw(); owEvDraw2();
   for (const o of owOrbs.concat(ow.drops)) {
     if (ow.taken[o.ck] || Math.abs(o.x - camX) > W / 2 + 100 || Math.abs(o.y - camY) > H / 2 + 100) continue;
     const T = OTYPE[o.t] || OTYPE.a, r = T.r * U * (1 + 0.08 * Math.sin(time * 3 + o.ph)), fade = o.life != null && o.life < 8 ? (Math.sin(time * 14) > 0 ? 1 : 0.35) : 1;
@@ -4221,6 +4369,7 @@ function drawMapAt(ox, oy, Sz, alpha, big, W, H) {
   ctx.beginPath(); ctx.arc(ox, oy, h + 1, 0, TAU); ctx.fillStyle = `rgba(0,0,0,${big ? 0.45 : 0.55})`; ctx.fill(); ctx.strokeStyle = 'rgba(255,255,255,0.14)'; ctx.lineWidth = 1; ctx.stroke();
   ctx.save(); ctx.beginPath(); ctx.arc(ox, oy, h, 0, TAU); ctx.clip();
   ctx.drawImage(big ? ow.mmB : ow.mm, x0, y0, Sz, Sz);
+  if (ow.gs) { const g = ctx.createRadialGradient(ox, oy, h * 0.55, ox, oy, h); g.addColorStop(0, 'rgba(170,110,255,0)'); g.addColorStop(1, `rgba(170,110,255,${0.3 + 0.15 * Math.sin(rtime * 4)})`); ctx.fillStyle = g; ctx.fillRect(x0, y0, Sz, Sz); }
   for (const P of ow.all.values()) for (const o of P.orbs) if (!ow.taken[o.ck]) { const a = o.t === 'a'; ctx.fillStyle = `rgba(${OTYPE[o.t].ring},${a ? 0.6 + 0.35 * Math.sin(rtime * 4 + o.ph) : 0.45})`; ctx.beginPath(); ctx.arc(X(o.x), Y(o.y), (a ? 1.6 : 0.9) * ds, 0, TAU); ctx.fill(); }
   for (const o of ow.drops) if (!ow.taken[o.ck]) { ctx.fillStyle = `rgb(${OTYPE[o.t].ring})`; ctx.beginPath(); ctx.arc(X(o.x), Y(o.y), 1.6 * ds, 0, TAU); ctx.fill(); }
   for (const d of drones) if (d.mini) { ctx.fillStyle = 'rgb(255,80,80)'; ctx.beginPath(); ctx.arc(X(d.x), Y(d.y), 2.6 * ds, 0, TAU); ctx.fill(); ctx.strokeStyle = 'rgba(0,0,0,0.6)'; ctx.lineWidth = 1; ctx.stroke(); }
@@ -4229,6 +4378,8 @@ function drawMapAt(ox, oy, Sz, alpha, big, W, H) {
   for (const h_ of owHoles) if (h_.born && now - h_.born < 8000) { const f = ((now - h_.born) / 1000) % 1; ctx.strokeStyle = `rgba(${h_.white ? '235,245,255' : '255,170,90'},${1 - f})`; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(X(h_.x), Y(h_.y), (3 + f * 9) * ds, 0, TAU); ctx.stroke(); }
   // event: the collapsing hole and the skin orbs left behind
   if (ow.bh) { const H_ = ow.bh.h, p = 0.5 + 0.5 * Math.sin(rtime * 7); ctx.strokeStyle = `rgba(255,110,200,${0.6 + 0.4 * p})`; ctx.lineWidth = 1.6 * Math.min(2, ds); ctx.beginPath(); ctx.arc(X(H_.x), Y(H_.y), (4 + p * 3) * ds, 0, TAU); ctx.stroke(); ctx.fillStyle = 'rgb(255,110,200)'; ctx.beginPath(); ctx.arc(X(H_.x), Y(H_.y), 1.8 * ds, 0, TAU); ctx.fill(); }
+  if (ow.cm) { const p = owCometPos(now); ctx.strokeStyle = 'rgba(150,230,255,0.35)'; ctx.lineWidth = 1; ctx.setLineDash([3, 3]); ctx.beginPath(); ctx.moveTo(X(p.x), Y(p.y)); ctx.lineTo(X(ow.cm.ex), Y(ow.cm.ey)); ctx.stroke(); ctx.setLineDash([]); ctx.fillStyle = 'rgb(200,240,255)'; ctx.beginPath(); ctx.arc(X(p.x), Y(p.y), 2.6 * ds, 0, TAU); ctx.fill(); ctx.strokeStyle = 'rgba(120,200,255,0.8)'; ctx.lineWidth = 2 * Math.min(2, ds); ctx.beginPath(); ctx.moveTo(X(p.x), Y(p.y)); ctx.lineTo(X(p.x - p.ux * 900 * U), Y(p.y - p.uy * 900 * U)); ctx.stroke(); }
+  if (ow.mt) { const p = 0.5 + 0.5 * Math.sin(rtime * 5); ctx.fillStyle = `rgba(255,150,80,${0.2 + 0.15 * p})`; ctx.strokeStyle = 'rgba(255,150,80,0.9)'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(X(ow.mt.x), Y(ow.mt.y), Math.max(3 * ds, ow.mt.r * k), 0, TAU); ctx.fill(); ctx.stroke(); }
   for (const o of ow.sk) if (!ow.taken[o.ck]) { const p = 0.5 + 0.5 * Math.sin(rtime * 5 + o.ph), c_ = o.k === 'holy' ? hsl2rgb((rtime * 0.2) % 1, 1, 0.7) : ORBS[o.k].col; ctx.fillStyle = `rgb(${c_})`; ctx.beginPath(); ctx.arc(X(o.x), Y(o.y), (2.2 + p) * ds, 0, TAU); ctx.fill(); ctx.strokeStyle = `rgba(${c_},${1 - p})`; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(X(o.x), Y(o.y), (4 + p * 5) * ds, 0, TAU); ctx.stroke(); }
   const vw = cv.width / (DPR || 1), vh = cv.height / (DPR || 1);
   ctx.strokeStyle = 'rgba(255,255,255,0.3)'; ctx.lineWidth = 1; ctx.strokeRect(X(camX - vw / 2), Y(camY - vh / 2), vw * k, vh * k);
@@ -4248,6 +4399,8 @@ function drawMapAt(ox, oy, Sz, alpha, big, W, H) {
     // labels for the event and a legend under the map
     ctx.font = `700 ${Math.round(12 * Math.min(1.3, ds / 1.5))}px ${FONT}`; ctx.textAlign = 'center';
     if (ow.bh) { const H_ = ow.bh.h, rem = Math.max(0, (ow.bh.end - now) / 1000); ctx.fillStyle = 'rgb(255,140,215)'; ctx.fillText('COLLAPSING ' + mmss(rem), X(H_.x), Y(H_.y) - 14 * ds); }
+    if (ow.cm) { const p = owCometPos(now); ctx.fillStyle = 'rgb(200,240,255)'; ctx.fillText('COMET', X(p.x), Y(p.y) - 12 * ds); }
+    if (ow.mt) { ctx.fillStyle = 'rgb(255,170,100)'; ctx.fillText('METEOR SHOWER', X(ow.mt.x), Y(ow.mt.y) - Math.max(3 * ds, ow.mt.r * k) - 8); }
     for (const o of ow.sk) if (!ow.taken[o.ck]) { ctx.fillStyle = `rgb(${ORBS[o.k].col})`; ctx.fillText(ORBS[o.k].name.toUpperCase(), X(o.x), Y(o.y) - 12 * ds); }
     ctx.font = `700 13px ${FONT}`; ctx.fillStyle = 'rgba(255,255,255,0.9)'; spaced('GALAXY MAP', ox, y0 - 16, 3, 'center');
     const items = [['255,255,255', 'You'], ['255,80,80', 'Mini boss'], ['200,150,255', 'Ability orb'], ['120,210,255', 'Upgrade orb'], ['255,110,200', 'Event'], ['255,170,90', 'Black hole'], ['235,245,255', 'White hole']];
@@ -4590,6 +4743,9 @@ function mpOn(ev, p) {
     const ev = p.wv[0];
     if (Array.isArray(ev) && !ow.bh) owEvBegin(ev[0], clamp(+ev[1] || 0, 0, BHEV));
     else if (!ev && ow.bh && performance.now() > ow.bh.end + 6000) ow.bh = null;
+    if (Array.isArray(p.wv[2]) && !ow.cm && p.wv[2][6] > 0) owCometBegin(p.wv[2]);
+    if (p.wv[3] > 0 && !ow.gs) owStormBegin(p.wv[3]);
+    if (Array.isArray(p.wv[4]) && Array.isArray(p.wv[4][0])) { if (!ow.mt && p.wv[4][0][5] > 0) owMeteorBegin(p.wv[4][0]); if (ow.mt) for (const id of p.wv[4][1] || []) if (!ow.mt.gone.has(id)) owMeteorGone(id); }
   }
 }
 function mpEvent(P, e) {
@@ -4603,6 +4759,10 @@ function mpEvent(P, e) {
   else if (e[0] === 'o' && ow) ow.taken[e[1]] = now;
   else if (e[0] === 'bh' && ow && typeof e[1] === 'string') owEvBegin(e[1], clamp(+e[2] || BHEV, 0, BHEV));
   else if (e[0] === 'bx' && ow && Array.isArray(e)) owEvApply(e);
+  else if (e[0] === 'cm' && ow) owCometBegin(e);
+  else if (e[0] === 'gs' && ow) owStormBegin(clamp(+e[1] || 0, 0, GSEV));
+  else if (e[0] === 'mt' && ow) owMeteorBegin(e);
+  else if (e[0] === 'mb' && ow && typeof e[1] === 'string') owMeteorGone(e[1]);
   else if (e[0] === 'sg' && ORBS[e[1]]) announce(P.n + ' grabbed the ' + ORBS[e[1]].name, { kick: 'Event', col: ORBS[e[1]].col, dur: 2.6 });
   else if (e[0] === 'dr' && ow && typeof e[1] === 'string' && !ow.taken[e[1]] && !ow.drops.some(o => o.ck === e[1]) && OTYPE[e[2]]) ow.drops.push({ ck: e[1], t: e[2], x: e[3] * U, y: e[4] * U, ph: rand(0, 6), life: 60 });
   else if (e[0] === 'pk') {
@@ -4653,7 +4813,7 @@ function mpSend() {
   if (mp.host) {
     for (const d of drones) if (d.nid == null) d.nid = ++mp.nid;
     pk.e = drones.map(d => [d.nid, Math.max(0, KINDS.indexOf(d.kind)), R(d.x / U), R(d.y / U), R(d.vx / U), R(d.vy / U), R(d.hp * 10), R(d.max * 10), Math.max(0, MPST.indexOf(d.st)), R((d.stT || 0) * 100), R((d.la || 0) * 100), R((d.cd || 0) * 100), d.mini ? 1 : 0, R((d.ax || 0) / U), R((d.ay || 0) / U)]);
-    if (++mp.tkT % 10 === 0 && ow) { pk.tk = Object.keys(ow.taken); ow.hm.so = ow.sk.map(o => [o.ck, o.k, R(o.x / U), R(o.y / U)]); pk.wv = [ow.bh ? [ow.bh.id, R(Math.max(0, ow.bh.end - performance.now()))] : null, ow.hm]; }
+    if (++mp.tkT % 10 === 0 && ow) { pk.tk = Object.keys(ow.taken); ow.hm.so = ow.sk.map(o => [o.ck, o.k, R(o.x / U), R(o.y / U)]); const nw = performance.now(); pk.wv = [ow.bh ? [ow.bh.id, R(Math.max(0, ow.bh.end - nw))] : null, ow.hm, ow.cm ? ow.cm.e.slice(0, 6).concat([R(Math.max(0, ow.cm.end - nw))]) : null, ow.gs ? R(Math.max(0, ow.gs.end - nw)) : 0, ow.mt ? [ow.mt.e.slice(0, 5).concat([R(Math.max(0, ow.mt.end - nw))]), [...ow.mt.gone]] : null]; }
   }
   mp.ch.send('p', pk);
 }
@@ -6057,16 +6217,29 @@ function drawHUDi(W, H) {
   else if (mp) { const ry = touch ? 96 : 88; for (let i = 0; i < lives; i++) miniShip(28 + i * 20, ry, 0.85); ctx.font = `600 11px ${FONT}`; ctx.fillStyle = 'rgba(233,238,247,0.62)'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; spaced(mpRoom().toUpperCase() + '  ·  ' + (1 + Object.values(mp.peers).filter(q => !q.away).length) + '/' + MPMAX + ' PILOTS' + (mp.host ? '  ·  HOST' : ''), 28 + Math.max(1, lives) * 20, ry, 1.6, 'left'); }
   if (gmode === 'world' && ow && !paused) {
     if (mp) drawScoreboard(W, H, touch);
-    const tgt = ow.bh ? ow.bh.h : ow.sk.find(o => !ow.taken[o.ck]);
-    if (tgt && ship) {
-      const rem = ow.bh ? Math.max(0, (ow.bh.end - performance.now()) / 1000) : 0, dk = (Math.hypot(tgt.x - ship.x, tgt.y - ship.y) / U / 1000).toFixed(1);
-      const txt = ow.bh ? (ow.bh.h.white ? 'WHITE' : 'BLACK') + ' HOLE COLLAPSING  ' + mmss(rem) + '  ·  ' + dk + 'K AWAY' : ORBS[tgt.k].name.toUpperCase() + ' UP FOR GRABS  ·  ' + dk + 'K AWAY';
-      const col = ow.bh ? '255,110,200' : ORBS[tgt.k].col, p = 0.5 + 0.5 * Math.sin(rtime * (ow.bh && rem < 10 ? 10 : 3));
+    // one pill per thing going on: what it is, how long it lasts and how far away it is
+    if (ship && mmBigA < 0.5) {
+      const nw = performance.now(), far = o => (Math.hypot(o.x - ship.x, o.y - ship.y) / U / 1000).toFixed(1) + 'K AWAY', pills = [];
+      if (ow.bh) { const rem = Math.max(0, (ow.bh.end - nw) / 1000); pills.push([(ow.bh.h.white ? 'WHITE' : 'BLACK') + ' HOLE COLLAPSING  ' + mmss(rem) + '  ·  ' + far(ow.bh.h), '255,110,200', rem < 10]); }
+      if (ow.cm) { const p = owCometPos(nw); pills.push(['COMET RUN  ·  CHASE ITS TAIL  ' + mmss(Math.max(0, (ow.cm.end - nw) / 1000)) + '  ·  ' + far(p), '150,230,255', false]); }
+      if (ow.gs) { const rem = Math.max(0, (ow.gs.end - nw) / 1000); pills.push(['GRAVITY STORM  ·  HOLES PULL ×2  ·  ROCKS SCORE ×2  ' + mmss(rem), '190,140,255', rem < 5]); }
+      if (ow.mt) pills.push(['METEOR SHOWER  ' + mmss(Math.max(0, (ow.mt.end - nw) / 1000)) + '  ·  ' + far(ow.mt), '255,150,80', false]);
+      const so = ow.sk.find(o => !ow.taken[o.ck]); if (so) pills.push([ORBS[so.k].name.toUpperCase() + ' UP FOR GRABS  ·  ' + far(so), ORBS[so.k].col, false]);
       ctx.save(); ctx.font = `700 ${touch ? 10 : 11}px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      const tw = ctx.measureText(txt).width + txt.length * 1.4 + 34, bx = W / 2 - tw / 2, by = touch ? 54 : 16;
-      ctx.fillStyle = `rgba(${col},${0.12 + 0.08 * p})`; ctx.strokeStyle = `rgba(${col},${0.5 + 0.3 * p})`; ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.roundRect ? ctx.roundRect(bx, by, tw, 24, 12) : ctx.rect(bx, by, tw, 24); ctx.fill(); ctx.stroke();
-      ctx.fillStyle = `rgb(${col})`; spaced(txt, W / 2, by + 12.5, 1.4, 'center'); ctx.restore();
+      pills.forEach(([txt, col, hot], i) => {
+        const p = 0.5 + 0.5 * Math.sin(rtime * (hot ? 10 : 3)), tw = ctx.measureText(txt).width + txt.length * 1.4 + 34, bx = W / 2 - tw / 2, by = (touch ? 54 : 16) + i * 30;
+        ctx.fillStyle = `rgba(${col},${0.12 + 0.08 * p})`; ctx.strokeStyle = `rgba(${col},${0.5 + 0.3 * p})`; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.roundRect ? ctx.roundRect(bx, by, tw, 24, 12) : ctx.rect(bx, by, tw, 24); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = `rgb(${col})`; spaced(txt, W / 2, by + 12.5, 1.4, 'center');
+      });
+      ctx.restore();
+    }
+    // the storm shows on screen as purple wind streaks
+    if (ow.gs) {
+      ctx.save(); ctx.globalCompositeOperation = 'lighter'; ctx.lineCap = 'round';
+      for (let i = 0; i < 26; i++) { const sd = i * 97.13, x = ((sd * 13.7 + rtime * (420 + (i % 5) * 90)) % (W + 400)) - 200, y = (sd * 31.9 + Math.sin(rtime * 0.7 + i) * 40) % H, l = 60 + (i % 4) * 40; ctx.strokeStyle = `rgba(180,130,255,${0.07 + 0.05 * (i % 3)})`; ctx.lineWidth = 1.5 + (i % 3); ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - l, y - l * 0.18); ctx.stroke(); }
+      const g = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.35, W / 2, H / 2, Math.hypot(W, H) * 0.6); g.addColorStop(0, 'rgba(150,90,255,0)'); g.addColorStop(1, `rgba(150,90,255,${0.1 + 0.05 * Math.sin(rtime * 3)})`); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+      ctx.restore();
     }
     drawMinimap(W, H);
     if (ship && Math.hypot(ship.x, ship.y) < owSafeR()) {
@@ -6338,7 +6511,7 @@ function drawIndicators() {
   if (tut && tut.bc) list.push([tut.bc, '200,150,255', 7]);
   if (gmode === 'world') { for (const o of owOrbs.concat(ow.drops)) { if (ow.taken[o.ck]) continue; if (o.t === 'a' && Math.hypot(o.x - camX, o.y - camY) < 2600 * U) list.push([o, OTYPE.a.ring, 8]); } for (const d of drones) if (d.mini && Math.hypot(d.x - camX, d.y - camY) < 3200 * U) list.push([d, '255,90,90', 10]); }
   else list.push([{ x: CX, y: CY, bh: true }, TH.ring, 7]);
-  if (gmode === 'world' && ow) { if (ow.bh) list.push([ow.bh.h, '255,110,200', 11]); for (const o of ow.sk) if (!ow.taken[o.ck]) list.push([o, ORBS[o.k].col, 11]); }
+  if (gmode === 'world' && ow) { if (ow.bh) list.push([ow.bh.h, '255,110,200', 11]); if (ow.cm) list.push([owCometPos(performance.now()), '150,230,255', 11]); if (ow.mt) list.push([ow.mt, '255,150,80', 11]); for (const o of ow.sk) if (!ow.taken[o.ck]) list.push([o, ORBS[o.k].col, 11]); }
   const m = 26, l = SAL + m + (gmode === 'world' && ow && !isTouch() ? upBox(W, H, false)[2] + 20 : 0), r_ = W - SAR - m, t = SAT + m + 70, b = H - SAB - m - (isTouch() ? 0 : 40);
   ctx.save(); ctx.globalAlpha = hudA;
   for (const [o, col, sz] of list) {
