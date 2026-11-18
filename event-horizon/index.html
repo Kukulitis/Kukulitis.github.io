@@ -466,6 +466,24 @@ body:has(#owPick:not(.hidden)) .tbtn{display:none!important}
 .opts.sopt button.on{background:rgba(var(--c),.18);color:#fff;box-shadow:inset 0 0 0 1px rgba(var(--c),.6)}
 .sbtn{padding:9px 18px;min-width:96px}
 body.touch .srow2.nt{display:none}
+body:not(.touch) .srow2.to{display:none}
+.stabs{display:flex;gap:4px;margin:16px auto 0;padding:4px;border-radius:14px;background:rgba(0,0,0,.32);border:1px solid var(--line);width:calc(100% - 4px);max-width:720px;box-sizing:border-box}
+#settings .list.ctr>*{margin-top:0}
+.stabs button{--c:255,255,255;flex:1;justify-content:center;display:flex;align-items:center;gap:8px;padding:9px 16px;border-radius:10px;border:0;background:transparent;color:var(--dim);font-size:13px;font-weight:600;letter-spacing:.02em;transition:background .2s,color .2s,box-shadow .2s}
+.stabs button svg{width:17px;height:17px;opacity:.75}
+.stabs button:hover{color:#fff}
+.stabs button.on{color:#fff;background:linear-gradient(180deg,rgba(var(--c),.22),rgba(var(--c),.08));box-shadow:inset 0 0 0 1px rgba(var(--c),.55),0 0 18px rgba(var(--c),.12)}
+.stabs button.on svg{opacity:1;color:rgb(var(--c))}
+.spane{display:none;flex-direction:column;gap:8px}.spane.on{display:flex;animation:spIn .28s cubic-bezier(.2,.8,.2,1) backwards}
+@keyframes spIn{from{opacity:0;transform:translateY(6px)}}
+.sl{display:flex;align-items:center;gap:12px;width:260px;cursor:pointer}
+.sl input{flex:1;min-width:0;-webkit-appearance:none;appearance:none;height:6px;margin:0;border-radius:6px;outline:none;cursor:pointer;background:linear-gradient(90deg,rgba(var(--c),.55),rgb(var(--c)) var(--p,50%),rgba(255,255,255,.09) var(--p,50%))}
+.sl input::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:#fff;border:0;box-shadow:0 0 0 4px rgba(var(--c),.28),0 0 14px rgba(var(--c),.7);transition:box-shadow .15s,transform .15s}
+.sl input::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:#fff;border:0;box-shadow:0 0 0 4px rgba(var(--c),.28),0 0 14px rgba(var(--c),.7)}
+.sl input:hover::-webkit-slider-thumb,.sl input:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 6px rgba(var(--c),.32),0 0 18px rgba(var(--c),.9);transform:scale(1.05)}
+.sl output{min-width:52px;padding:5px 0;border-radius:8px;text-align:center;font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;color:#fff;background:rgba(var(--c),.12);border:1px solid rgba(var(--c),.3)}
+.sl.zero output{color:var(--dim);background:rgba(255,255,255,.04);border-color:var(--line)}
+@media (max-width:560px){.srow2>.sl{grid-column:1/-1;width:auto}.stabs button{padding:8px 10px;gap:6px;font-size:12px}.stabs button svg{display:none}}
 @media (max-width:560px){.srow2{grid-template-columns:36px minmax(0,1fr);row-gap:10px;padding:11px 12px}.sico{width:36px;height:36px}.srow2>.sopt,.srow2>.sbtn{grid-column:1/-1}.opts.sopt button{flex:1}}
 /* phone garage: the details card is a bottom sheet so nothing jumps when you tap */
 @media (max-width:900px) and (min-height:521px){
@@ -620,19 +638,42 @@ body.touch .srow2.nt{display:none}
 </div>
 
 <div id="settings" class="ov scr hidden">
-  <div class="hd a1"><div><div class="h3">SETTINGS</div><div class="sub">Saved on this device. Camera changes apply from your next run.</div></div></div>
-  <div class="list ctr a2" style="margin-top:14px"><div class="setl">
-    <div class="sgt">Camera</div>
-    <div class="srow2" style="--c:120,230,255"><div class="sico"><i data-ic="camera"></i></div><div class="stx"><b>View</b><small>Follow ship keeps you centred in a big round arena. Fixed fits the whole arena on one screen.</small></div><div class="opts sopt" data-set="cam"><button data-v="follow">Follow ship</button><button data-v="fixed">Fixed</button></div></div>
-    <div class="srow2 nt" style="--c:120,230,255"><div class="sico"><i data-ic="look"></i></div><div class="stx"><b>Look toward cursor</b><small>Mouse only. Tap Space to re-centre, hold Space to keep the ship centred.</small></div><div class="opts sopt" data-set="look"><button data-v="off">Off</button><button data-v="on">On</button></div></div>
-    <div class="sgt">Graphics</div>
-    <div class="srow2" style="--c:255,214,120"><div class="sico"><i data-ic="gfx"></i></div><div class="stx"><b>Quality</b><small>Auto lowers resolution and glow detail by itself if the game starts to stutter.</small></div><div class="opts sopt" data-set="gfx"><button data-v="auto">Auto</button><button data-v="high">High</button><button data-v="bal">Balanced</button><button data-v="perf">Fast</button></div></div>
-    <div class="sgt">Feel</div>
-    <div class="srow2" style="--c:143,255,214"><div class="sico"><i data-ic="sound"></i></div><div class="stx"><b>Sound</b><small>Music and sound effects.</small></div><div class="opts sopt" data-set="snd"><button data-v="on">On</button><button data-v="off">Off</button></div></div>
-    <div class="srow2" style="--c:255,176,112"><div class="sico"><i data-ic="shake"></i></div><div class="stx"><b>Screen shake</b><small>Camera shake on explosions and hits.</small></div><div class="opts sopt" data-set="shake"><button data-v="on">On</button><button data-v="off">Off</button></div></div>
-    <div class="sgt">Interface</div>
-    <div class="srow2" style="--c:200,150,255"><div class="sico"><i data-ic="hud"></i></div><div class="stx"><b>HUD layout</b><small>Move and resize the minimap, upgrade panel and scoreboard in Multiplayer.</small></div><button class="buy ctr sbtn" id="sMM">Edit</button></div>
-    <div class="srow2" id="sTutRow" style="--c:200,150,255"><div class="sico"><i data-ic="play"></i></div><div class="stx"><b>Tutorial</b><small>Learn the controls step by step.</small></div><button class="buy ctr sbtn" id="sTut">Play</button></div>
+  <div class="hd a1"><div><div class="h3">SETTINGS</div><div class="sub">Saved on this device. Changes apply right away.</div></div></div>
+  <div class="stabs a2" id="sTabs"><button data-tab="audio" style="--c:143,255,214"><i data-ic="sound"></i><span>Audio</span></button><button data-tab="video" style="--c:255,214,120"><i data-ic="gfx"></i><span>Video</span></button><button data-tab="ctrl" style="--c:120,230,255"><i data-ic="look"></i><span>Controls</span></button><button data-tab="ui" style="--c:200,150,255"><i data-ic="hud"></i><span>Interface</span></button></div>
+  <div class="list ctr a2" style="margin-top:12px"><div class="setl">
+<div class="spane" data-pane="audio">
+<div class="sgt">Volume</div>
+<div class="srow2" style="--c:143,255,214"><div class="sico"><i data-ic="sound"></i></div><div class="stx"><b>Master volume</b><small>Everything you hear.</small></div><label class="sl" data-sl="vm" data-u="%"><input type="range" min="0" max="100" step="5" aria-label="vm"><output></output></label></div>
+<div class="srow2" style="--c:143,255,214"><div class="sico"><i data-ic="music"></i></div><div class="stx"><b>Music</b><small>The soundtrack and the black hole hum.</small></div><label class="sl" data-sl="vmu" data-u="%"><input type="range" min="0" max="100" step="5" aria-label="vmu"><output></output></label></div>
+<div class="srow2" style="--c:143,255,214"><div class="sico"><i data-ic="sfx"></i></div><div class="stx"><b>Sound effects</b><small>Shots, explosions, pickups and menus.</small></div><label class="sl" data-sl="vfx" data-u="%"><input type="range" min="0" max="100" step="5" aria-label="vfx"><output></output></label></div>
+<div class="sgt">Output</div>
+<div class="srow2" style="--c:143,255,214"><div class="sico"><i data-ic="mute"></i></div><div class="stx"><b>Sound</b><small>Mute everything. M toggles this in game.</small></div><div class="opts sopt" data-set="snd"><button data-v="on">On</button><button data-v="off">Muted</button></div></div>
+</div>
+<div class="spane" data-pane="video">
+<div class="sgt">Performance</div>
+<div class="srow2" style="--c:255,214,120"><div class="sico"><i data-ic="gfx"></i></div><div class="stx"><b>Quality</b><small>Auto lowers resolution and glow detail by itself if the game starts to stutter.</small></div><div class="opts sopt" data-set="gfx"><button data-v="auto">Auto</button><button data-v="high">High</button><button data-v="bal">Balanced</button><button data-v="perf">Fast</button></div></div>
+<div class="srow2" style="--c:255,214,120"><div class="sico"><i data-ic="fps"></i></div><div class="stx"><b>FPS counter</b><small>Shows frame rate at the bottom of the screen.</small></div><div class="opts sopt" data-set="fps"><button data-v="off">Off</button><button data-v="on">On</button></div></div>
+<div class="sgt">Effects</div>
+<div class="srow2" style="--c:255,214,120"><div class="sico"><i data-ic="shake"></i></div><div class="stx"><b>Screen shake</b><small>Camera shake on explosions and hits. 0% turns it off.</small></div><label class="sl" data-sl="shk" data-u="%"><input type="range" min="0" max="150" step="10" aria-label="shk"><output></output></label></div>
+<div class="srow2" style="--c:255,214,120"><div class="sico"><i data-ic="bolt"></i></div><div class="stx"><b>Screen flashes</b><small>Full-screen flashes from hits, bombs and big moments. Lower it if bright flashes bother you.</small></div><label class="sl" data-sl="fls" data-u="%"><input type="range" min="0" max="100" step="10" aria-label="fls"><output></output></label></div>
+</div>
+<div class="spane" data-pane="ctrl">
+<div class="sgt">Camera</div>
+<div class="srow2" style="--c:120,230,255"><div class="sico"><i data-ic="camera"></i></div><div class="stx"><b>View</b><small>Follow ship keeps you centred in a big round arena. Fixed fits the whole arena on one screen. Applies from your next run.</small></div><div class="opts sopt" data-set="cam"><button data-v="follow">Follow ship</button><button data-v="fixed">Fixed</button></div></div>
+<div class="srow2 nt" style="--c:120,230,255"><div class="sico"><i data-ic="look"></i></div><div class="stx"><b>Look toward cursor</b><small>Mouse only. Tap Space to re-centre, hold Space to keep the ship centred.</small></div><div class="opts sopt" data-set="look"><button data-v="off">Off</button><button data-v="on">On</button></div></div>
+<div class="srow2 nt" style="--c:120,230,255"><div class="sico"><i data-ic="look"></i></div><div class="stx"><b>Look-ahead distance</b><small>How far the camera leans toward the cursor when Look toward cursor is on.</small></div><label class="sl" data-sl="lk" data-u="%"><input type="range" min="25" max="150" step="5" aria-label="lk"><output></output></label></div>
+<div class="sgt">Aim</div>
+<div class="srow2 nt" style="--c:120,230,255"><div class="sico"><i data-ic="look"></i></div><div class="stx"><b>Crosshair size</b><small>Size of the in-game aim reticle.</small></div><label class="sl" data-sl="ret" data-u="%"><input type="range" min="60" max="180" step="10" aria-label="ret"><output></output></label></div>
+<div class="srow2 to" style="--c:120,230,255"><div class="sico"><i data-ic="stick"></i></div><div class="stx"><b>Stick sensitivity</b><small>How far you drag the move stick to reach full speed. Higher reacts faster.</small></div><label class="sl" data-sl="stk" data-u="%"><input type="range" min="50" max="200" step="10" aria-label="stk"><output></output></label></div>
+<div class="srow2 to" style="--c:120,230,255"><div class="sico"><i data-ic="vib"></i></div><div class="stx"><b>Vibration</b><small>Haptic buzz on hits and bombs.</small></div><div class="opts sopt" data-set="vib"><button data-v="on">On</button><button data-v="off">Off</button></div></div>
+</div>
+<div class="spane" data-pane="ui">
+<div class="sgt">Layout</div>
+<div class="srow2" style="--c:200,150,255"><div class="sico"><i data-ic="hud"></i></div><div class="stx"><b>HUD layout</b><small>Move and resize the minimap, upgrade panel and scoreboard in Multiplayer.</small></div><button class="buy ctr sbtn" id="sMM">Edit</button></div>
+<div class="srow2" id="sTutRow" style="--c:200,150,255"><div class="sico"><i data-ic="play"></i></div><div class="stx"><b>Tutorial</b><small>Learn the controls step by step.</small></div><button class="buy ctr sbtn" id="sTut">Play</button></div>
+<div class="sgt">Defaults</div>
+<div class="srow2" style="--c:200,150,255"><div class="sico"><i data-ic="reset"></i></div><div class="stx"><b>Reset settings</b><small>Puts audio, video and control options back to how they started. Your progress is untouched.</small></div><button class="buy ctr sbtn" id="sReset">Reset</button></div>
+</div>
   </div></div>
   <div class="ft a3"><button class="play sm" id="sBack"><span class="pm">DONE</span></button></div>
 </div>
@@ -755,7 +796,7 @@ body.touch .srow2.nt{display:none}
 <script>
 'use strict';
 // Versioning: next version -> next whole number (4.00), sub version -> +0.01 (3.01)
-const VERSION = '4.52';
+const VERSION = '4.53';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -770,7 +811,7 @@ const isTouch = () => document.body.classList.contains('touch');
 const FONT = '"Chakra Petch", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif';
 let SAT = 0, SAB = 0, SAL = 0, SAR = 0, gameStart = 0;
 function readSafe() { const cs = getComputedStyle($('safe')); SAT = parseFloat(cs.paddingTop) || 0; SAB = parseFloat(cs.paddingBottom) || 0; SAL = parseFloat(cs.paddingLeft) || 0; SAR = parseFloat(cs.paddingRight) || 0; }
-function buzz(p) { try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) {} }
+function buzz(p) { if (typeof save !== 'undefined' && save.opt && save.opt.vib === false) return; try { if (navigator.vibrate) navigator.vibrate(p); } catch (e) {} }
 
 // ================= ICONS (shared by HTML and canvas) =================
 const C = (x, y, r) => `M${x - r} ${y}a${r} ${r} 0 1 0 ${2 * r} 0a${r} ${r} 0 1 0 ${-2 * r} 0`;
@@ -820,6 +861,13 @@ const ICONS = {
   look: [C(12, 12, 3), 'M12 2v4M12 18v4M2 12h4M18 12h4'],
   hud: ['M3 5h18v14H3z', 'M6 8h5v4H6z', C(16.5, 14.5, 2)],
   play: ['M8 5.5v13l10.5-6.5z'],
+  music: ['M9 18V5l11-2v13', C(6.5, 18, 2.5), C(17.5, 16, 2.5)],
+  sfx: ['M4 9v6h4l5 4V5L8 9z', 'M17 9l4-2M17 12h4.5M17 15l4 2'],
+  bolt: ['M13 2L4 14h7l-1 8 9-12h-7z'],
+  fps: ['M4 17a8 8 0 1 1 16 0', 'M12 17l4.5-5', 'M4 20h16'],
+  stick: [C(12, 12, 9), C(12, 12, 3.5)],
+  vib: ['M8 3h8v18H8z', 'M4 8v8M20 8v8', 'M11 18h2'],
+  reset: ['M4 12a8 8 0 1 0 2.4-5.7', 'M4 4v5h5'],
   gfx: ['M3 5h18v12H3z', 'M8 21h8M12 17v4', 'M7 13l3-3 2 2 4-4'],
 };
 const svgIcon = k => `<svg viewBox="0 0 24 24" aria-hidden="true">${(ICONS[k] || []).map(d => `<path d="${d}"/>`).join('')}</svg>`;
@@ -894,6 +942,9 @@ let TH = SECTORS[0];
 let save = { abil: {}, abTry: {}, seen: { k: {}, b: {} }, upv: 3, dust: 0, up: {}, unlocked: 1, sel: 1, best: 0, sbest: {}, lb: [], deep: 0, name: '', tut: 0, cam: 'follow', shake: true, skins: ['scrap'], skin: 'scrap', bskins: ['pellet'], bskin: 'pellet', orbs: { void: 0, stellar: 0 } };
 const SAVE0 = JSON.stringify(save);
 let lastPacked = '';
+// V4.53 settings: device options with defaults
+const OPT0 = { vm: 100, vmu: 100, vfx: 100, shk: 100, fls: 100, fps: false, lk: 100, ret: 100, stk: 100, vib: true, tab: 'audio' };
+const O = k => { const o = save.opt || (save.opt = {}); return o[k] ?? OPT0[k]; };
 function loadSave() {
   try {
     const s = JSON.parse(localStorage.getItem('eh_save2') || 'null');
@@ -1484,19 +1535,20 @@ function buildDisk() {
 function applyTheme(n) { TH = themeFor(n); buildNebula(); buildStars(); buildDisk(); }
 
 // ================= AUDIO =================
-let AC = null, master, droneF, droneG, noiseBuf, musF, beamOsc = null, beamG = null;
+let AC = null, master, musG, sfxG, droneF, droneG, noiseBuf, musF, beamOsc = null, beamG = null;
 function audio() {
   if (AC) { if (AC.state === 'suspended') AC.resume(); return; }
   try {
     AC = new (window.AudioContext || window.webkitAudioContext)();
-    master = AC.createGain(); master.gain.value = muted ? 0 : 0.5;
+    master = AC.createGain(); master.gain.value = 0;
     const comp = AC.createDynamicsCompressor();
     master.connect(comp); comp.connect(AC.destination);
+    musG = AC.createGain(); sfxG = AC.createGain(); musG.connect(master); sfxG.connect(master); applyVol();
     droneF = AC.createBiquadFilter(); droneF.type = 'lowpass'; droneF.frequency.value = 120; droneF.Q.value = 4;
     droneG = AC.createGain(); droneG.gain.value = 0.06;
-    droneF.connect(droneG); droneG.connect(master);
+    droneF.connect(droneG); droneG.connect(musG);
     for (const f of [41.2, 41.7, 61.8, 82.4]) { const o = AC.createOscillator(); o.type = 'sawtooth'; o.frequency.value = f; o.connect(droneF); o.start(); }
-    musF = AC.createBiquadFilter(); musF.type = 'lowpass'; musF.frequency.value = 500; musF.Q.value = 6; musF.connect(master);
+    musF = AC.createBiquadFilter(); musF.type = 'lowpass'; musF.frequency.value = 500; musF.Q.value = 6; musF.connect(musG);
   } catch (e) { AC = null; }
 }
 function tone(f, d, type, v, f2, t0, dest) {
@@ -1505,9 +1557,9 @@ function tone(f, d, type, v, f2, t0, dest) {
   o.type = type; o.frequency.setValueAtTime(f, t);
   if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + d);
   g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
-  o.connect(g); g.connect(dest || master); o.start(t); o.stop(t + d + 0.02);
+  o.connect(g); g.connect(dest || sfxG); o.start(t); o.stop(t + d + 0.02);
 }
-function noise(d, v, fc, fc2, t0) {
+function noise(d, v, fc, fc2, t0, dest) {
   if (!AC) return;
   if (!noiseBuf) {
     noiseBuf = AC.createBuffer(1, AC.sampleRate * 2, AC.sampleRate);
@@ -1518,7 +1570,7 @@ function noise(d, v, fc, fc2, t0) {
   s.buffer = noiseBuf; f.type = 'lowpass'; f.frequency.setValueAtTime(fc, t);
   if (fc2) f.frequency.exponentialRampToValueAtTime(fc2, t + d);
   g.gain.setValueAtTime(v, t); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
-  s.connect(f); f.connect(g); g.connect(master); s.start(t); s.stop(t + d);
+  s.connect(f); f.connect(g); g.connect(dest || sfxG); s.start(t); s.stop(t + d);
 }
 function beamSound(on) {
   if (!AC) return;
@@ -1526,13 +1578,19 @@ function beamSound(on) {
     beamOsc = AC.createOscillator(); beamOsc.type = 'sawtooth'; beamOsc.frequency.value = 110;
     const f = AC.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 900; f.Q.value = 3;
     beamG = AC.createGain(); beamG.gain.value = 0;
-    beamOsc.connect(f); f.connect(beamG); beamG.connect(master); beamOsc.start();
+    beamOsc.connect(f); f.connect(beamG); beamG.connect(sfxG); beamOsc.start();
   }
   if (beamG) beamG.gain.setTargetAtTime(on ? 0.07 : 0, AC.currentTime, 0.03);
   if (on) beamOsc.frequency.setTargetAtTime(105 + Math.random() * 25, AC.currentTime, 0.04);
 }
+const volC = v => Math.pow(clamp(v, 0, 100) / 100, 1.6);
+function applyVol() {
+  if (!AC) return; const t = AC.currentTime;
+  master.gain.setTargetAtTime(muted ? 0 : 0.5 * volC(O('vm')), t, 0.03);
+  musG.gain.setTargetAtTime(volC(O('vmu')), t, 0.03); sfxG.gain.setTargetAtTime(volC(O('vfx')), t, 0.03);
+}
 function setMute(m) {
-  muted = m; if (master) master.gain.value = muted ? 0 : 0.5;
+  muted = m; applyVol();
   const b = $('muteBtn'); b.innerHTML = svgIcon(muted ? 'mute' : 'sound') + `<span id="muteLbl">${muted ? 'Sound off' : 'Sound on'}</span>`;
 }
 let lastShootSnd = 0;
@@ -1567,8 +1625,8 @@ function music() {
     const i = beat % 8, tr = TR[(beat >> 3) % 4] * kp, t = nextBeat, live = mode === 'play' || mode === 'warp';
     tone(BASS[i] * tr, SPB * 0.9, 'sawtooth', live ? 0.09 : 0.05, 0, t, musF);
     if (live) {
-      if (i % 4 === 0) tone(130, 0.22, 'sine', 0.22, 38, t);
-      if (inten > 0.15 && i % 2 === 1) noise(0.035, 0.035 + inten * 0.03, 9000, 0, t);
+      if (i % 4 === 0) tone(130, 0.22, 'sine', 0.22, 38, t, musG);
+      if (inten > 0.15 && i % 2 === 1) noise(0.035, 0.035 + inten * 0.03, 9000, 0, t, musG);
       if (inten > 0.45) tone(ARP[(i * 3 + (beat >> 3)) % 8] * tr, SPB * 0.8, 'square', 0.018 + inten * 0.012, 0, t, musF);
       if (boss && i % 4 === 2) tone(BASS[i] * tr * 2, SPB * 1.6, 'sawtooth', 0.03, BASS[i] * tr * 1.9, t, musF);
     }
@@ -2052,7 +2110,7 @@ function killBoss() {
 }
 function doBomb(free) {
   if (!ship) return;
-  if (!free) { if (bombs <= 0) return; bombs--; tutEv('bomb'); }
+  if (!free) { if (bombs <= 0 && !devGod) return; if (!devGod) bombs--; tutEv('bomb'); }
   bwId++; buzz(70);
   bw = { x: ship.x, y: ship.y, r: 0, max: 560 * U, id: bwId };
   flash = 0.5; flashCol = free ? '255,170,80' : '200,120,255'; shake = 14; sfx.bomb();
@@ -2774,7 +2832,7 @@ function devRun(line) {
       devSay('/god   /upgrade <key|all> [level]   /basic <key|all> [level]   /ability <key|all> [level]   /unlock sectors|skins|all   /clear');
       return;
     case 'clear': $('devLog').innerHTML = ''; return;
-    case 'god': devGod = !devGod; if (ship && !devGod) ship.inv = 0; ok('God mode ' + (devGod ? 'on' : 'off')); return;
+    case 'god': devGod = !devGod; if (ship && !devGod) ship.inv = 0; if (ship && devGod) ship.dcd = 0; ok('God mode ' + (devGod ? 'on: no damage, infinite dashes and E-bombs' : 'off')); return;
     case 'give': {
       if (A1 === 'dust') { const n = Math.round(num(A2, 1000)); save.dust = Math.max(0, save.dust + n); persist(); refreshMenu(); ok('Gave ◆ ' + fmt(n) + ' stardust (now ' + fmt(save.dust) + ')'); return; }
       if (A1 === 'score') { const n = Math.round(num(A2, 1000)); score += n; ok('Added ' + fmt(n) + ' score'); return; }
@@ -3106,7 +3164,7 @@ function crateFrame(dt) {
       c.restore();
     }
   }
-  if (cr.flash > 0) { c.globalCompositeOperation = 'lighter'; c.fillStyle = `rgba(${cr.fcol},${cr.flash * (cr.fcol === '255,255,255' ? 0.85 : 0.28)})`; c.fillRect(0, 0, W, H); c.globalCompositeOperation = 'source-over'; }
+  if (cr.flash > 0) { c.globalCompositeOperation = 'lighter'; c.fillStyle = `rgba(${cr.fcol},${cr.flash * (cr.fcol === '255,255,255' ? 0.85 : 0.28) * (0.25 + 0.75 * O('fls') / 100)})`; c.fillRect(0, 0, W, H); c.globalCompositeOperation = 'source-over'; }
   if (cr.phase === 'reveal' && !cr.shown && cr.t > 0.5) crShow();
 }
 $('crate').addEventListener('pointerdown', e => { if (e.target.closest('button')) return; e.preventDefault(); crInput('tap'); });
@@ -3257,19 +3315,51 @@ function openProfile() {
 function profSum() { $('pSum').innerHTML = `◆ ${fmt(save.dust)} <small>${Math.min(NS, save.unlocked - 1)}/${NS} SECTORS</small>`; }
 $('pilotBtn').onclick = () => { audio(); sfx.ui(); openProfile(); };
 function renderSettings() {
-  const cur = { look: save.look ? 'on' : 'off', cam: save.cam === 'fixed' ? 'fixed' : 'follow', snd: muted ? 'off' : 'on', shake: save.shake === false ? 'off' : 'on', gfx: save.gfx || 'auto' };
+  const cur = { look: save.look ? 'on' : 'off', cam: save.cam === 'fixed' ? 'fixed' : 'follow', snd: muted ? 'off' : 'on', gfx: save.gfx || 'auto', fps: O('fps') ? 'on' : 'off', vib: O('vib') ? 'on' : 'off' };
   document.querySelectorAll('#settings .opts').forEach(g => g.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === cur[g.dataset.set])));
+  document.querySelectorAll('#settings .sl').forEach(l => slSync(l, O(l.dataset.sl)));
+  const tab = O('tab');
+  document.querySelectorAll('#sTabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
+  document.querySelectorAll('#settings .spane').forEach(p => p.classList.toggle('on', p.dataset.pane === tab));
+}
+function slSync(l, v) {
+  const i = l.querySelector('input'); i.value = v;
+  i.style.setProperty('--p', ((v - i.min) / (i.max - i.min) * 100) + '%');
+  l.querySelector('output').textContent = +v === 0 ? 'Off' : v + l.dataset.u; l.classList.toggle('zero', +v === 0);
+}
+let slPrevT = 0;
+function slPreview(k, v) {
+  const now = performance.now(); if (now - slPrevT < 110) return; slPrevT = now;
+  if (k === 'vfx' || k === 'vm') { audio(); tone(700 + v * 4, 0.08, 'triangle', 0.06); }
+  if (k === 'shk') shake = 14;
+  if (k === 'fls') { flash = 0.45; flashCol = '255,255,255'; }
 }
 $('setBtn').onclick = () => { audio(); sfx.ui(); setFrom = 'menu'; hideAll(); show('settings'); renderSettings(); $('sTutRow').classList.remove('hidden'); };
 let setFrom = 'menu';
 $('sBack').onclick = () => { if (setFrom === 'pause' && mode === 'play') { setFrom = 'menu'; hideAll(); show('pause'); setPause(true); } else { setFrom = 'menu'; goMenu(); } };
 $('pSet').onclick = () => { sfx.ui(); setFrom = 'pause'; hideAll(); show('settings'); renderSettings(); $('sTutRow').classList.add('hidden'); };
+$('settings').addEventListener('input', e => {
+  const l = e.target.closest('.sl'); if (!l) return;
+  const k = l.dataset.sl, v = +e.target.value; save.opt = save.opt || {}; save.opt[k] = v; slSync(l, v);
+  if (k === 'vm' || k === 'vmu' || k === 'vfx') { audio(); applyVol(); }
+  slPreview(k, v);
+});
+$('settings').addEventListener('change', e => { if (e.target.closest('.sl')) persist(); });
+$('sTabs').onclick = e => { const b = e.target.closest('button'); if (!b) return; save.opt = save.opt || {}; save.opt.tab = b.dataset.tab; sfx.ui(); renderSettings(); persist(); };
+let resetArmed = 0;
+$('sReset').onclick = () => {
+  if (performance.now() - resetArmed > 3000) { resetArmed = performance.now(); $('sReset').textContent = 'Sure?'; sfx.ui(); setTimeout(() => { $('sReset').textContent = 'Reset'; }, 3000); return; }
+  resetArmed = 0; $('sReset').textContent = 'Done';
+  save.opt = { tab: 'ui' }; save.gfx = 'auto'; save.look = false; save.cam = 'follow'; save.muted = false; setMute(false); applyVol(); gfxNoUp = false; resize();
+  persist(); sfx.buy(); renderSettings(); setTimeout(() => { $('sReset').textContent = 'Reset'; }, 1500);
+};
 $('settings').addEventListener('click', e => {
   const b = e.target.closest('.opts button'); if (!b) return;
-  const k = b.parentElement.dataset.set, v = b.dataset.v;
+  const k = b.parentElement.dataset.set, v = b.dataset.v; save.opt = save.opt || {};
   if (k === 'cam') save.cam = v;
   if (k === 'look') save.look = v === 'on';
-  if (k === 'shake') save.shake = v === 'on';
+  if (k === 'fps') save.opt.fps = v === 'on';
+  if (k === 'vib') { save.opt.vib = v === 'on'; if (v === 'on') buzz(40); }
   if (k === 'gfx') { save.gfx = v; gfxNoUp = false; resize(); }
   if (k === 'snd') { save.muted = v === 'off'; setMute(save.muted); }
   persist(); sfx.ui(); renderSettings();
@@ -3425,7 +3515,7 @@ $('accOutBtn').onclick = async () => {
     accMsg('Saving first...');
     if (!(await cloudPush())) return accMsg('Could not save to the cloud yet. Try again when you are online.', true);
   }
-  const keep = { cam: save.cam, shake: save.shake, muted: save.muted, tut: save.tut, gift2: true };
+  const keep = { cam: save.cam, shake: save.shake, muted: save.muted, tut: save.tut, gift2: true, gfx: save.gfx, look: save.look, opt: save.opt };
   for (const k of Object.keys(save)) delete save[k];
   Object.assign(save, JSON.parse(SAVE0), keep);
   setUser(''); cloudState = 'idle';
@@ -5661,7 +5751,7 @@ function update(dt, rdt) {
   if (ship) {
     if (keys.KeyA || keys.ArrowLeft) ix -= 1; if (keys.KeyD || keys.ArrowRight) ix += 1;
     if (keys.KeyW || keys.ArrowUp) iy -= 1; if (keys.KeyS || keys.ArrowDown) iy += 1;
-    if (stick) { const sx = (stick.x - stick.ox) / STICK, sy = (stick.y - stick.oy) / STICK, sl = Math.hypot(sx, sy); if (sl > 0.12) { const k = Math.min(1, (sl - 0.12) / 0.75) / sl; ix += sx * k; iy += sy * k; } }
+    if (stick) { const sK = O('stk') / 100, sx = (stick.x - stick.ox) / STICK * sK, sy = (stick.y - stick.oy) / STICK * sK, sl = Math.hypot(sx, sy); if (sl > 0.12) { const k = Math.min(1, (sl - 0.12) / 0.75) / sl; ix += sx * k; iy += sy * k; } }
     const len = Math.hypot(ix, iy); if (len > 1) { ix /= len; iy /= len; }
     const thrust = 560 * U * S.thrust;
     ship.vx += ix * thrust * dt; ship.vy += iy * thrust * dt; ship.thr = Math.min(1, len);
@@ -5694,7 +5784,7 @@ function update(dt, rdt) {
       let dx = ix, dy = iy;
       if (Math.hypot(dx, dy) < 0.2) { dx = Math.cos(ship.ang); dy = Math.sin(ship.ang); }
       const l = Math.hypot(dx, dy); dx /= l; dy /= l;
-      ship.vx += dx * 480 * U; ship.vy += dy * 480 * U; ship.inv = Math.max(ship.inv, S.dashInv); ship.dcd = S.dashCD;
+      ship.vx += dx * 480 * U; ship.vy += dy * 480 * U; ship.inv = Math.max(ship.inv, S.dashInv); ship.dcd = devGod ? 0.15 : S.dashCD;
       for (let k = 0; k < 7; k++) ghosts.push({ x: ship.x - dx * k * 10 * U, y: ship.y - dy * k * 10 * U, ang: ship.ang, life: 0.4 - k * 0.045, col: trailCol() });
       noise(0.3, 0.14, 4000, 300); ring(ship.x, ship.y, 55, '120,240,255', 0.3, 2);
     }
@@ -6232,7 +6322,7 @@ function animUI(rdt) {
     } else { ctx_ = camX; cty = camY; }
   } else if (follow && mode === 'clear') { ctx_ = camX; cty = camY; }
   camX = lerp(camX, ctx_, k(ck)); camY = lerp(camY, cty, k(ck));
-  if (follow && ship) { const lim = save.look && !isTouch() ? Math.max(W, H) * 0.45 : MIN * 0.28, ddx = camX - ship.x, ddy = camY - ship.y, dl = Math.hypot(ddx, ddy); if (dl > lim) { camX = ship.x + ddx / dl * lim; camY = ship.y + ddy / dl * lim; } }
+  if (follow && ship) { const lim = save.look && !isTouch() ? Math.max(W, H) * 0.45 * Math.max(1, O('lk') / 100) : MIN * 0.28, ddx = camX - ship.x, ddy = camY - ship.y, dl = Math.hypot(ddx, ddy); if (dl > lim) { camX = ship.x + ddx / dl * lim; camY = ship.y + ddy / dl * lim; } }
   const dcx = camX - pcx, dcy = camY - pcy;
   if (dcx || dcy) for (const s of stars) {
     s.x -= dcx * s.z * 0.35; s.y -= dcy * s.z * 0.35;
@@ -7069,8 +7159,8 @@ function drawHUDi(W, H) {
     const rdy = ship.dcd <= 0;
     ctx.save(); if (!rdy) ctx.globalAlpha *= 0.55;
     badge(xd, y, r, 'dash', '120,235,255', rdy ? 1 : 1 - ship.dcd / S.dashCD, '', false); ctx.restore();
-    ctx.save(); if (bombs <= 0) ctx.globalAlpha *= 0.45;
-    badge(xb, y, r, 'bombbay', PICK.bomb.c, bombs > 0 ? 1 : 0, String(bombs), false); ctx.restore();
+    ctx.save(); if (bombs <= 0 && !devGod) ctx.globalAlpha *= 0.45;
+    badge(xb, y, r, 'bombbay', PICK.bomb.c, bombs > 0 || devGod ? 1 : 0, devGod ? '∞' : String(bombs), false); ctx.restore();
     ctx.save(); ctx.globalAlpha *= 0.7; keycap(xd, H - 12, 'SHIFT'); keycap(xb, H - 12, 'E'); ctx.restore();
   }
   // wave progress bar (fills up to the point where the next wave starts)
@@ -7158,7 +7248,7 @@ function syncButtons() {
   if (!isTouch() || mode !== 'play') return;
   const t = String(bombs);
   if (t !== lastBombTxt) { $('bombN').textContent = t; lastBombTxt = t; }
-  $('bombBtn').classList.toggle('off', bombs <= 0);
+  $('bombBtn').classList.toggle('off', bombs <= 0 && !devGod);
   const p = ship && ship.dcd > 0 ? Math.round(ship.dcd / S.dashCD * 36) * 10 : 0;
   if (p !== lastDashP) { $('dashCd').style.setProperty('--p', p + 'deg'); lastDashP = p; }
   $('dashBtn').classList.toggle('off', !ship);
@@ -7168,7 +7258,8 @@ function syncButtons() {
 function draw() {
   const wi = mode === 'warp' ? Math.sin(Math.PI * clamp(warpT / 1.8, 0, 1)) : 0;
   ctx.save();
-  if (shake > 0 && save.shake !== false) ctx.translate(shake * 0.5 * (Math.sin(rtime * 61.3) + 0.5 * Math.sin(rtime * 23.7)) / 1.5, shake * 0.5 * (Math.cos(rtime * 57.1) + 0.5 * Math.cos(rtime * 19.3)) / 1.5);
+  const shk = shake * O('shk') / 100;
+  if (shk > 0) ctx.translate(shk * 0.5 * (Math.sin(rtime * 61.3) + 0.5 * Math.sin(rtime * 23.7)) / 1.5, shk * 0.5 * (Math.cos(rtime * 57.1) + 0.5 * Math.cos(rtime * 19.3)) / 1.5);
   ctx.drawImage(neb, -20 + nebOX, -20 + nebOY);
   ctx.globalCompositeOperation = 'lighter'; drawStars(); ctx.globalCompositeOperation = 'source-over';
   ctx.translate(W / 2 - camX, H / 2 - camY);
@@ -7275,12 +7366,24 @@ function draw() {
     sg.addColorStop(0, `rgba(${TH.danger},0)`); sg.addColorStop(1, `rgba(${TH.danger},${0.14 + 0.06 * Math.sin(rtime * 12)})`);
     ctx.fillStyle = sg; ctx.fillRect(0, 0, W, H);
   }
-  if (flash > 0) { ctx.fillStyle = `rgba(${flashCol},${flash * 0.32})`; ctx.fillRect(0, 0, W, H); }
+  if (flash > 0 && O('fls') > 0) { ctx.fillStyle = `rgba(${flashCol},${flash * 0.32 * O('fls') / 100})`; ctx.fillRect(0, 0, W, H); }
+  if (O('fps')) drawFps();
   drawHUD();
   drawIndicators();
   drawSticks();
   drawReticle();
   syncButtons();
+}
+let fpsA = 60, fpsMs = 16.7, fpsLast = 0;
+function drawFps() {
+  const now = performance.now(), d = now - (fpsLast || now); fpsLast = now;
+  if (d > 0 && d < 250) { fpsMs += (d - fpsMs) * 0.06; fpsA = 1000 / fpsMs; }
+  const f = Math.round(fpsA), col = f >= 55 ? '143,255,214' : f >= 40 ? '255,214,120' : '255,110,110';
+  ctx.save(); ctx.font = `600 11px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  const tx = `${f} FPS  ·  ${fpsMs.toFixed(1)} ms`, w = ctx.measureText(tx).width + 22, x = W / 2, y = H - SAB - 14;
+  ctx.fillStyle = 'rgba(4,6,16,.6)'; ctx.beginPath(); ctx.roundRect(x - w / 2, y - 10, w, 20, 10); ctx.fill();
+  ctx.strokeStyle = `rgba(${col},.35)`; ctx.lineWidth = 1; ctx.stroke();
+  ctx.fillStyle = `rgb(${col})`; ctx.fillText(tx, x, y + 0.5); ctx.restore();
 }
 // aim reticle: replaces the system pointer while flying with a mouse. It kicks out a little with every shot and
 // tightens and turns hot when something you can hit is right under it.
@@ -7303,6 +7406,7 @@ function drawReticle() {
     for (let i = 0; i < 4; i++) { const a = i * Math.PI / 2; ctx.moveTo(x + Math.cos(a) * t0, y + Math.sin(a) * t0); ctx.lineTo(x + Math.cos(a) * t1, y + Math.sin(a) * t1); }
   };
   ctx.save(); ctx.lineCap = 'round';
+  { const k = O('ret') / 100; ctx.translate(x, y); ctx.scale(k, k); ctx.translate(-x, -y); }
   shape(); ctx.strokeStyle = 'rgba(0,0,0,.5)'; ctx.lineWidth = 3.6; ctx.stroke();
   shape(); ctx.shadowColor = `rgba(${col},.9)`; ctx.shadowBlur = 7; ctx.strokeStyle = `rgb(${col})`; ctx.lineWidth = 1.7; ctx.stroke();
   ctx.shadowBlur = 0; ctx.fillStyle = 'rgba(0,0,0,.5)'; ctx.beginPath(); ctx.arc(x, y, 2.6, 0, TAU); ctx.fill();
@@ -7344,7 +7448,7 @@ function lookOff() {
   if (keys.Space) { look.ax = mx; look.ay = my; return { x: 0, y: 0, snap: true }; }
   if (look.ax != null) { if (Math.hypot(mx - look.ax, my - look.ay) < 60) return { x: 0, y: 0 }; look.ax = null; }
   const dx = clamp(mx - W / 2, -W / 2, W / 2), dy = clamp(my - H / 2, -H / 2, H / 2);
-  return { x: dx * 0.45, y: dy * 0.45 };
+  const lk = 0.45 * O('lk') / 100; return { x: dx * lk, y: dy * lk };
 }
 
 // ================= BOOT =================
@@ -7354,6 +7458,7 @@ save.unlocked = Math.min(save.unlocked, NS); save.sel = clamp(save.sel || 1, 1, 
 TH = themeFor(save.sel); bhMass = TH.mods.mass || 1;
 resize(); buildDisk();
 for (let i = 0; i < 8; i++) spawnOrbital(1 + (i % 3));
+if (save.shake === false && !(save.opt && 'shk' in save.opt)) { save.opt = save.opt || {}; save.opt.shk = 0; }
 refreshMenu(); setMute(!!save.muted);
 if (cloudUser) cloudPull(); else showLogin();
 try { for (const w of ['300', '500', '600', '700']) document.fonts.load(`${w} 16px "Chakra Petch"`); } catch (e) {}
