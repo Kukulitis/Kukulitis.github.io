@@ -733,7 +733,7 @@ body.touch .srow2.nt{display:none}
 <script>
 'use strict';
 // Versioning: next version -> next whole number (4.00), sub version -> +0.01 (3.01)
-const VERSION = '4.46';
+const VERSION = '4.47';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -4210,7 +4210,7 @@ function owEvDraw2() {
 // The galaxy turns light or dark, rocks shrink to bubbles (60% fewer), only the boss's own drones fly, PvP is off and the
 // safe zone is gone. Everyone has 5 minutes; if it dies every pilot gets a Quasar Orb (20% chance of a Holy Orb instead).
 const WBDUR = 300000;
-const wbHp = n => 1300 + 800 * (n - 1);
+const wbHp = n => 2400 + 1500 * (n - 1);
 const WBTH = {
   m: Object.assign({}, SECTORS[0], { name: 'Matter', neb: ['255,230,170', '255,250,235', '255,205,130', '245,225,255', '255,215,150'], base: '#332b1a', disk: ['255,255,250', '255,240,200', '255,215,140', '255,190,110'], glow: ['255,240,200', '255,210,140'], ring: '255,246,225', danger: '255,215,120', rock: '#d8c8a0', rim: '255,240,200', boss: '255,225,140' }),
   a: Object.assign({}, SECTORS[0], { name: 'Antimatter', neb: ['90,20,140', '40,0,70', '140,30,170', '25,0,45', '70,10,120'], base: '#000000', disk: ['220,180,255', '170,100,255', '110,40,200', '60,10,120'], glow: ['170,90,255', '90,30,160'], ring: '200,150,255', danger: '190,110,255', rock: '#2a1838', rim: '170,100,255', boss: '180,100,255' }),
