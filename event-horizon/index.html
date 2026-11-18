@@ -174,6 +174,7 @@ svg{stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-l
 .owtm{font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgb(220,190,255)}
 .pmodes{display:flex;gap:10px;width:min(620px,94vw);justify-content:center}.pmodes .play{flex:1;min-width:0;padding-left:10px;padding-right:10px}.pmodes .play .pm{letter-spacing:.16em;white-space:nowrap;font-size:clamp(12px,3.4vw,19px)}.pmodes .play .ps{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:clamp(9.5px,2.6vw,12px)}
 @media (max-width:520px){.pmodes{flex-direction:column;gap:8px;width:min(340px,90vw)}.pmodes .play{padding-top:12px;padding-bottom:12px}}
+.pmode{margin-top:6px;font-size:13px;font-weight:600;letter-spacing:.32em;text-transform:uppercase;color:var(--dim)}
 .gmsel{display:flex;gap:4px;padding:4px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.04);margin-bottom:12px}
 .gmsel button{padding:8px 14px;border-radius:10px;border:0;background:none;color:var(--dim);font:inherit;font-size:11.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;transition:background .15s,color .15s}
 .gmsel button:hover{color:#fff}.gmsel button.on{background:rgba(255,255,255,.12);color:#fff}
@@ -508,7 +509,7 @@ body.paused .tbtn{display:none!important}
 </div>
 
 <div id="pause" class="ov hidden">
-  <div class="top"><div class="h2 a1">PAUSED</div><div class="sub a2" id="pRoom"></div></div>
+  <div class="top"><div class="h2 a1">PAUSED</div><div class="pmode a1" id="pMode"></div><div class="sub a2" id="pRoom"></div></div>
   <div class="hole"></div>
   <div class="bot">
     <button class="play a2" id="resume"><span class="pm">RESUME</span></button>
@@ -625,7 +626,7 @@ body.paused .tbtn{display:none!important}
 <script>
 'use strict';
 // Versioning: next version -> next whole number (4.00), sub version -> +0.01 (3.01)
-const VERSION = '4.34';
+const VERSION = '4.35';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -1904,6 +1905,7 @@ function setPause(p) {
   if (mode !== 'play') return;
   paused = p; $('pause').classList.toggle('hidden', !p); document.body.classList.toggle('paused', p);
   if (p) { beamSound(false); buildKeysRef(); }
+  $('pMode').textContent = tut ? 'Tutorial' : gmode === 'world' ? 'Multiplayer' : gmode === 'waves' ? 'Endless waves' : 'Story';
   $('pRoom').innerHTML = mp && gmode === 'world' ? `Room <b style="color:#fff">${escH(mpRoom())}</b> · ${1 + Object.keys(mp.peers).length}/${MPMAX} pilots · the galaxy keeps running, you're not protected while paused` : '';
 }
 function goMenu() {
@@ -5535,7 +5537,7 @@ function drawHUDi(W, H) {
   const ly = touch ? 96 : H - 22, by = touch ? (gmode === 'world' && ow ? upBox(W, H, true)[1] + upBox(W, H, true)[3] + 24 : 128) : H - 58;
   if (gmode !== 'world') for (let i = 0; i < lives; i++) miniShip(28 + i * 20, ly, 0.85);
   else if (mp) { const ry = touch ? 96 : 88; for (let i = 0; i < lives; i++) miniShip(28 + i * 20, ry, 0.85); ctx.font = `600 11px ${FONT}`; ctx.fillStyle = 'rgba(233,238,247,0.62)'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; spaced(mpRoom().toUpperCase() + '  ·  ' + (1 + Object.values(mp.peers).filter(q => !q.away).length) + '/' + MPMAX + ' PILOTS' + (mp.host ? '  ·  HOST' : ''), 28 + Math.max(1, lives) * 20, ry, 1.6, 'left'); }
-  if (gmode === 'world' && ow) {
+  if (gmode === 'world' && ow && !paused) {
     drawMinimap(W, H); if (mp) drawScoreboard(W, H, touch);
     if (ship && Math.hypot(ship.x, ship.y) < owSafeR()) {
       const [mx0, my0, ms] = mmLayout(touch, W, H), under = mx0 < W / 2 + 180 && mx0 + ms > W / 2 - 180 && my0 + ms > H - 60;
