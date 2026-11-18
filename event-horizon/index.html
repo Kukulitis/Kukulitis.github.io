@@ -523,6 +523,26 @@ body.touch .srow2.nt{display:none}
 #devSug span.on{background:rgba(255,190,110,.25);color:#ffd9a8}
 #devIn{display:none;pointer-events:auto;width:100%;padding:9px 12px;border-radius:8px;border:1px solid rgba(255,190,110,.5);background:rgba(4,6,14,.85);color:#fff;font:inherit;outline:none;caret-color:#ffb070}
 #dev.open #devIn{display:block}
+/* skins list: owned-only switch, bigger cards */
+.skown{flex:none;display:flex;align-items:center;gap:9px;padding:8px 12px 8px 9px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--dim);font:600 11.5px var(--f);letter-spacing:.1em;text-transform:uppercase;cursor:var(--cp,pointer);transition:background .2s,border-color .2s,color .2s;white-space:nowrap}
+.skown:hover{color:#fff;background:rgba(255,255,255,.07)}
+.skown i{position:relative;width:28px;height:16px;border-radius:9px;background:rgba(255,255,255,.14);transition:background .2s}
+.skown i::after{content:'';position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:#cfd6e4;transition:transform .22s cubic-bezier(.3,1.4,.5,1),background .2s}
+.skown b{font-weight:600;letter-spacing:.04em;color:rgba(233,238,247,.45)}
+.skown.on{color:#fff;border-color:rgba(143,255,214,.45);background:rgba(143,255,214,.08)}
+.skown.on i{background:rgba(143,255,214,.55)}.skown.on i::after{transform:translateX(12px);background:#fff}
+.skown.on b{color:var(--mint)}
+.skgrid{grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:10px}
+.skgrid .skc{padding:12px 8px 10px;gap:5px;border-radius:14px}
+.skgrid .skc canvas{width:68px;height:68px;border-radius:14px}
+.skgrid .skc .skn{font-size:12.5px}
+.skgrid .skc:hover canvas{border-color:rgba(var(--c),.6)}
+.skgrid.swap{animation:swap .28s cubic-bezier(.2,.8,.2,1) backwards}
+.skempty{grid-column:1/-1;padding:28px 10px;text-align:center;color:var(--dim);font-size:13px}
+@media (max-width:900px) and (min-height:521px){.skgrid{grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px}.skgrid .skc canvas{width:58px;height:58px}}
+.skown .sm{display:none}
+@media (max-width:520px){.skown .lg{display:none}.skown .sm{display:inline}.skown{padding:8px 10px;gap:7px}}
+@media (max-height:520px){.skgrid{grid-template-columns:repeat(auto-fill,minmax(84px,1fr))}.skgrid .skc{padding:6px 4px}.skgrid .skc canvas{width:40px;height:40px}}
 </style>
 </head>
 <body>
@@ -639,7 +659,7 @@ body.touch .srow2.nt{display:none}
   <div class="hd a1"><div><div class="hti"><div class="h3" id="hTitle">GARAGE</div><span class="mchip" id="hMode"></span></div><div class="sub" id="hSub"></div></div><div class="hdr"><div class="pill">◆ <span id="hDust">0</span></div></div></div>
   <div class="gtabs a2" id="gTabs"></div>
   <div class="garage a3" id="garage">
-    <div class="gskins" id="gS"><div class="gsh"><div class="subseg" id="skSeg"><button data-sub="ship">Ships</button><button data-sub="bullet">Bullets</button></div></div><div class="skgrid" id="skList"></div></div>
+    <div class="gskins" id="gS"><div class="gsh"><div class="subseg" id="skSeg"><button data-sub="ship">Ships</button><button data-sub="bullet">Bullets</button></div><button class="skown" id="skOwn" aria-pressed="false" title="Show only the skins you own"><i></i><span class="lg">Owned only</span><span class="sm">Owned</span><b id="skOwnN"></b></button></div><div class="skgrid" id="skList"></div></div>
     <canvas id="gLines"></canvas>
     <div class="gcol gl" id="gL"></div>
     <div class="gbay"><canvas id="pvCv"></canvas></div>
@@ -733,7 +753,7 @@ body.touch .srow2.nt{display:none}
 <script>
 'use strict';
 // Versioning: next version -> next whole number (4.00), sub version -> +0.01 (3.01)
-const VERSION = '4.47';
+const VERSION = '4.48';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -2175,7 +2195,8 @@ function renderOwned() {}
 function renderSkins() {
   document.querySelectorAll('#skSeg button').forEach(b => b.classList.toggle('on', b.dataset.sub === skSub));
   const ship = skSub === 'ship', list = ship ? SKINS : BSKINS, owned = ship ? (save.skins || ['scrap']) : (save.bskins || ['pellet']), cur = ship ? SK() : BS();
-  const items = list.slice().sort(byRarity);
+  const only = !!save.skOwned, items = list.slice().sort(byRarity).filter(it => !only || owned.includes(it.id));
+  $('skOwn').classList.toggle('on', only); $('skOwn').setAttribute('aria-pressed', only); $('skOwnN').textContent = list.filter(x => owned.includes(x.id)).length + '/' + list.length;
   const L = $('skList'), sl = L.scrollLeft;
   L.innerHTML = items.map(it => {
     const own = owned.includes(it.id), eq = cur.id === it.id, myth = it.rar === 'mythic', id = skSub + ':' + it.id;
@@ -2188,10 +2209,10 @@ function renderSkins() {
 function drawThumbs(root) {
   const t = performance.now() / 1000;
   document.querySelectorAll(root + ' canvas.sth').forEach(cvs => {
-    const d = Math.min(2, window.devicePixelRatio || 1), w = 40, hh = 40; cvs.width = w * d; cvs.height = hh * d;
-    const c = cvs.getContext('2d'); c.setTransform(d, 0, 0, d, 0, 0);
-    if (cvs.dataset.s) { const sk = SKINS.find(x => x.id === cvs.dataset.s); if (sk) drawShipModel(c, sk, w / 2, hh / 2 + 1, -Math.PI / 2, 0.95, t, false); }
-    else { const bs = BSKINS.find(x => x.id === cvs.dataset.b); if (bs) { c.globalCompositeOperation = 'lighter'; drawBullet(c, bs, { x: w / 2, y: hh / 2 - 2, vx: 0, vy: -500, seed: 7 }, t, 1.6); } }
+    const d = Math.min(2, window.devicePixelRatio || 1), w = cvs.clientWidth || 40, hh = cvs.clientHeight || 40, z = w / 40; if (cvs.width !== Math.round(w * d)) { cvs.width = Math.round(w * d); cvs.height = Math.round(hh * d); }
+    const c = cvs.getContext('2d'); c.setTransform(d, 0, 0, d, 0, 0); c.clearRect(0, 0, w, hh);
+    if (cvs.dataset.s) { const sk = SKINS.find(x => x.id === cvs.dataset.s); if (sk) drawShipModel(c, sk, w / 2, hh / 2 + z, -Math.PI / 2, 0.95 * z, t, false); }
+    else { const bs = BSKINS.find(x => x.id === cvs.dataset.b); if (bs) { c.globalCompositeOperation = 'lighter'; drawBullet(c, bs, { x: w / 2, y: hh / 2 - 2 * z, vx: 0, vy: -500, seed: 7 }, t, 1.6 * z); } }
   });
 }
 function selInfo() {
@@ -2279,6 +2300,7 @@ function skinClick(e) {
   document.querySelectorAll('#garage .gnode').forEach(r => r.classList.remove('sel'));
 }
 $('skList').addEventListener('click', skinClick);
+$('skOwn').addEventListener('click', () => { save.skOwned = !save.skOwned; persist(); sfx.ui(); const sel = shopSel.G; renderSkins(); const L = $('skList'); L.classList.remove('swap'); void L.offsetWidth; L.classList.add('swap'); if (sel && !L.querySelector(`[data-sel="${sel}"]`)) selectShop(''); });
 $('skSeg').addEventListener('click', e => { const b = e.target.closest('button'); if (!b || b.dataset.sub === skSub) return; skSub = b.dataset.sub; sfx.ui(); renderSkins(); });
 const shopBuyClick = e => { const b = e.target.closest('.buy'); if (!b || b.disabled) return; if (b.dataset.buyorb) buyOrb(b.dataset.buyorb); else if (b.dataset.openorb) openOrb(b.dataset.openorb); else if (b.dataset.skin) buySkin(b.dataset.skin); else if (b.dataset.bskin) buyBSkin(b.dataset.bskin); else if (b.dataset.k) buy(b.dataset.k); };
 $('pvI').addEventListener('click', shopBuyClick);
