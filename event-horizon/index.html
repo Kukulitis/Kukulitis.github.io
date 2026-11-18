@@ -796,7 +796,7 @@ body:not(.touch) .srow2.to{display:none}
 <script>
 'use strict';
 // Versioning: next version -> next whole number (4.00), sub version -> +0.01 (3.01)
-const VERSION = '4.53';
+const VERSION = '4.54';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -1752,6 +1752,15 @@ const KINDS = ['drone', 'seeker', 'lancer', 'charger', 'bomber', 'splitter', 'wa
 const KALL = KINDS.concat(['lumen', 'umbra']);
 const KP = { bomber: { keep: 300, th: 300, cap: 240 }, splitter: { keep: 150, th: 330, cap: 290 }, warden: { keep: 230, th: 240, cap: 170 }, gunship: { keep: 380, th: 200, cap: 150 }, phantom: { keep: 260, th: 280, cap: 230 }, carrier: { keep: 430, th: 180, cap: 130 } };
 const sectorKinds = sec => KINDS.slice(0, Math.min(KINDS.length, sec));
+// story sectors: half the drones are the sector's new enemy, the other half are spread over the older ones
+const storyMix = () => gmode !== 'waves' && sector > 1 && sector <= NS;
+function pickSectorKind(wantNew, filter) {
+  const kinds = sectorKinds(sector).filter(k => !filter || filter(k)), newest = KINDS[Math.min(KINDS.length, sector) - 1];
+  if (!storyMix()) return kinds[Math.random() * kinds.length | 0];
+  const old = kinds.filter(k => k !== newest), hasNew = kinds.includes(newest);
+  if (hasNew && (wantNew ?? Math.random() < 0.5) || !old.length) return newest;
+  return old[Math.random() * old.length | 0];
+}
 const dCol = d => (DK[d.kind] || DK.drone).c;
 const astUnits = a => [0, 1, 3, 7][a.size] || 1;
 let waveTot = 0, reinT = 0;
@@ -1907,12 +1916,19 @@ function startWave() {
     let budget = ew >= 2 ? Math.min(16, 1 + (ew - 1) * 0.85 + (M.drones || 0)) : 0;
     const picks = [];
     if (budget > 0 && sector > 1 && sector <= NS) { picks.push(newest); budget -= DK[newest].cost; }
-    let guard = 0;
+    // keep the newest kind at half of the drones in the wave (seekers count per ship, they come in packs)
+    const units = k => k === 'seeker' ? Math.max(2, Math.round(2 * (M.seekers || 1))) : 1;
+    let guard = 0, nNew = picks.length ? units(newest) : 0, nAll = nNew;
     while (budget > 0.4 && picks.length < 14 && guard++ < 60) {
-      const k = kinds[Math.random() * kinds.length | 0];
+      const wantNew = storyMix() ? nNew * 2 < nAll + 1 : undefined;
+      const k = pickSectorKind(guard > 30 ? false : wantNew);
       if (DK[k].cost > budget + 0.5) continue;
-      picks.push(k); budget -= DK[k].cost;
+      picks.push(k); budget -= DK[k].cost; nAll += units(k); if (k === newest) nNew += units(k);
     }
+    // top up with the new kind if the budget ran out on an older one
+    if (storyMix() && picks.length) while (nNew * 2 < nAll - 1 && picks.length < 15) { picks.push(newest); nNew += units(newest); nAll += units(newest); }
+    // mix the order so the new kind and the old ones arrive interleaved
+    for (let i = picks.length - 1; i > 1; i--) { const j = 1 + (Math.random() * i | 0); [picks[i], picks[j]] = [picks[j], picks[i]]; }
     let tq = 1.5;
     for (const k of picks) {
       if (k === 'seeker') { const n = Math.max(2, Math.round(2 * (M.seekers || 1))); for (let j = 0; j < n; j++) spawnKind('seeker', tq + j * 0.35); }
@@ -6248,8 +6264,8 @@ function update(dt, rdt) {
     if (wave > 0 && wave < WPS && !clearing && waveTimer <= 0 && ship && (sector - 1) * 2 + wave >= 2) {
       reinT -= dt;
       if (reinT <= 0) {
-        const ew = (sector - 1) * 2 + wave, pool = sectorKinds(sector).filter(k => k !== 'carrier');
-        if (drones.length < 7) spawnKind(pool[Math.random() * pool.length | 0], 0, true);
+        const ew = (sector - 1) * 2 + wave;
+        if (drones.length < 7) spawnKind(pickSectorKind(undefined, k => k !== 'carrier'), 0, true);
         reinT = rand(11, 17) * Math.max(0.6, 1 - ew * 0.03);
       }
     }
