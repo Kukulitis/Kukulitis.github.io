@@ -753,7 +753,7 @@ body.touch .srow2.nt{display:none}
 <script>
 'use strict';
 // Versioning: next version -> next whole number (4.00), sub version -> +0.01 (3.01)
-const VERSION = '4.48';
+const VERSION = '4.49';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -6612,6 +6612,125 @@ function drawDrone(d, c = ctx) {
   c.fillStyle = '#ffb3c4'; c.beginPath(); c.arc(3 * k, 0, 2.4 * k, 0, TAU); c.fill();
   c.restore();
 }
+// each story boss has its own silhouette (the Singularity Eye keeps the original look). Drawn around 0,0 at radius ~44.
+function drawBossBody(X, b, D, k, c, enr) {
+  const fill = b.hit > 0 ? '#fff' : 'rgba(30,14,10,0.95)', stroke = `rgb(${c})`, glow = enr ? '255,60,40' : c, pulse = 0.6 + 0.4 * Math.sin(time * (enr ? 14 : 6)), t = time;
+  const face = X === ctx && ship ? Math.atan2(ship.y - b.y, ship.x - b.x) : -Math.PI / 2;
+  const P = (x, y) => [x * k, y * k];
+  const poly = pts => { X.beginPath(); pts.forEach(([x, y], i) => i ? X.lineTo(x * k, y * k) : X.moveTo(x * k, y * k)); X.closePath(); };
+  const sty = (lw = 2) => { X.fillStyle = fill; X.strokeStyle = stroke; X.lineWidth = lw; };
+  const fs = () => { X.fill(); X.stroke(); };
+  const core = r => { const g = X.createRadialGradient(0, 0, 0, 0, 0, r * k); g.addColorStop(0, '#fff'); g.addColorStop(0.3, `rgba(${glow},${pulse})`); g.addColorStop(1, 'rgba(0,0,0,0)'); X.fillStyle = g; X.beginPath(); X.arc(0, 0, r * k, 0, TAU); X.fill(); };
+  const dot = (x, y, r, col) => { X.fillStyle = col; X.beginPath(); X.arc(x * k, y * k, r * k, 0, TAU); X.fill(); };
+  X.lineJoin = 'round'; X.lineCap = 'round';
+  switch (D.name) {
+    case 'Sentinel': { // a watchtower: armoured plate, four turning cannons, one big lens
+      X.save(); X.rotate(b.spin * 0.5);
+      X.strokeStyle = `rgba(${c},0.45)`; X.lineWidth = 2; X.setLineDash([6 * k, 5 * k]); X.beginPath(); X.arc(0, 0, 40 * k, 0, TAU); X.stroke(); X.setLineDash([]);
+      for (let i = 0; i < 4; i++) { X.save(); X.rotate(i * Math.PI / 2); sty(); poly([[22, -6], [48, -6], [48, 6], [22, 6]]); fs(); poly([[48, -8.5], [56, -8.5], [56, 8.5], [48, 8.5]]); fs(); X.restore(); }
+      X.restore();
+      X.save(); X.rotate(Math.PI / 4 - b.spin * 0.3); sty(2.5); poly([[-22, -16], [-16, -22], [16, -22], [22, -16], [22, 16], [16, 22], [-16, 22], [-22, 16]]); fs();
+      X.strokeStyle = `rgba(${c},0.55)`; X.lineWidth = 1.5; poly([[-13, -13], [13, -13], [13, 13], [-13, 13]]); X.stroke(); X.restore();
+      core(15); X.strokeStyle = stroke; X.lineWidth = 2; X.beginPath(); X.arc(0, 0, 9 * k, 0, TAU); X.stroke();
+      break;
+    }
+    case 'Brood Mother': { // a swollen insect queen carrying glowing eggs
+      X.rotate(face + Math.PI / 2);
+      X.strokeStyle = stroke; X.lineWidth = 3;
+      for (let i = 0; i < 6; i++) { const sd = i < 3 ? -1 : 1, j = i % 3, w = Math.sin(t * 6 + i * 1.3) * 4; const x0 = sd * 16, y0 = -8 + j * 12, x1 = sd * 38, y1 = -18 + j * 18 + w; X.beginPath(); X.moveTo(x0 * k, y0 * k); X.quadraticCurveTo(sd * 34 * k, (y0 - 12) * k, x1 * k, y1 * k); X.stroke(); }
+      sty(2.5); X.beginPath(); X.ellipse(0, 10 * k, 22 * k, 28 * k, 0, 0, TAU); fs();
+      X.strokeStyle = `rgba(${c},0.4)`; X.lineWidth = 1.5; for (let i = 0; i < 3; i++) { X.beginPath(); X.ellipse(0, (6 + i * 11) * k, (19 - i * 3) * k, 4 * k, 0, 0, Math.PI); X.stroke(); }
+      for (let i = 0; i < 6; i++) { const a = i / 6 * TAU + t * 0.5, p = 0.5 + 0.5 * Math.sin(t * 4 + i); dot(Math.cos(a) * 11, 12 + Math.sin(a) * 15, 3.4 + p, `rgba(${glow},${0.35 + 0.55 * p})`); }
+      sty(2); X.beginPath(); X.ellipse(0, -23 * k, 13 * k, 10 * k, 0, 0, TAU); fs();
+      X.strokeStyle = stroke; X.lineWidth = 2.5; const m = Math.sin(t * 5) * 4;
+      for (const sd of [-1, 1]) { X.beginPath(); X.moveTo(sd * 6 * k, -31 * k); X.quadraticCurveTo(sd * (15 + m) * k, -40 * k, sd * 4 * k, -47 * k); X.stroke(); }
+      dot(-5, -25, 2.6, `rgb(${glow})`); dot(5, -25, 2.6, `rgb(${glow})`);
+      break;
+    }
+    case 'Prism Lord': { // a floating crystal that splits light
+      X.save(); X.rotate(b.spin * 0.6);
+      const tri = r => [0, 1, 2].map(i => { const a = -Math.PI / 2 + i * TAU / 3; return [Math.cos(a) * r, Math.sin(a) * r]; });
+      sty(2.5); poly(tri(46)); fs();
+      X.strokeStyle = `rgba(${c},0.55)`; X.lineWidth = 1.5; const o = tri(46), n = tri(-23);
+      for (let i = 0; i < 3; i++) { X.beginPath(); X.moveTo(0, 0); X.lineTo(o[i][0] * k, o[i][1] * k); X.stroke(); }
+      poly(n); X.stroke();
+      X.globalCompositeOperation = 'lighter';
+      for (let i = 0; i < 3; i++) { const a = o[i], q = o[(i + 1) % 3], col = hsl2rgb((t * 0.12 + i / 3) % 1, 1, 0.65); X.strokeStyle = `rgba(${col},0.75)`; X.lineWidth = 3; X.beginPath(); X.moveTo(a[0] * k * 0.92, a[1] * k * 0.92); X.lineTo(q[0] * k * 0.92, q[1] * k * 0.92); X.stroke(); }
+      X.globalCompositeOperation = 'source-over';
+      X.restore();
+      X.save(); X.rotate(-b.spin * 1.4);
+      for (let i = 0; i < 3; i++) { X.save(); X.rotate(i * TAU / 3 + Math.PI / 3); X.translate(58 * k, 0); X.rotate(t * 2); sty(1.5); poly([[0, -7], [6, 5], [-6, 5]]); fs(); X.restore(); }
+      X.restore();
+      core(13);
+      break;
+    }
+    case 'Juggernaut': { // an armoured battering ram on treads
+      X.rotate(face);
+      for (const sd of [-1, 1]) { sty(2); poly([[-34, sd * 26], [24, sd * 26], [24, sd * 38], [-34, sd * 38]]); fs(); X.strokeStyle = `rgba(${c},0.5)`; X.lineWidth = 1.5; for (let i = 0; i < 6; i++) { const x = -34 + ((i * 10 + t * 60) % 58); X.beginPath(); X.moveTo(x * k, sd * 27 * k); X.lineTo(x * k, sd * 37 * k); X.stroke(); } }
+      sty(2.5); poly([[44, 0], [24, -26], [-32, -28], [-42, 0], [-32, 28], [24, 26]]); fs();
+      sty(2); poly([[44, -11], [64, 0], [44, 11]]); fs(); poly([[30, -22], [46, -30], [38, -16]]); fs(); poly([[30, 22], [46, 30], [38, 16]]); fs();
+      X.strokeStyle = `rgba(${c},0.5)`; X.lineWidth = 1.5; for (const x of [-18, 0, 16]) { X.beginPath(); X.moveTo(x * k, -22 * k); X.lineTo(x * k, 22 * k); X.stroke(); }
+      X.save(); X.globalCompositeOperation = 'lighter'; const g = X.createRadialGradient(-44 * k, 0, 0, -44 * k, 0, 18 * k); g.addColorStop(0, `rgba(${glow},${0.6 * pulse})`); g.addColorStop(1, 'rgba(0,0,0,0)'); X.fillStyle = g; X.beginPath(); X.arc(-44 * k, 0, 18 * k, 0, TAU); X.fill(); X.restore();
+      X.fillStyle = `rgba(${glow},${pulse})`; poly([[30, -4], [38, 0], [30, 4], [26, 0]]); X.fill();
+      break;
+    }
+    case 'Minefather': { // a giant sea mine sprouting blinking spikes
+      X.rotate(b.spin * 0.4);
+      for (let i = 0; i < 8; i++) { const a = i / 8 * TAU, on = (Math.floor(t * 3) + i) % 3 === 0; X.strokeStyle = stroke; X.lineWidth = 4; X.beginPath(); X.moveTo(Math.cos(a) * 24 * k, Math.sin(a) * 24 * k); X.lineTo(Math.cos(a) * 42 * k, Math.sin(a) * 42 * k); X.stroke(); sty(2); X.beginPath(); X.arc(Math.cos(a) * 45 * k, Math.sin(a) * 45 * k, 5.5 * k, 0, TAU); fs(); if (on) dot(Math.cos(a) * 45, Math.sin(a) * 45, 3, `rgb(${glow})`); }
+      sty(2.5); X.beginPath(); X.arc(0, 0, 27 * k, 0, TAU); fs();
+      for (let i = 0; i < 12; i++) { const a = i / 12 * TAU + 0.26; dot(Math.cos(a) * 21, Math.sin(a) * 21, 1.6, `rgba(${c},0.7)`); }
+      X.strokeStyle = `rgba(${c},0.45)`; X.lineWidth = 1.5; X.beginPath(); X.arc(0, 0, 15 * k, 0, TAU); X.stroke();
+      core(12);
+      break;
+    }
+    case 'Hydra': { // three swaying serpent heads on one body
+      for (let i = 0; i < 3; i++) {
+        const a = face + (i - 1) * 0.85, ux = Math.cos(a), uy = Math.sin(a), px = -uy, py = ux, pts = [];
+        for (let q = 0; q <= 10; q++) { const s_ = q / 10, w = Math.sin(t * 3 + i * 2.1 + s_ * 5) * 9 * s_; pts.push([(ux * (16 + s_ * 34) + px * w) * k, (uy * (16 + s_ * 34) + py * w) * k]); }
+        X.strokeStyle = stroke; X.lineWidth = 11 * k; X.beginPath(); pts.forEach(([x, y], j) => j ? X.lineTo(x, y) : X.moveTo(x, y)); X.stroke();
+        X.strokeStyle = fill; X.lineWidth = 7 * k; X.stroke();
+        const [hx, hy] = pts[10], ha = Math.atan2(pts[10][1] - pts[9][1], pts[10][0] - pts[9][0]);
+        X.save(); X.translate(hx, hy); X.rotate(ha); sty(2); poly([[12, 0], [-4, -8], [-8, 0], [-4, 8]]); fs(); dot(2, -3, 1.8, `rgb(${glow})`); dot(2, 3, 1.8, `rgb(${glow})`); X.restore();
+      }
+      sty(2.5); X.beginPath(); X.arc(0, 0, 21 * k, 0, TAU); fs();
+      X.strokeStyle = `rgba(${c},0.45)`; X.lineWidth = 1.5; for (let i = 0; i < 6; i++) { const a = i / 6 * TAU + t * 0.3; X.beginPath(); X.arc(Math.cos(a) * 11 * k, Math.sin(a) * 11 * k, 5 * k, 0, TAU); X.stroke(); }
+      core(10);
+      break;
+    }
+    case 'Aegis': { // a fortress: turning gear wall, hex keep, sealed core
+      X.save(); X.rotate(b.spin * 0.35); sty(2.5); X.beginPath();
+      for (let i = 0; i < 32; i++) { const a = i / 32 * TAU, r = (Math.floor(i / 2) % 2 ? 40 : 46) * k; i ? X.lineTo(Math.cos(a) * r, Math.sin(a) * r) : X.moveTo(Math.cos(a) * r, Math.sin(a) * r); }
+      X.closePath(); fs();
+      X.strokeStyle = `rgba(${c},0.4)`; X.lineWidth = 1.5; X.beginPath(); X.arc(0, 0, 34 * k, 0, TAU); X.stroke(); X.restore();
+      X.save(); X.rotate(-b.spin * 0.5); sty(2.5); poly([0, 1, 2, 3, 4, 5].map(i => [Math.cos(i * Math.PI / 3) * 27, Math.sin(i * Math.PI / 3) * 27])); fs();
+      X.strokeStyle = `rgba(${c},0.6)`; X.lineWidth = 1.5; poly([0, 1, 2, 3, 4, 5].map(i => [Math.cos(i * Math.PI / 3 + Math.PI / 6) * 18, Math.sin(i * Math.PI / 3 + Math.PI / 6) * 18])); X.stroke(); X.restore();
+      core(12);
+      break;
+    }
+    case 'Dreadnought': { // a capital ship: long hull, four turrets, bridge tower, engines
+      X.rotate(face);
+      X.save(); X.globalCompositeOperation = 'lighter'; for (const y of [-8, 8]) { const g = X.createRadialGradient(-54 * k, y * k, 0, -54 * k, y * k, 14 * k); g.addColorStop(0, `rgba(${glow},${0.7 * pulse})`); g.addColorStop(1, 'rgba(0,0,0,0)'); X.fillStyle = g; X.beginPath(); X.arc(-54 * k, y * k, 14 * k, 0, TAU); X.fill(); } X.restore();
+      sty(2.5); poly([[58, 0], [38, -17], [-40, -18], [-52, -10], [-52, 10], [-40, 18], [38, 17]]); fs();
+      X.strokeStyle = `rgba(${c},0.45)`; X.lineWidth = 1.5; X.beginPath(); X.moveTo(-40 * k, 0); X.lineTo(44 * k, 0); X.stroke();
+      sty(2); poly([[-16, -9], [4, -9], [6, 0], [4, 9], [-16, 9]]); fs(); dot(-2, 0, 2.5, `rgba(${glow},${pulse})`);
+      for (const [x, y] of [[26, -9], [26, 9], [-30, -9], [-30, 9]]) { X.save(); X.translate(x * k, y * k); X.rotate(Math.sin(t * 1.5 + x) * 0.25); sty(1.8); X.beginPath(); X.arc(0, 0, 5 * k, 0, TAU); fs(); X.strokeStyle = stroke; X.lineWidth = 2.5; X.beginPath(); X.moveTo(3 * k, 0); X.lineTo(11 * k, 0); X.stroke(); X.restore(); }
+      break;
+    }
+    case 'Wraith': { // a hooded ghost that flickers
+      X.save(); X.globalAlpha *= 0.78 + 0.22 * Math.sin(t * 7);
+      X.strokeStyle = `rgba(${c},0.35)`; X.lineWidth = 2;
+      for (let i = 0; i < 5; i++) { const x = -22 + i * 11, w = Math.sin(t * 3 + i) * 6; X.beginPath(); X.moveTo(x * k, 34 * k); X.quadraticCurveTo((x + w) * k, 48 * k, (x - w) * k, 60 * k); X.stroke(); }
+      sty(2); X.beginPath(); X.moveTo(0, -44 * k); X.quadraticCurveTo(-30 * k, -38 * k, -30 * k, -10 * k); X.lineTo(-32 * k, 30 * k);
+      for (let i = 0; i <= 6; i++) { const x = -32 + i * (64 / 6), y = 34 + Math.sin(t * 4 + i * 1.7) * 5 + (i % 2 ? 7 : -1); X.lineTo(x * k, y * k); }
+      X.lineTo(30 * k, -10 * k); X.quadraticCurveTo(30 * k, -38 * k, 0, -44 * k); X.closePath(); fs();
+      X.fillStyle = 'rgba(0,0,0,0.9)'; X.beginPath(); X.ellipse(0, -16 * k, 15 * k, 17 * k, 0, 0, TAU); X.fill();
+      X.shadowColor = `rgb(${glow})`; X.shadowBlur = 10; X.fillStyle = `rgba(255,255,255,${0.7 + 0.3 * pulse})`; for (const sd of [-1, 1]) { X.beginPath(); X.ellipse(sd * 6 * k, -18 * k, 3.8 * k, 1.9 * k, sd * 0.25, 0, TAU); X.fill(); } X.shadowBlur = 0;
+      X.restore();
+      break;
+    }
+    default: { sty(2.5); X.beginPath(); X.arc(0, 0, 30 * k, 0, TAU); fs(); core(14); }
+  }
+}
 function drawBoss(b, X = ctx) {
   const k = U, c = TH.boss, enr = b.hp < b.max / 2, D = b.def;
   for (const bm of b.beams) {
@@ -6624,6 +6743,7 @@ function drawBoss(b, X = ctx) {
   if (b.chg && b.chg.st === 'wind') { const pr = 1 - b.chg.t / 0.9; X.save(); X.strokeStyle = `rgba(${c},${(Math.sin(time * 30) > 0 ? 0.5 : 0.15) * (0.4 + pr)})`; X.lineWidth = b.R * 1.6; X.lineCap = 'round'; X.beginPath(); X.moveTo(b.x, b.y); X.lineTo(b.x + Math.cos(b.chg.a) * 620 * k, b.y + Math.sin(b.chg.a) * 620 * k); X.stroke(); X.restore(); }
   if (D.shield) { X.save(); X.translate(b.x, b.y); X.lineCap = 'round'; for (let i = 0; i < D.shield; i++) { const a = b.sh + i * TAU / D.shield; X.strokeStyle = `rgba(${c},0.25)`; X.lineWidth = 12 * k; X.beginPath(); X.arc(0, 0, b.R + 20 * k, a - 0.6, a + 0.6); X.stroke(); X.strokeStyle = `rgba(255,255,255,0.85)`; X.lineWidth = 3 * k; X.beginPath(); X.arc(0, 0, b.R + 20 * k, a - 0.6, a + 0.6); X.stroke(); } X.restore(); }
   X.save(); X.translate(b.x, b.y);
+  if (!D.eye) { X.scale(b.R / (44 * k), b.R / (44 * k)); drawBossBody(X, b, D, k, c, enr); X.restore(); return; }
   X.rotate(b.spin);
   const arms = D.arms, sides = D.sides, sz = b.R / (44 * k);
   X.scale(sz, sz);
