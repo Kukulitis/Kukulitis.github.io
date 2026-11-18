@@ -580,7 +580,7 @@ body.touch .srow2.nt{display:none}
   <div class="crTop"><div class="kick" id="crK">VOID ORB</div><div class="crSub" id="crSub"></div></div>
   <div id="crStage"></div>
   <div class="crInfo" id="crInfo">
-    <div class="crLadW"><div class="crLad" id="crLad"></div><div class="crHint"><span class="crTaps" id="crTaps"><i></i><i></i><i></i></span><span id="crHintT"></span></div></div>
+    <div class="crLadW"><div class="crLad" id="crLad"></div><div class="crHint"><span class="crTaps" id="crTaps"><i></i><i></i><i></i><i></i><i></i></span><span id="crHintT"></span></div></div>
     <div class="crCard hidden" id="crCard"><div class="crR" id="crRar"></div><div class="crName" id="crName"></div><div class="crType" id="crType"></div></div>
   </div>
   <div class="row off" id="crBtns"><button class="sec" id="crBack">Done</button><button class="sec" id="crEquip">Equip</button><button class="play sm" id="crAgain"><span class="pm">OPEN NEXT</span><span class="ps" id="crAgainS"></span></button></div>
@@ -720,7 +720,7 @@ body.touch .srow2.nt{display:none}
 <script>
 'use strict';
 // Versioning: next version -> next whole number (4.00), sub version -> +0.01 (3.01)
-const VERSION = '4.41';
+const VERSION = '4.42';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -2650,7 +2650,7 @@ function buyOrb(k) {
   persist(); sfx.buy(); renderHangar();
 }
 // ================= ORB OPENING =================
-// Tap the orb three times to crack it. Any crack can push the rarity up a tier (the ladder under the orb shows it climb),
+// Tap the orb five times to crack it. Any crack can push the rarity up a tier (the ladder under the orb shows it climb),
 // then the shell bursts and the skin is revealed on a card. The result is rolled and saved before the show starts.
 let crate = null, crAnim = false;
 const easeOutBack = f => { const k = 1.70158; return 1 + (k + 1) * Math.pow(f - 1, 3) + k * Math.pow(f - 1, 2); };
@@ -2661,20 +2661,21 @@ function openOrb(k) {
   if (!(save.orbs[k] > 0)) return;
   save.orbs[k]--;
   const res = rollOrb(k); persist();
-  const tiers = RORDER.filter(r => ORBS[k].odds[r]), fin = Math.max(0, tiers.indexOf(res.rar)), slots = [0, 0, 0, 0];
-  for (let i = 0; i < fin; i++) { const r = Math.random(); slots[r < 0.22 ? 0 : r < 0.5 ? 1 : r < 0.8 ? 2 : 3]++; }
+  const tiers = RORDER.filter(r => ORBS[k].odds[r]), fin = Math.max(0, tiers.indexOf(res.rar)), slots = [0, 0, 0, 0, 0, 0];
+  // which crack raises the rarity: later cracks are likelier, and sometimes it happens right before the burst
+  for (let i = 0; i < fin; i++) { const r = Math.random(); slots[r < 0.1 ? 0 : r < 0.22 ? 1 : r < 0.38 ? 2 : r < 0.58 ? 3 : r < 0.8 ? 4 : 5]++; }
   const cracks = [];
-  for (let i = 0; i < 8; i++) {
-    let an = i / 8 * TAU + rand(-0.25, 0.25), r = rand(0.04, 0.2); const pts = [[Math.cos(an) * r, Math.sin(an) * r]];
+  for (let i = 0; i < 10; i++) {
+    let an = i / 10 * TAU + rand(-0.25, 0.25), r = rand(0.04, 0.2); const pts = [[Math.cos(an) * r, Math.sin(an) * r]];
     while (r < 1) { r = Math.min(1.02, r + rand(0.13, 0.22)); an += rand(-0.42, 0.42); pts.push([Math.cos(an) * r, Math.sin(an) * r]); }
-    cracks.push({ pts, at: (i % 3) / 3 });
+    cracks.push({ pts, at: (i % 5) / 5 });
   }
   crate = { k, res, tiers, fin, slots, cracks, tier: 0, col: RAR[tiers[0]].c, cFrom: '', cTo: '', cF: 1, hits: 0, phase: 'drop', t: 0, q: [], late: 0, lateN: 0, dur: 0, parts: [], shards: [], rings: [], pop: null, punch: 0, shake: 0, flash: 0, fcol: '255,255,255', crack: 0, crackT: 0, shown: false, shots: [], fcd: 0, cx: 0, cy: 0, R: 60 };
   hideAll(); show('crate');
   const o = ORBS[k];
   $('crate').style.setProperty('--oc', o.col);
   $('crK').textContent = o.name.toUpperCase();
-  $('crSub').textContent = 'Crack it three times. Every crack can raise the rarity.';
+  $('crSub').textContent = 'Crack it five times. Every crack can raise the rarity.';
   $('crLad').innerHTML = tiers.map((r, i) => `<span class="crp${i ? '' : ' on cur'}" style="--c:${RAR[r].c}"><i></i>${RAR[r].n}</span>`).join('');
   crTapsUI(); $('crHintT').textContent = isTouch() ? 'Tap the orb' : 'Click or press Space';
   $('crInfo').classList.remove('rev'); $('crCard').classList.add('hidden'); $('crBtns').classList.add('off');
@@ -2706,15 +2707,15 @@ function crInput(kind) {
   else if (kind === 'go') (!$('crAgain').classList.contains('hidden') ? $('crAgain') : $('crBack')).click();
 }
 function crHit() {
-  const cr = crate; if (cr.q.length || cr.hits >= 3) return;
-  cr.hits++; cr.punch = 1; cr.shake = Math.max(cr.shake, 0.4); cr.crackT = cr.hits / 3;
-  tone(250 + cr.hits * 130, 0.16, 'triangle', 0.09, 520 + cr.hits * 220); noise(0.12, 0.07, 6500, 1400); buzz(14);
+  const cr = crate; if (cr.q.length || cr.hits >= 5) return;
+  cr.hits++; cr.punch = 1; cr.shake = Math.max(cr.shake, 0.4); cr.crackT = cr.hits / 5;
+  tone(240 + cr.hits * 90, 0.16, 'triangle', 0.09, 480 + cr.hits * 150); noise(0.12, 0.07, 6500, 1400); buzz(14);
   crSpark(18 + cr.hits * 6, cr.col, 160, 460, 0.6, 0.95);
   cr.rings.push({ x: cr.cx, y: cr.cy, r: 1, v: 2.6, life: 0.45, max: 0.45, col: cr.col, w: 3 });
   for (let i = 0; i < cr.slots[cr.hits - 1]; i++) cr.q.push(i ? 0.5 : 0.24);
   crTapsUI(); $('crSub').textContent = '';
-  $('crHintT').textContent = cr.hits === 1 ? 'Again' : cr.hits === 2 ? 'One more' : '';
-  if (cr.hits >= 3 && !cr.q.length) crCharge();
+  $('crHintT').textContent = ['', 'Again', 'Keep going', 'Two more', 'One more'][cr.hits] || '';
+  if (cr.hits >= 5 && !cr.q.length) crCharge();
 }
 function crUpgrade() {
   const cr = crate; if (cr.tier >= cr.fin) return;
@@ -2729,13 +2730,13 @@ function crUpgrade() {
   crLadUI(true);
 }
 function crCharge() {
-  const cr = crate; cr.phase = 'charge'; cr.t = 0; cr.lateN = cr.slots[3]; cr.late = 0; cr.dur = 0.8 + cr.lateN * 0.55;
+  const cr = crate; cr.phase = 'charge'; cr.t = 0; cr.lateN = cr.slots[5]; cr.late = 0; cr.dur = 0.8 + cr.lateN * 0.55;
   tone(110, cr.dur, 'sawtooth', 0.05, 950); $('crHintT').textContent = '';
 }
 function crBurst() {
   const cr = crate; if (cr.phase === 'reveal') return;
   cr.q.length = 0; cr.tier = cr.fin; cr.col = RAR[cr.res.rar].c; cr.cF = 1; crLadUI(false);
-  cr.hits = 3; crTapsUI(); cr.crack = cr.crackT = 1;
+  cr.hits = 5; crTapsUI(); cr.crack = cr.crackT = 1;
   cr.phase = 'reveal'; cr.t = 0; cr.flash = 1; cr.fcol = '255,255,255'; cr.shake = 0.7; cr.pop = null;
   const col = cr.col, myth = cr.res.rar === 'mythic', leg = cr.res.rar === 'legendary';
   for (let i = 0; i < 28; i++) { const an = rand(0, TAU), sp = rand(260, 720) * cr.R / 80; cr.shards.push({ x: cr.cx + Math.cos(an) * cr.R * 0.5, y: cr.cy + Math.sin(an) * cr.R * 0.5, vx: Math.cos(an) * sp, vy: Math.sin(an) * sp, a: rand(0, TAU), va: rand(-9, 9), s: rand(0.1, 0.24) * cr.R, life: rand(0.7, 1.3), max: 1.3, p: [rand(0.7, 1), rand(0.5, 1), rand(0.6, 1)] }); }
@@ -2787,7 +2788,7 @@ function drawCrOrb(c, x, y, R, sx, sy, o, col, t, power, crack, cracks) {
   if (crack > 0.01) {
     c.lineJoin = 'round'; c.lineCap = 'round';
     for (const k of cracks) {
-      const vis = clamp((crack - k.at) / 0.3, 0, 1); if (vis <= 0) continue;
+      const vis = clamp((crack - k.at) / 0.2, 0, 1); if (vis <= 0) continue;
       const n = Math.max(2, Math.ceil(k.pts.length * vis));
       const path = () => { c.beginPath(); c.moveTo(k.pts[0][0] * R, k.pts[0][1] * R); for (let i = 1; i < n; i++) c.lineTo(k.pts[i][0] * R, k.pts[i][1] * R); };
       c.strokeStyle = `rgba(${col},${0.5 * vis})`; c.lineWidth = R * (0.1 + power * 0.08); path(); c.stroke();
@@ -2848,7 +2849,7 @@ function crateFrame(dt) {
   if (cr.cF < 1) { cr.cF = Math.min(1, cr.cF + dt * 4); cr.col = mixC(cr.cFrom, cr.cTo, cr.cF); }
   cr.punch = Math.max(0, cr.punch - dt * 3.5); cr.shake = Math.max(0, cr.shake - dt * 1.8); cr.flash = Math.max(0, cr.flash - dt * (cr.phase === 'reveal' ? 1.6 : 2.4));
   cr.crack += (cr.crackT - cr.crack) * Math.min(1, dt * 9);
-  if (cr.q.length) { cr.q[0] -= dt; if (cr.q[0] <= 0) { cr.q.shift(); crUpgrade(); if (!cr.q.length && cr.hits >= 3 && cr.phase === 'idle') crCharge(); } }
+  if (cr.q.length) { cr.q[0] -= dt; if (cr.q[0] <= 0) { cr.q.shift(); crUpgrade(); if (!cr.q.length && cr.hits >= 5 && cr.phase === 'idle') crCharge(); } }
   let cy = cy0 + Math.sin(t * 2.2) * R * 0.05, power = 0;
   if (cr.phase === 'drop') {
     const f = Math.min(1, cr.t / 0.75); cy = cy0 - (1 - easeOutBack(f)) * (cy0 + R * 2.5);
