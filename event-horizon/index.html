@@ -625,7 +625,7 @@ body.paused .tbtn{display:none!important}
 <script>
 'use strict';
 // Versioning: next version -> next whole number (4.00), sub version -> +0.01 (3.01)
-const VERSION = '4.33';
+const VERSION = '4.34';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -4678,7 +4678,12 @@ function update(dt, rdt) {
     }
     a.x += a.vx * edt; a.y += a.vy * edt; a.rot += a.vr * edt; if (a.hit > 0) a.hit -= dt;
     if (bound(a, a.R, 0.8)) { const ex = a.x - CX, ey = a.y - CY, er = Math.hypot(ex, ey) || 1; a.vx -= ex / er * 60 * U; a.vy -= ey / er * 60 * U; }
-    if (r < rh + a.R * 0.3) { swallow(a, 0.014 * a.size); asts.splice(i, 1); continue; }
+    if (r < rh + a.R * 0.3) {
+      swallow(a, 0.014 * a.size); asts.splice(i, 1);
+      // story / endless: the hole doesn't clear waves for you - the rock comes back (it still spits a little stardust)
+      if (gmode !== 'world' && !tut && wave > 0 && !boss) { const sz = a.size; queue.push({ t: rand(1.2, 2.4), u: astUnits(a), f: () => spawnOrbital(sz) }); }
+      continue;
+    }
     if (ship && ship.inv <= 0 && dist2(a, ship) < (a.R + 8 * U) ** 2) {
       hurt();
       if (!a.dead) { a.hp -= 2; if (a.hp <= 0) { const j = asts.indexOf(a); if (j >= 0) breakAst(j, false); } }
@@ -4768,7 +4773,7 @@ function update(dt, rdt) {
       eShot(d.x, d.y, Math.cos(a) * s, Math.sin(a) * s, 4, 0.4, 4 * U, '255,80,120');
       sfx.eshot();
     }
-    if (r < rh) { swallow(d, 0.03); drones.splice(i, 1); mpGone(d); continue; }
+    if (r < rh) { swallow(d, 0.03); drones.splice(i, 1); mpGone(d); if (gmode !== 'world' && !tut && !d.extra && wave > 0) spawnKind(d.kind, rand(1.5, 2.5)); continue; }
     if (ship && ship.inv <= 0 && dist2(d, ship) < (d.R + 9 * U) ** 2) { hurt(); if (!d.mini) { killDrone(i, false); continue; } if (ship) { const a = Math.atan2(ship.y - d.y, ship.x - d.x); ship.vx = Math.cos(a) * 420 * U; ship.vy = Math.sin(a) * 420 * U; } }
     if (Math.random() < 0.5) part(d.x - Math.cos(d.ang) * 10 * U, d.y - Math.sin(d.ang) * 10 * U, -Math.cos(d.ang) * 80 * U, -Math.sin(d.ang) * 80 * U, 0.25, dCol(d), 1.8 * Math.max(1, U), 0.2, 0.95);
   }
