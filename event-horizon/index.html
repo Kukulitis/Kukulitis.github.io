@@ -720,7 +720,7 @@ body.touch .srow2.nt{display:none}
 <script>
 'use strict';
 // Versioning: next version -> next whole number (4.00), sub version -> +0.01 (3.01)
-const VERSION = '4.42';
+const VERSION = '4.43';
 const TAU = Math.PI * 2;
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 const $ = id => document.getElementById(id);
@@ -1726,7 +1726,7 @@ function dropDust(x, y, n, v = 1) {
     dust.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, v, life: 16, rot: rand(0, TAU) });
   }
 }
-function targets() { const a = drones.slice(); if (boss) a.push(boss); for (const o of asts) a.push(o); return a; }
+function targets() { const a = drones.slice(); if (boss) a.push(boss); if (gmode === 'world' && ow && ow.wb) a.push(ow.wb.o); for (const o of asts) a.push(o); return a; }
 function nearestTo(p, list, maxD) {
   let best = null, bd = maxD * maxD;
   for (const o of list) { if (o.dead || !onScreen(o)) continue; const d = dist2(o, p); if (d < bd) { bd = d; best = o; } }
@@ -1939,6 +1939,7 @@ function shipBoom(x, y, sk, mine) {
 function hexRgb(h) { const m = /^#?([0-9a-f]{6})$/i.exec(h || ''); if (!m) return '255,255,255'; const n = parseInt(m[1], 16); return (n >> 16 & 255) + ',' + (n >> 8 & 255) + ',' + (n & 255); }
 function hitObj(o, dmg) {
   if (o.dead) return false;
+  if (o.wb) { owWbDamage(dmg); return false; }
   if (o.nid != null && mp && !mp.host && gmode === 'world') { o.hp = Math.max(0.01, o.hp - dmg); o.hit = 0.08; mp.hits[o.nid] = (mp.hits[o.nid] || 0) + dmg; return false; }
   o.hp -= dmg; o.hit = 0.08;
   if (o.mini && gmode === 'world') { if (!(o.aggro > 0)) o.called = false; o.aggro = 4; }
@@ -3653,7 +3654,7 @@ function startWorld(seed, sx, sy) {
   if (!cloudUser) { goMenu(); return; }
   closeLobby();
   gmode = 'world'; tut = null; $('tutBox').classList.add('hidden');
-  ow = { ab: {}, bs: {}, drops: [], sk: [], hm: { rm: [], add: [], so: [] }, bh: null, cm: null, gs: null, mt: null, lastEv: '', bhNext: rand(70, 140), dc: 0, miniT: 25, chunks: new Map(), taken: {}, cx: 9999, cy: 9999, biome: -1, spawnT: 3, timers: {}, dist: 0, orbs: 0, kills0: 0, dx: 0, dy: 0, seed: seed | 0, CH: owCH(), safe: 0, pickT: 0, sig: '' };
+  ow = { ab: {}, bs: {}, drops: [], sk: [], hm: { rm: [], add: [], so: [] }, bh: null, cm: null, gs: null, mt: null, lastEv: '', wb: null, wbT: 300, bhNext: rand(70, 140), dc: 0, miniT: 25, chunks: new Map(), taken: {}, cx: 9999, cy: 9999, biome: -1, spawnT: 3, timers: {}, dist: 0, orbs: 0, kills0: 0, dx: 0, dy: 0, seed: seed | 0, CH: owCH(), safe: 0, pickT: 0, sig: '' };
   ow.R = OWM * ow.CH;
   owPre();
   owHoles.length = 0; owOrbs.length = 0;
@@ -3689,7 +3690,7 @@ function owApply() {
 function owChunkGen(cx, cy) {
   const key = cx + ',' + cy, CH = ow.CH, bi = owBiomeAt(cx, cy), B = BIOMES[bi], dg = owDanger(cx, cy), R = rng(hash2(cx, cy, 31 + ow.seed)), P = ow.all.get(key);
   const ch = { key, cx, cy, holes: P.holes, orbs: P.orbs };
-  const nr = Math.round((B.rocks[0] + Math.floor(R() * (B.rocks[1] - B.rocks[0] + 1))) * 0.5);
+  const nr = Math.round((B.rocks[0] + Math.floor(R() * (B.rocks[1] - B.rocks[0] + 1))) * 0.5 * (ow.wb ? 0.4 : 1));
   sector = Math.min(NS, 1 + dg);
   for (let i = 0; i < nr; i++) {
     const x = (cx - 0.5 + R()) * CH, y = (cy - 0.5 + R()) * CH, sz = 1 + Math.floor(R() * 3), vx = (R() - 0.5) * 60 * U, vy = (R() - 0.5) * 60 * U, vr = R();
@@ -3721,7 +3722,7 @@ function owUpdateChunks(force) {
   for (const ch of ow.chunks.values()) { for (const h of ch.holes) owHoles.push(h); for (const o of ch.orbs) owOrbs.push(o); }
   const bi = owBiomeAt(cx, cy);
   if (bi !== ow.biome) {
-    const first = ow.biome < 0; ow.biome = bi; TH = SECTORS[BIOMES[bi].th]; buildNebula(); buildStars(); ow.mm = null;
+    const first = ow.biome < 0; ow.biome = bi; TH = ow.wb ? WBTH[ow.wb.k] : SECTORS[BIOMES[bi].th]; buildNebula(); buildStars(); ow.mm = null;
     if (!first) { const dg = owDanger(cx, cy); announce(BIOMES[bi].n, { kick: 'Entering', sub: dg ? 'Danger level ' + dg : 'Safe zone', col: TH.danger, dur: 2.2 }); }
   }
 }
@@ -3729,6 +3730,7 @@ let gHole = null;
 function worldGravity(o, k, dt) {
   let best = 1e9; gHole = null;
   for (const h of owHoles) {
+    if (h.big && ow.wb) continue;
     const dx = h.x - o.x, dy = h.y - o.y, r2 = dx * dx + dy * dy;
     if (r2 > ((h.big ? 2600 : 1300) * U) ** 2) continue;
     const r = Math.sqrt(r2) + 1e-6, a = GMv * h.m * k / (r2 + 36 * U * U) * (ow && ow.gs ? 2 : 1);
@@ -3824,7 +3826,7 @@ function owEvLaunch(k, pl) {
   }
 }
 function owEvHost(dt, pl) {
-  if (!owEvBusy()) {
+  if (!owEvBusy() && !ow.wb) {
     ow.bhNext -= dt;
     if (ow.bhNext <= 0) { ow.bhNext = rand(110, 200); const ks = ['bh', 'cm', 'gs', 'mt'].filter(k => k !== ow.lastEv), k = ks[Math.random() * ks.length | 0]; ow.lastEv = k; owEvLaunch(k, pl); }
     return;
@@ -3840,7 +3842,7 @@ function owEvHost(dt, pl) {
   }
   // extra drones gather around the collapsing hole while pilots are near it
   ow.bhSp = (ow.bhSp || 0) - dt;
-  if (ow.bhSp > 0 || !pl.some(P => Math.hypot(P.x - h.x, P.y - h.y) < 2400 * U)) return;
+  if (ow.wb || ow.bhSp > 0 || !pl.some(P => Math.hypot(P.x - h.x, P.y - h.y) < 2400 * U)) return;
   ow.bhSp = 2.4;
   const dg = Math.max(3, owDanger(h.x / ow.CH, h.y / ow.CH)), near = drones.filter(d => !d.mini && Math.hypot(d.x - h.x, d.y - h.y) < 1100 * U).length;
   if (near >= 7 + dg || drones.length >= 60) return;
@@ -4012,6 +4014,165 @@ function owEvDraw2() {
     ctx.restore();
   }
 }
+// ================= WORLD BOSSES (multiplayer) =================
+// Every 5 minutes there is a 50% chance that the Matter or the Antimatter Colossus takes the place of the central black hole.
+// The galaxy turns light or dark, rocks shrink to bubbles (60% fewer), only the boss's own drones fly, PvP is off and the
+// safe zone is gone. Everyone has 5 minutes; if it dies every pilot gets a Quasar Orb (20% chance of a Holy Orb instead).
+const WBDUR = 300000;
+const WBTH = {
+  m: Object.assign({}, SECTORS[0], { name: 'Matter', neb: ['255,230,170', '255,250,235', '255,205,130', '245,225,255', '255,215,150'], base: '#332b1a', disk: ['255,255,250', '255,240,200', '255,215,140', '255,190,110'], glow: ['255,240,200', '255,210,140'], ring: '255,246,225', danger: '255,215,120', rock: '#d8c8a0', rim: '255,240,200', boss: '255,225,140' }),
+  a: Object.assign({}, SECTORS[0], { name: 'Antimatter', neb: ['90,20,140', '40,0,70', '140,30,170', '25,0,45', '70,10,120'], base: '#000000', disk: ['220,180,255', '170,100,255', '110,40,200', '60,10,120'], glow: ['170,90,255', '90,30,160'], ring: '200,150,255', danger: '190,110,255', rock: '#2a1838', rim: '170,100,255', boss: '180,100,255' }),
+};
+const WBN = { m: 'Matter Colossus', a: 'Antimatter Colossus' };
+function owWbRegen() {
+  // rebuild the rocks around you with the boss's 60% cut (or without it once it is gone)
+  asts = asts.filter(a => !a.ck); ow.chunks.clear(); ow.sig = ''; ow.mm = null; ow.mmB = null; owUpdateChunks(true);
+}
+function owWbBegin(k, rem, hp, max, el) {
+  if (ow.wb) return;
+  const now = performance.now(), col = k === 'm' ? '255,225,140' : '190,110,255';
+  ow.wb = { k, col, name: WBN[k], t0: now - el, end: now + rem, stage: 1, inv: 0, n1: -1, n2: -1, n3: -1, sT: 2, o: { x: 0, y: 0, R: 150 * U, hp: Math.min(hp, max), max, wb: true, dead: false, hit: 0 } };
+  const B = ow.wb, st = B.o.hp / max; B.stage = st > 0.66 ? 1 : st > 0.33 ? 2 : 3;
+  ow.wbDK = {}; for (const key in DK) { ow.wbDK[key] = DK[key].c; DK[key].c = k === 'm' ? '255,226,150' : '185,105,255'; }
+  if (!mp || mp.host) drones = [];
+  ebullets = []; TH = WBTH[k]; buildNebula(); buildStars(); owWbRegen();
+  if (ship) ship.inv = Math.max(ship.inv, 2);
+  announce(B.name, { big: true, kick: 'World boss', sub: 'PvP is off - everyone has ' + mmss(rem / 1000) + ' to destroy it in the centre', col, dur: 5, now: true });
+  (k === 'm' ? [262, 330, 392, 523] : [196, 185, 147, 98]).forEach((f, i) => setTimeout(() => tone(f, 0.7, k === 'm' ? 'triangle' : 'sawtooth', 0.07, f * (k === 'm' ? 1.5 : 0.5)), i * 220));
+  shake = Math.min(30, shake + 14); flash = 0.8; flashCol = k === 'm' ? '255,245,220' : '60,0,90'; buzz([60, 40, 120]);
+}
+function owWbEnd(dead) {
+  const B = ow.wb; if (!B) return;
+  ow.wb = null;
+  for (const key in ow.wbDK || {}) if (DK[key]) DK[key].c = ow.wbDK[key];
+  if (!mp || mp.host) drones = [];
+  ebullets = []; TH = SECTORS[BIOMES[Math.max(0, ow.biome)].th]; buildNebula(); buildStars(); owWbRegen();
+  if (dead) {
+    if (Math.hypot(camX, camY) < Math.max(W, H) * 1.5) { burst(0, 0, 220, B.col, 700, 2, 3); burst(0, 0, 120, '255,255,255', 900, 1.2, 2.6); ring(0, 0, 400, '255,255,255', 0.8, 8); ring(0, 0, 800, B.col, 1.6, 6); ring(0, 0, 1300, B.col, 2.4, 3); }
+    flash = 1; flashCol = B.k === 'm' ? '255,250,230' : '200,150,255'; shake = Math.min(30, shake + 24); sfx.boom(1.6);
+    const k = Math.random() < 0.2 ? 'holy' : 'quasar';
+    save.orbs = save.orbs || { void: 0, stellar: 0 }; save.orbs[k] = (save.orbs[k] || 0) + 1; persist();
+    if (ship) addScore(20000, ship.x, ship.y);
+    [523, 659, 784, 1046, 1318, 1568].forEach((f, i) => setTimeout(() => tone(f, 0.5, 'triangle', 0.08), i * 100)); buzz([60, 40, 60, 40, 200]);
+    announce(B.name + ' destroyed', { big: true, kick: 'World boss', sub: 'Everyone earns a ' + ORBS[k].name + (k === 'holy' ? ' - a guaranteed mythic skin!' : ' - open it in the garage'), col: ORBS[k].col, dur: 5, now: true });
+  } else announce(B.name + ' left', { kick: 'World boss', sub: 'Time ran out - the galaxy returns to normal', col: B.col, dur: 3.5, now: true });
+}
+function owWbDamage(dmg) {
+  const B = ow.wb; if (!B || B.o.dead) return;
+  B.o.hit = 0.08;
+  if (mp && !mp.host) { B.o.hp = Math.max(1, B.o.hp - dmg); mp.wbHit = (mp.wbHit || 0) + dmg; }
+  else owWbHit(dmg);
+}
+function owWbHit(dmg) {
+  const B = ow.wb; if (!B || B.inv > 0) return;
+  B.o.hp -= dmg;
+  if (B.o.hp <= 0) { B.o.hp = 0; if (mp) mp.ev.push(['wbd']); owWbEnd(true); }
+}
+function owWbHost(dt, pl) {
+  if (!ow.wb) {
+    ow.wbT -= dt;
+    if (ow.wbT <= 0) {
+      ow.wbT = 300;
+      if (Math.random() < 0.5) {
+        const k = Math.random() < 0.5 ? 'm' : 'a', n = mp ? 1 + Object.values(mp.peers).filter(P => !P.away).length : 1, max = 2400 + 1500 * (n - 1);
+        owWbBegin(k, WBDUR, max, max, 0); if (mp) mp.ev.push(['wb', k, WBDUR, max]);
+      }
+    }
+    return;
+  }
+  // its own drones pour out of it - more of them every stage
+  const B = ow.wb; B.sT -= dt;
+  if (B.sT <= 0) {
+    B.sT = [3.2, 2.6, 2][B.stage - 1];
+    const cap = [10, 14, 18][B.stage - 1] + 3 * (pl.length - 1);
+    if (drones.length < cap && pl.some(P => Math.hypot(P.x, P.y) < 3200 * U)) {
+      const pool = KINDS.slice(0, 2 + B.stage * 2); sector = Math.min(NS, 3 + B.stage * 2);
+      for (let j = 0; j < 1 + B.stage; j++) { const a = rand(0, TAU), d = droneObj(Math.cos(a) * B.o.R * 2.2, Math.sin(a) * B.o.R * 2.2, pool[Math.random() * pool.length | 0]); d.extra = true; drones.push(d); }
+    }
+  }
+}
+// runs on every pilot: stages, the attack patterns (built from the shared clock, so everyone sees the same spirals), body hits
+function owWbTick(dt) {
+  const B = ow.wb; if (!B) return;
+  const now = performance.now(), o = B.o;
+  o.hit = Math.max(0, o.hit - dt); B.inv = Math.max(0, B.inv - dt);
+  if (now >= B.end) { owWbEnd(false); return; }
+  const f = o.hp / o.max, st = f > 0.66 ? 1 : f > 0.33 ? 2 : 3;
+  if (st > B.stage) {
+    B.stage = st; B.inv = 1.5;
+    announce('Stage ' + st, { kick: B.name, sub: st === 2 ? 'It is getting angry' : 'Final stage - give it everything', col: B.col, dur: 2.4, now: true });
+    if (Math.hypot(camX, camY) < Math.max(W, H) * 1.5) { ring(0, 0, 500, B.col, 1, 7); burst(0, 0, 90, B.col, 500, 1.2, 2.6); shake = Math.min(30, shake + 16); sfx.boom(1.1); }
+    if (ship) { const d = Math.hypot(ship.x, ship.y) || 1; if (d < 1300 * U) { const k = (1 - d / (1300 * U)) * 900 * U; ship.vx += ship.x / d * k; ship.vy += ship.y / d * k; } }
+    ebullets = ebullets.filter(b => Math.hypot(b.x, b.y) > 700 * U);
+  }
+  const tb = (now - B.t0) / 1000, near = ship && Math.hypot(ship.x, ship.y) < 2600 * U;
+  const emit = (a, sp, r) => { if (near) eShot(o.x + Math.cos(a) * o.R * 0.92, o.y + Math.sin(a) * o.R * 0.92, Math.cos(a) * sp * U, Math.sin(a) * sp * U, 7, 0, r * U, B.col); };
+  // spiral arms (a second, counter-turning set from stage 2)
+  const iv = [0.2, 0.16, 0.13][B.stage - 1], arms = [4, 5, 6][B.stage - 1], n = Math.floor(tb / iv);
+  if (B.n1 < 0 || n - B.n1 > 6) B.n1 = n - 1;
+  for (let q = B.n1 + 1; q <= n; q++) {
+    for (let k = 0; k < arms; k++) emit(q * iv * 0.85 + k * TAU / arms, 220 + B.stage * 25, 7);
+    if (B.stage >= 2 && q % 2) for (let k = 0; k < arms; k++) emit(-q * iv * 1.1 + k * TAU / arms + 0.3, 180 + B.stage * 20, 6);
+  }
+  B.n1 = n;
+  // rings
+  const ri = [6, 4.5, 3.2][B.stage - 1], rn = Math.floor(tb / ri);
+  if (B.n2 < 0) B.n2 = rn;
+  if (rn > B.n2) { B.n2 = rn; const c = [24, 32, 40][B.stage - 1], off = rn * 0.37; for (let k = 0; k < c; k++) emit(off + k * TAU / c, 165, 9); if (near) ring(0, 0, 200, B.col, 0.5, 3); }
+  // aimed fans at you from stage 2
+  if (B.stage >= 2) {
+    const ai = B.stage === 2 ? 2.2 : 1.4, an = Math.floor(tb / ai);
+    if (B.n3 < 0) B.n3 = an;
+    if (an > B.n3 && ship) { B.n3 = an; const a0 = Math.atan2(ship.y - o.y, ship.x - o.x); for (let k = -2; k <= 2; k++) emit(a0 + k * 0.12, 330, 8); }
+  }
+  // touching it hurts and throws you back
+  if (ship) { const d = Math.hypot(ship.x - o.x, ship.y - o.y) || 1; if (d < o.R + 14 * U) { if (ship.inv <= 0) hurt(); const k = 700 * U; ship.vx = ship.x / d * k; ship.vy = ship.y / d * k; } }
+}
+function drawWb() {
+  const B = ow.wb, o = B.o, R = o.R, t = time, L = B.k === 'm', st = B.stage;
+  if (Math.abs(camX) > W / 2 + R * 6 || Math.abs(camY) > H / 2 + R * 6) return;
+  ctx.save();
+  if (L) {
+    ctx.globalCompositeOperation = 'lighter';
+    const g = ctx.createRadialGradient(0, 0, R * 0.5, 0, 0, R * 5); g.addColorStop(0, 'rgba(255,240,200,0.55)'); g.addColorStop(0.3, 'rgba(255,215,140,0.18)'); g.addColorStop(1, 'rgba(255,210,140,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, R * 5, 0, TAU); ctx.fill();
+    for (let i = 0; i < 14; i++) { const a = t * 0.25 + i / 14 * TAU, l = R * (2.2 + 0.6 * Math.sin(t * 2 + i) + st * 0.3); const rg = ctx.createRadialGradient(0, 0, R, 0, 0, l); rg.addColorStop(0, 'rgba(255,245,215,0.5)'); rg.addColorStop(1, 'rgba(255,230,170,0)'); ctx.fillStyle = rg; ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, l, a - 0.07, a + 0.07); ctx.closePath(); ctx.fill(); }
+    ctx.globalCompositeOperation = 'source-over';
+    for (let i = 0; i < st + 1; i++) { ctx.save(); ctx.rotate(t * (0.4 + i * 0.25) * (i % 2 ? -1 : 1)); ctx.scale(1, 0.32 + i * 0.12); ctx.strokeStyle = `rgba(255,230,170,${0.75 - i * 0.12})`; ctx.lineWidth = 3 * U; ctx.beginPath(); ctx.arc(0, 0, R * (1.35 + i * 0.28), 0, TAU); ctx.stroke(); ctx.restore(); }
+    const c = ctx.createRadialGradient(-R * 0.3, -R * 0.3, R * 0.1, 0, 0, R); c.addColorStop(0, '#ffffff'); c.addColorStop(0.45, 'rgb(255,240,200)'); c.addColorStop(0.85, 'rgb(255,200,110)'); c.addColorStop(1, 'rgb(230,150,60)');
+    ctx.fillStyle = o.hit > 0 ? '#fff' : c; ctx.beginPath(); ctx.arc(0, 0, R, 0, TAU); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,255,255,0.8)'; ctx.lineWidth = 2.5 * U; ctx.beginPath(); ctx.arc(0, 0, R * (0.55 + 0.05 * Math.sin(t * 3)), 0, TAU); ctx.stroke();
+  } else {
+    const g = ctx.createRadialGradient(0, 0, R * 0.8, 0, 0, R * 5); g.addColorStop(0, 'rgba(0,0,0,0.9)'); g.addColorStop(0.35, 'rgba(10,0,25,0.45)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, R * 5, 0, TAU); ctx.fill();
+    ctx.globalCompositeOperation = 'lighter';
+    const rg = ctx.createRadialGradient(0, 0, R * 0.95, 0, 0, R * 1.6); rg.addColorStop(0, `rgba(190,110,255,${0.55 + 0.2 * Math.sin(t * 3)})`); rg.addColorStop(1, 'rgba(120,40,220,0)');
+    ctx.fillStyle = rg; ctx.beginPath(); ctx.arc(0, 0, R * 1.6, 0, TAU); ctx.fill();
+    ctx.globalCompositeOperation = 'source-over';
+    for (let i = 0; i < 6 + st * 3; i++) { const a = t * (0.5 + (i % 3) * 0.2) * (i % 2 ? -1 : 1) + i * 1.7, d = R * (1.45 + (i % 4) * 0.22), sz = R * (0.1 + (i % 3) * 0.04); ctx.save(); ctx.translate(Math.cos(a) * d, Math.sin(a) * d); ctx.rotate(a * 2); ctx.fillStyle = 'rgba(12,0,25,0.95)'; ctx.strokeStyle = 'rgba(190,120,255,0.9)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(sz, 0); ctx.lineTo(-sz * 0.6, sz * 0.7); ctx.lineTo(-sz * 0.6, -sz * 0.7); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore(); }
+    ctx.fillStyle = o.hit > 0 ? 'rgb(120,60,180)' : '#000'; ctx.beginPath(); ctx.arc(0, 0, R, 0, TAU); ctx.fill();
+    ctx.lineWidth = 2.5 * U;
+    for (let i = 0; i < 3 + st; i++) { ctx.strokeStyle = `rgba(170,90,255,${0.25 + 0.12 * i})`; ctx.beginPath(); ctx.arc(0, 0, R * (0.3 + i * 0.14), t * (1 + i * 0.4) * (i % 2 ? -1 : 1), t * (1 + i * 0.4) * (i % 2 ? -1 : 1) + 2.2); ctx.stroke(); }
+    ctx.strokeStyle = 'rgba(210,160,255,0.95)'; ctx.lineWidth = 3 * U; ctx.beginPath(); ctx.arc(0, 0, R, 0, TAU); ctx.stroke();
+  }
+  if (B.inv > 0) { ctx.strokeStyle = `rgba(255,255,255,${B.inv / 1.5})`; ctx.lineWidth = 4 * U; ctx.beginPath(); ctx.arc(0, 0, R * 1.15, 0, TAU); ctx.stroke(); }
+  ctx.restore();
+}
+// the boss bar on top of the screen; returns where the event pills can start
+function drawWbBar(W, H, touch) {
+  const B = ow.wb, o = B.o, rem = Math.max(0, (B.end - performance.now()) / 1000), w = Math.min(560, W * 0.62), x = W / 2 - w / 2, y = touch ? 50 : 12, f = clamp(o.hp / o.max, 0, 1);
+  ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = B.k === 'a' ? 'rgba(0,0,0,0.35)' : 'rgba(255,240,210,0.05)';
+  ctx.font = `700 ${touch ? 11 : 13}px ${FONT}`; ctx.fillStyle = `rgb(${B.col})`; spaced(B.name.toUpperCase() + '   ·   STAGE ' + B.stage + ' / 3', W / 2, y + 7, 2.4, 'center');
+  const by = y + 18, bh = 9;
+  ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(x - 2, by - 2, w + 4, bh + 4);
+  const g = ctx.createLinearGradient(x, 0, x + w, 0); g.addColorStop(0, `rgba(${B.col},0.75)`); g.addColorStop(1, `rgb(${B.col})`);
+  ctx.fillStyle = g; ctx.fillRect(x, by, w * f, bh);
+  ctx.fillStyle = 'rgba(255,255,255,0.6)'; for (const q of [0.33, 0.66]) ctx.fillRect(x + w * q - 1, by - 3, 2, bh + 6);
+  ctx.font = `600 ${touch ? 10 : 11}px ${FONT}`; ctx.fillStyle = 'rgba(233,238,247,0.8)'; spaced(mmss(rem) + ' LEFT   ·   PVP OFF   ·   REWARD: QUASAR OR HOLY ORB', W / 2, by + bh + 13, 1.4, 'center');
+  ctx.restore();
+  return by + bh + 30;
+}
 function owOffer() {
   const L = ow.ab, ups = Object.keys(L).filter(k => L[k] < OWA[k].max), news = Object.keys(OWA).filter(k => !L[k]);
   const out = [];
@@ -4130,7 +4291,7 @@ function owSpawnPos() {
   let best = null, bs = -1;
   for (let t = 0; t < 40; t++) {
     // always inside the safe zone, between the central black hole's pull and the zone edge
-    const a = rand(0, TAU), r = rand(0.55, 0.88) * owSafeR(), x = Math.cos(a) * r, y = Math.sin(a) * r;
+    const a = rand(0, TAU), r = ow.wb ? rand(0.8, 0.9) * ow.R : rand(0.55, 0.88) * owSafeR(), x = Math.cos(a) * r, y = Math.sin(a) * r;
     let sc = Math.min(4000 * U, Math.hypot(x - ow.dx, y - ow.dy));
     for (const P of ow.all.values()) for (const h of P.holes) sc = Math.min(sc, (Math.hypot(h.x - x, h.y - y) - h.rh * (h.big ? 8 : 12)) * 3);
     for (const d of drones) sc = Math.min(sc, Math.hypot(d.x - x, d.y - y) * 2);
@@ -4161,7 +4322,7 @@ function owRespawn() {
 // enemies chase whichever pilot is closest
 // only plain red drones go into the safe zone; everything else ignores pilots inside it and waits at the edge
 const SAFEF = 0.2;
-const owSafeR = () => ow ? ow.R * SAFEF : 0;
+const owSafeR = () => ow ? (ow.wb ? 0 : ow.R * SAFEF) : 0;
 function owTarget(d) {
   const list = mp ? mpPl : ship ? [ship] : [], safeOK = d.kind === 'drone' && !d.mini, SZ = owSafeR();
   let best = null, bd = 1e18, near = null, nd = 1e18;
@@ -4199,7 +4360,7 @@ function owTick(dt) {
   if (owChoosing) ow.safe = 2; else ow.safe = Math.max(0, ow.safe - dt);
   if (ship && ow.safe > 0) ship.inv = Math.max(ship.inv, 0.3);
   if (mp) mpWorld(dt);
-  owEvTick(dt);
+  owEvTick(dt); owWbTick(dt);
   if (Math.random() < 0.02) { const now = performance.now(); for (const k in ow.taken) if (now - ow.taken[k] > 150000) delete ow.taken[k]; }
   if (!ship) return;
   ow.dist = Math.max(ow.dist, Math.hypot(ship.x, ship.y) / U);
@@ -4222,7 +4383,7 @@ function owTick(dt) {
   if (!mp || mp.host) {
     const pl = mp ? mpPl : [ship];
     ow.spawnT -= dt;
-    if (ow.spawnT <= 0 && pl.length) {
+    if (ow.spawnT <= 0 && pl.length && !ow.wb) {
       const P = pl[Math.random() * pl.length | 0], pcx = Math.round(P.x / ow.CH), pcy = Math.round(P.y / ow.CH);
       const bi = owBiomeAt(pcx, pcy), B = BIOMES[bi], dg = owDanger(pcx, pcy);
       // danger level 1 is quiet, danger 9 is a swarm: faster spawns, more drones at once, sometimes in pairs
@@ -4238,7 +4399,8 @@ function owTick(dt) {
       }
     }
     ow.miniT -= dt;
-    if (ow.miniT <= 0) { ow.miniT = rand(35, 60); if (drones.filter(d => d.mini).length < 3) owSpawnMini(pl); }
+    owWbHost(dt, pl);
+    if (ow.miniT <= 0 && !ow.wb) { ow.miniT = rand(35, 60); if (drones.filter(d => d.mini).length < 3) owSpawnMini(pl); }
     // a mini boss under fire calls in reinforcements every few seconds
     for (const m of drones.filter(d => d.mini && d.aggro > 0)) {
       m.aggro -= dt; m.callT = (m.callT || 0) - dt;
@@ -4269,7 +4431,9 @@ function drawWorldEdge() {
   ctx.restore();
 }
 function drawHoles() {
+  if (ow.wb) drawWb();
   for (const h of owHoles) {
+    if (h.big && ow.wb) continue;
     if (Math.abs(h.x - camX) > W / 2 + 400 * U || Math.abs(h.y - camY) > H / 2 + 400 * U) continue;
     const R = h.rh, t = time + h.ph, evh = ow.bh && ow.bh.h === h;
     if (evh) { const j = (1 - Math.max(0, ow.bh.end - performance.now()) / BHEV) * 6 * U; ctx.save(); ctx.translate(rand(-j, j), rand(-j, j)); }
@@ -4332,14 +4496,15 @@ function owMiniBuild(Sz, st = 2) {
   g.save(); g.beginPath(); g.arc(h, h, h, 0, TAU); g.clip();
   for (let px = 0; px < Sz; px += st) for (let py = 0; py < Sz; py += st) {
     const cx = (px + st / 2 - h) / k / ow.CH, cy = (py + st / 2 - h) / k / ow.CH;
-    const T = SECTORS[BIOMES[owBiomeAt(cx, cy)].th];
-    g.fillStyle = `rgba(${T.glow[0]},${0.1 + 0.12 * owDanger(cx, cy) / 9})`; g.fillRect(px, py, st, st);
+    const T = ow.wb ? WBTH[ow.wb.k] : SECTORS[BIOMES[owBiomeAt(cx, cy)].th];
+    g.fillStyle = `rgba(${T.glow[0]},${(ow.wb ? 0.14 : 0.1) + 0.12 * owDanger(cx, cy) / 9})`; g.fillRect(px, py, st, st);
   }
   g.strokeStyle = 'rgba(255,255,255,0.08)'; g.lineWidth = 1;
   for (const f of [0.3, 0.65]) { g.beginPath(); g.arc(h, h, h * f, 0, TAU); g.stroke(); }
-  g.strokeStyle = 'rgba(143,255,214,0.45)'; g.setLineDash([2, 2]); g.beginPath(); g.arc(h, h, h * SAFEF, 0, TAU); g.stroke(); g.setLineDash([]);
+  if (!ow.wb) { g.strokeStyle = 'rgba(143,255,214,0.45)'; g.setLineDash([2, 2]); g.beginPath(); g.arc(h, h, h * SAFEF, 0, TAU); g.stroke(); g.setLineDash([]); }
   for (const P of ow.all.values()) for (const o of P.holes) {
     const x = h + o.x * k, y = h + o.y * k;
+    if (o.big && ow.wb) continue;
     if (o.big) { g.fillStyle = '#000'; g.beginPath(); g.arc(x, y, 3.6 * hs, 0, TAU); g.fill(); g.strokeStyle = 'rgba(255,170,90,0.9)'; g.lineWidth = 1.2; g.beginPath(); g.arc(x, y, 4.4 * hs, 0, TAU); g.stroke(); }
     else if (o.white) { g.fillStyle = 'rgba(235,245,255,0.75)'; g.beginPath(); g.arc(x, y, 1.1 * hs, 0, TAU); g.fill(); }
     else { g.fillStyle = 'rgba(0,0,0,0.9)'; g.beginPath(); g.arc(x, y, 1.5 * hs, 0, TAU); g.fill(); g.strokeStyle = 'rgba(255,160,80,0.6)'; g.lineWidth = 0.7 * Math.min(2, hs); g.beginPath(); g.arc(x, y, 1.8 * hs, 0, TAU); g.stroke(); }
@@ -4380,6 +4545,7 @@ function drawMapAt(ox, oy, Sz, alpha, big, W, H) {
   // event: the collapsing hole and the skin orbs left behind
   if (ow.bh) { const H_ = ow.bh.h, p = 0.5 + 0.5 * Math.sin(rtime * 7); ctx.strokeStyle = `rgba(255,110,200,${0.6 + 0.4 * p})`; ctx.lineWidth = 1.6 * Math.min(2, ds); ctx.beginPath(); ctx.arc(X(H_.x), Y(H_.y), (4 + p * 3) * ds, 0, TAU); ctx.stroke(); ctx.fillStyle = 'rgb(255,110,200)'; ctx.beginPath(); ctx.arc(X(H_.x), Y(H_.y), 1.8 * ds, 0, TAU); ctx.fill(); }
   if (ow.cm) { const p = owCometPos(now); ctx.strokeStyle = 'rgba(150,230,255,0.35)'; ctx.lineWidth = 1; ctx.setLineDash([3, 3]); ctx.beginPath(); ctx.moveTo(X(p.x), Y(p.y)); ctx.lineTo(X(ow.cm.ex), Y(ow.cm.ey)); ctx.stroke(); ctx.setLineDash([]); ctx.fillStyle = 'rgb(200,240,255)'; ctx.beginPath(); ctx.arc(X(p.x), Y(p.y), 2.6 * ds, 0, TAU); ctx.fill(); ctx.strokeStyle = 'rgba(120,200,255,0.8)'; ctx.lineWidth = 2 * Math.min(2, ds); ctx.beginPath(); ctx.moveTo(X(p.x), Y(p.y)); ctx.lineTo(X(p.x - p.ux * 900 * U), Y(p.y - p.uy * 900 * U)); ctx.stroke(); }
+  if (ow.wb) { const p = 0.5 + 0.5 * Math.sin(rtime * 4), c_ = ow.wb.col; ctx.fillStyle = ow.wb.k === 'm' ? `rgb(${c_})` : '#000'; ctx.strokeStyle = `rgba(${c_},${0.6 + 0.4 * p})`; ctx.lineWidth = 1.5 * Math.min(2, ds); ctx.beginPath(); ctx.arc(ox, oy, (4 + p * 2) * ds, 0, TAU); ctx.fill(); ctx.stroke(); }
   if (ow.mt) { const p = 0.5 + 0.5 * Math.sin(rtime * 5); ctx.fillStyle = `rgba(255,150,80,${0.2 + 0.15 * p})`; ctx.strokeStyle = 'rgba(255,150,80,0.9)'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(X(ow.mt.x), Y(ow.mt.y), Math.max(3 * ds, ow.mt.r * k), 0, TAU); ctx.fill(); ctx.stroke(); }
   for (const o of ow.sk) if (!ow.taken[o.ck]) { const p = 0.5 + 0.5 * Math.sin(rtime * 5 + o.ph), c_ = o.k === 'holy' ? hsl2rgb((rtime * 0.2) % 1, 1, 0.7) : ORBS[o.k].col; ctx.fillStyle = `rgb(${c_})`; ctx.beginPath(); ctx.arc(X(o.x), Y(o.y), (2.2 + p) * ds, 0, TAU); ctx.fill(); ctx.strokeStyle = `rgba(${c_},${1 - p})`; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(X(o.x), Y(o.y), (4 + p * 5) * ds, 0, TAU); ctx.stroke(); }
   const vw = cv.width / (DPR || 1), vh = cv.height / (DPR || 1);
@@ -4395,7 +4561,7 @@ function drawMapAt(ox, oy, Sz, alpha, big, W, H) {
   if (!big) {
     const dg = owDanger(ow.cx, ow.cy);
     ctx.font = `600 ${Sz > 110 ? 10 : 9}px ${FONT}`; ctx.fillStyle = dg ? `rgba(${TH.danger},0.85)` : 'rgba(143,255,214,0.8)';
-    spaced((dg ? 'DANGER ' + dg : 'SAFE ZONE') + (isTouch() ? '' : '  ·  TAB MAP'), ox, y0 < 40 ? y0 + Sz + 11 : y0 - 9, 1.4, 'center');
+    spaced((dg ? 'DANGER ' + dg : ow.wb ? 'BOSS ARENA' : 'SAFE ZONE') + (isTouch() ? '' : '  ·  TAB MAP'), ox, y0 < 40 ? y0 + Sz + 11 : y0 - 9, 1.4, 'center');
   } else {
     // labels for the event and a legend under the map
     ctx.font = `700 ${Math.round(12 * Math.min(1.3, ds / 1.5))}px ${FONT}`; ctx.textAlign = 'center';
@@ -4739,6 +4905,10 @@ function mpOn(ev, p) {
   if (Array.isArray(p.ev)) for (const e of p.ev) if (Array.isArray(e)) mpEvent(P, e);
   mpElect();
   if (Array.isArray(p.e) && !mp.host && p.i === mp.hostId) mpSnap(p.e);
+  if (Array.isArray(p.wb) && ow && !mp.host && p.i === mp.hostId && WBTH[p.wb[0]]) {
+    if (!ow.wb && p.wb[1] > 1500) owWbBegin(p.wb[0], p.wb[1], +p.wb[2], +p.wb[3], +p.wb[4] || 0);
+    else if (ow.wb) ow.wb.o.hp = Math.min(ow.wb.o.hp, +p.wb[2]);
+  }
   if (Array.isArray(p.wv) && ow && !mp.host && p.i === mp.hostId) {
     owHmApply(p.wv[1]);
     const ev = p.wv[0];
@@ -4761,6 +4931,9 @@ function mpEvent(P, e) {
   else if (e[0] === 'bh' && ow && typeof e[1] === 'string') owEvBegin(e[1], clamp(+e[2] || BHEV, 0, BHEV));
   else if (e[0] === 'bx' && ow && Array.isArray(e)) owEvApply(e);
   else if (e[0] === 'cm' && ow) owCometBegin(e);
+  else if (e[0] === 'wb' && ow && WBTH[e[1]]) owWbBegin(e[1], clamp(+e[2] || 0, 0, WBDUR), +e[3] || 1, +e[3] || 1, 0);
+  else if (e[0] === 'wh' && ow && mp.host && ow.wb) owWbHit(Math.min(500, +e[1] || 0));
+  else if (e[0] === 'wbd' && ow && ow.wb) owWbEnd(true);
   else if (e[0] === 'gs' && ow) owStormBegin(clamp(+e[1] || 0, 0, GSEV));
   else if (e[0] === 'mt' && ow) owMeteorBegin(e);
   else if (e[0] === 'mb' && ow && typeof e[1] === 'string') owMeteorGone(e[1]);
@@ -4806,6 +4979,7 @@ function mpGone(d) {
 function mpSend() {
   const R = Math.round;
   for (const nid in mp.hits) mp.ev.push(['h', +nid, R(mp.hits[nid] * 100) / 100, 1]);
+  if (mp.wbHit) { mp.ev.push(['wh', R(mp.wbHit * 100) / 100]); mp.wbHit = 0; }
   mp.hits = {};
   const pk = { i: mp.id, n: cloudUser, rn: mp.name, j: mp.j, sd: mp.seed, pub: mp.pub ? 1 : 0, sk: save.skin, bs: save.bskin, k: score, o: ow && ow.out ? 1 : 0, pw: ow ? owPower(ow.bs, ow.ab) : 0,
     s: ship ? [R(ship.x / U), R(ship.y / U), R(ship.vx / U), R(ship.vy / U), R(ship.ang * 100) / 100, (ow && ow.safe > 0) || ship.inv > 0 ? 1 : 0, R(ship.php == null ? PVPHP : ship.php)] : null };
@@ -4814,6 +4988,7 @@ function mpSend() {
   if (mp.host) {
     for (const d of drones) if (d.nid == null) d.nid = ++mp.nid;
     pk.e = drones.map(d => [d.nid, Math.max(0, KINDS.indexOf(d.kind)), R(d.x / U), R(d.y / U), R(d.vx / U), R(d.vy / U), R(d.hp * 10), R(d.max * 10), Math.max(0, MPST.indexOf(d.st)), R((d.stT || 0) * 100), R((d.la || 0) * 100), R((d.cd || 0) * 100), d.mini ? 1 : 0, R((d.ax || 0) / U), R((d.ay || 0) / U)]);
+    if (ow && ow.wb) { const B = ow.wb; pk.wb = [B.k, R(Math.max(0, B.end - performance.now())), R(B.o.hp * 10) / 10, B.o.max, R(performance.now() - B.t0)]; }
     if (++mp.tkT % 10 === 0 && ow) { pk.tk = Object.keys(ow.taken); ow.hm.so = ow.sk.map(o => [o.ck, o.k, R(o.x / U), R(o.y / U)]); const nw = performance.now(); pk.wv = [ow.bh ? [ow.bh.id, R(Math.max(0, ow.bh.end - nw))] : null, ow.hm, ow.cm ? ow.cm.e.slice(0, 6).concat([R(Math.max(0, ow.cm.end - nw))]) : null, ow.gs ? R(Math.max(0, ow.gs.end - nw)) : 0, ow.mt ? [ow.mt.e.slice(0, 5).concat([R(Math.max(0, ow.mt.end - nw))]), [...ow.mt.gone]] : null]; }
   }
   mp.ch.send('p', pk);
@@ -4870,7 +5045,7 @@ function mpWorld(dt) {
   for (let i = rbul.length - 1; i >= 0; i--) {
     const b = rbul[i]; b.x += b.vx * dt; b.y += b.vy * dt; b.life -= dt;
     // PvP: the pilot being shot decides the hit
-    if (ship && ow.safe <= 0 && ship.inv <= 0 && dist2(b, ship) < (12 * U) ** 2) {
+    if (ship && ow.safe <= 0 && ship.inv <= 0 && !ow.wb && dist2(b, ship) < (12 * U) ** 2) {
       rbul.splice(i, 1); burst(b.x, b.y, 8, '255,120,120', 140, 0.35, 2); sfx.hit();
       ship.php = (ship.php == null ? PVPHP : ship.php) - b.dmg; ow.hitBy = b.by; ow.hitT = now;
       if (ship.php <= 0) { ship.php = PVPHP; hurt(); }
@@ -4883,7 +5058,7 @@ function mpWorld(dt) {
   // your shots stop on other pilots (they register the damage on their side)
   for (let i = bullets.length - 1; i >= 0; i--) {
     const b = bullets[i];
-    for (const P of mpPl) { if (P === ship || P.safe) continue; if (dist2(b, P) < (12 * U) ** 2) { burst(b.x, b.y, 6, P.col, 140, 0.3, 1.8); bullets.splice(i, 1); break; } }
+    if (!ow.wb) for (const P of mpPl) { if (P === ship || P.safe) continue; if (dist2(b, P) < (12 * U) ** 2) { burst(b.x, b.y, 6, P.col, 140, 0.3, 1.8); bullets.splice(i, 1); break; } }
   }
 }
 function mpDraw() {
@@ -5888,6 +6063,15 @@ function drawZone() {
   }
 }
 function drawAst(a) {
+  if (gmode === 'world' && ow && ow.wb) {
+    const L = ow.wb.k === 'm', g = ctx.createRadialGradient(a.x - a.R * 0.35, a.y - a.R * 0.4, a.R * 0.08, a.x, a.y, a.R);
+    if (L) { g.addColorStop(0, 'rgba(255,255,255,0.95)'); g.addColorStop(0.35, 'rgba(255,244,215,0.35)'); g.addColorStop(1, 'rgba(255,215,140,0.16)'); }
+    else { g.addColorStop(0, 'rgba(210,160,255,0.6)'); g.addColorStop(0.4, 'rgba(30,0,55,0.88)'); g.addColorStop(1, 'rgba(8,0,18,0.96)'); }
+    ctx.fillStyle = a.hit > 0 ? 'rgba(255,255,255,0.9)' : g; ctx.beginPath(); ctx.arc(a.x, a.y, a.R, 0, TAU); ctx.fill();
+    ctx.strokeStyle = L ? 'rgba(255,248,225,0.85)' : 'rgba(180,110,255,0.85)'; ctx.lineWidth = Math.max(1.2, a.R * 0.06); ctx.stroke();
+    ctx.strokeStyle = L ? 'rgba(255,255,255,0.7)' : 'rgba(230,200,255,0.5)'; ctx.lineWidth = Math.max(1, a.R * 0.05); ctx.beginPath(); ctx.arc(a.x, a.y, a.R * 0.72, -2.6, -1.7); ctx.stroke();
+    return;
+  }
   const dx = CX - a.x, dy = CY - a.y, d = Math.hypot(dx, dy) || 1, lx = dx / d, ly = dy / d;
   const g = ctx.createLinearGradient(a.x + lx * a.R, a.y + ly * a.R, a.x - lx * a.R, a.y - ly * a.R);
   g.addColorStop(0, a.hit > 0 ? '#fff' : TH.rock); g.addColorStop(0.45, '#2a2032'); g.addColorStop(1, '#0c0a12');
@@ -6219,6 +6403,7 @@ function drawHUDi(W, H) {
   if (gmode === 'world' && ow && !paused) {
     if (mp) drawScoreboard(W, H, touch);
     // one pill per thing going on: what it is, how long it lasts and how far away it is
+    const pTop = ow.wb ? drawWbBar(W, H, touch) : (touch ? 54 : 16);
     if (ship && mmBigA < 0.5) {
       const nw = performance.now(), far = o => (Math.hypot(o.x - ship.x, o.y - ship.y) / U / 1000).toFixed(1) + 'K AWAY', pills = [];
       if (ow.bh) { const rem = Math.max(0, (ow.bh.end - nw) / 1000); pills.push([(ow.bh.h.white ? 'WHITE' : 'BLACK') + ' HOLE COLLAPSING  ' + mmss(rem) + '  ·  ' + far(ow.bh.h), '255,110,200', rem < 10]); }
@@ -6228,12 +6413,18 @@ function drawHUDi(W, H) {
       const so = ow.sk.find(o => !ow.taken[o.ck]); if (so) pills.push([ORBS[so.k].name.toUpperCase() + ' UP FOR GRABS  ·  ' + far(so), ORBS[so.k].col, false]);
       ctx.save(); ctx.font = `700 ${touch ? 10 : 11}px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       pills.forEach(([txt, col, hot], i) => {
-        const p = 0.5 + 0.5 * Math.sin(rtime * (hot ? 10 : 3)), tw = ctx.measureText(txt).width + txt.length * 1.4 + 34, bx = W / 2 - tw / 2, by = (touch ? 54 : 16) + i * 30;
+        const p = 0.5 + 0.5 * Math.sin(rtime * (hot ? 10 : 3)), tw = ctx.measureText(txt).width + txt.length * 1.4 + 34, bx = W / 2 - tw / 2, by = pTop + i * 30;
         ctx.fillStyle = `rgba(${col},${0.12 + 0.08 * p})`; ctx.strokeStyle = `rgba(${col},${0.5 + 0.3 * p})`; ctx.lineWidth = 1;
         ctx.beginPath(); ctx.roundRect ? ctx.roundRect(bx, by, tw, 24, 12) : ctx.rect(bx, by, tw, 24); ctx.fill(); ctx.stroke();
         ctx.fillStyle = `rgb(${col})`; spaced(txt, W / 2, by + 12.5, 1.4, 'center');
       });
       ctx.restore();
+    }
+    if (ow.wb) {
+      ctx.save(); const L = ow.wb.k === 'm', g = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.25, W / 2, H / 2, Math.hypot(W, H) * 0.65);
+      if (L) { g.addColorStop(0, 'rgba(255,245,220,0.07)'); g.addColorStop(1, 'rgba(255,235,190,0.24)'); ctx.globalCompositeOperation = 'lighter'; }
+      else { g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,0.5)'); }
+      ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); ctx.restore();
     }
     // the storm shows on screen as purple wind streaks
     if (ow.gs) {
@@ -6512,7 +6703,7 @@ function drawIndicators() {
   if (tut && tut.bc) list.push([tut.bc, '200,150,255', 7]);
   if (gmode === 'world') { for (const o of owOrbs.concat(ow.drops)) { if (ow.taken[o.ck]) continue; if (o.t === 'a' && Math.hypot(o.x - camX, o.y - camY) < 2600 * U) list.push([o, OTYPE.a.ring, 8]); } for (const d of drones) if (d.mini && Math.hypot(d.x - camX, d.y - camY) < 3200 * U) list.push([d, '255,90,90', 10]); }
   else list.push([{ x: CX, y: CY, bh: true }, TH.ring, 7]);
-  if (gmode === 'world' && ow) { if (ow.bh) list.push([ow.bh.h, '255,110,200', 11]); if (ow.cm) list.push([owCometPos(performance.now()), '150,230,255', 11]); if (ow.mt) list.push([ow.mt, '255,150,80', 11]); for (const o of ow.sk) if (!ow.taken[o.ck]) list.push([o, ORBS[o.k].col, 11]); }
+  if (gmode === 'world' && ow) { if (ow.wb) list.push([ow.wb.o, ow.wb.col, 13]); if (ow.bh) list.push([ow.bh.h, '255,110,200', 11]); if (ow.cm) list.push([owCometPos(performance.now()), '150,230,255', 11]); if (ow.mt) list.push([ow.mt, '255,150,80', 11]); for (const o of ow.sk) if (!ow.taken[o.ck]) list.push([o, ORBS[o.k].col, 11]); }
   const m = 26, l = SAL + m + (gmode === 'world' && ow && !isTouch() ? upBox(W, H, false)[2] + 20 : 0), r_ = W - SAR - m, t = SAT + m + 70, b = H - SAB - m - (isTouch() ? 0 : 40);
   ctx.save(); ctx.globalAlpha = hudA;
   for (const [o, col, sz] of list) {
